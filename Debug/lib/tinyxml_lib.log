@@ -1,0 +1,11 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(376,5): warning MSB8004: Intermediate Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Intermediate Directory.
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(377,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+cl : Command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+  tinyxmlparser.cpp
+  tinyxmlerror.cpp
+  tinyxml.cpp
+c:\users\u1218984\documents\github\bhraytracer\tinyxml\tinyxml.cpp(670): warning C4458: declaration of 'value' hides class member
+  c:\users\u1218984\documents\github\bhraytracer\tinyxml\tinyxml.h(761): note: see declaration of 'TiXmlNode::value'
+  tinystr.cpp
+  Generating Code...
+  tinyxml_lib.vcxproj -> C:\Users\U1218984\Documents\GitHub\BHRayTracer\Debug\lib\tinyxml.lib

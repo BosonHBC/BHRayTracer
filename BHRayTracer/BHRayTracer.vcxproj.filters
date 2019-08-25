@@ -13,5 +13,102 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\DataStructure">
+      <UniqueIdentifier>{27fee814-b88c-4519-9e1f-30381dc22d4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\LoadPNG">
+      <UniqueIdentifier>{d942d8c2-167e-4e0a-8e59-755190d1426e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DataStructure\Sphere">
+      <UniqueIdentifier>{a4b94873-c029-4301-a360-d5fe8757d59e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DataStructure\cyAlphaDistribution.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyBVH.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyColor.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyCore.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyGL.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyHairFile.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyHeap.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyIPoint.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyIVector.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyLightingGrid.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyMatrix.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyPoint.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyPointCloud.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyQuat.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cySampleElim.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cySpatial.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyString.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyTimer.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyTriMesh.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\cyVector.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\objects.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\scene.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="LoadPNG\lodepng.h">
+      <Filter>Source Files\LoadPNG</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="LoadPNG\lodepng.cpp">
+      <Filter>Source Files\LoadPNG</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="viewport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xmlload.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sphere.cpp">
+      <Filter>Source Files\DataStructure\Sphere</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

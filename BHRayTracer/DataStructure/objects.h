@@ -23,9 +23,16 @@ class Sphere : public Object
 public:
 	virtual bool IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide = HIT_FRONT) const;
 	virtual void ViewportDisplay() const;
+
+
 };
 
+
+
 extern Sphere theSphere;
+
+
+
 
 //-------------------------------------------------------------------------------
 
