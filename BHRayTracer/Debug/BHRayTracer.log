@@ -1,9 +1,6 @@
-﻿  lodepng.cpp
-c:\users\u1218984\documents\github\bhraytracer\bhraytracer\loadpng\lodepng.cpp(119): warning C4551: function call missing argument list
-  Main.cpp
-  Sphere.cpp
-  viewport.cpp
-  xmlload.cpp
-  Generating Code...
+﻿  Main.cpp
+c:\users\u1218984\documents\github\bhraytracer\bhraytracer\main.cpp(19): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\u1218984\documents\github\bhraytracer\bhraytracer\main.cpp(38): warning C4018: '<': signed/unsigned mismatch
+c:\users\u1218984\documents\github\bhraytracer\bhraytracer\main.cpp(40): warning C4018: '<': signed/unsigned mismatch
 LINK : warning LNK4098: defaultlib 'LIBCMTD' conflicts with use of other libs; use /NODEFAULTLIB:library
   BHRayTracer.vcxproj -> C:\Users\U1218984\Documents\GitHub\BHRayTracer\Debug\BHRayTracer.exe
