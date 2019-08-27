@@ -83,6 +83,7 @@ void BeginRender() {
 	}
 
 	renderImage.SaveImage("proj1.png");
+	//renderImage.SaveZImage("proj1_z.png");
 }
 void StopRender() {
 
