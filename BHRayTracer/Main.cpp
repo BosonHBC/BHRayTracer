@@ -56,6 +56,7 @@ void BeginRender() {
 
 	
 	Color24* pixels = renderImage.GetPixels();
+	float* zBuffers = renderImage.GetZBuffer();
 	renderImage.ResetNumRenderedPixels();
 	for (size_t i = 0; i < camera.imgWidth; i++)
 	{
@@ -74,6 +75,7 @@ void BeginRender() {
 				HitInfo outHit;
 				if (sps[s].IntersectRay(tempRay, outHit, 1)) {
 					pixels[j*camera.imgWidth + i].Set(255, 255, 255);
+					zBuffers[j*camera.imgWidth + i] = outHit.z;
 					// if it hit, do need to go to next sphere
 					break;
 				}
@@ -81,9 +83,9 @@ void BeginRender() {
 			renderImage.IncrementNumRenderPixel(1);
 		}
 	}
-
+	renderImage.ComputeZBufferImage();
 	renderImage.SaveImage("proj1.png");
-	//renderImage.SaveZImage("proj1_z.png");
+	renderImage.SaveZImage("proj1_z.png");
 }
 void StopRender() {
 
