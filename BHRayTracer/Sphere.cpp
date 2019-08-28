@@ -2,16 +2,14 @@
 #include "cyVector.h"
 bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
 {
-	// dot(p-c, p-c) = (x-cx)^2 + (y-cy)^2 + (z-cz)^2 = r*r
+	// dot(p, p) = (x)^2 + (y)^2 + (z)^2 = 1
 	// p = origin + dist * dir;
 	Vec3f dir = ray.dir;
-	dir.Normalize();
-
-	Vec3f oc = ray.p - c;
+	Vec3f oc = ray.p;
 
 	float A = dir.Dot(dir);
 	float B = 2 * dir.Dot(oc);
-	float C = oc.Dot(oc) - r * r;
+	float C = oc.Dot(oc) - 1;
 
 	float DD = B * B - 4 * A*C;
 	if (DD > 0) {
