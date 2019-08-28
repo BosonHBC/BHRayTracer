@@ -85,7 +85,8 @@
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y</Command>
+      <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y
+xcopy $(SolutionDir)$(ProjectName)\Output $(targetDir)\Output /Y /E /I</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -100,6 +101,10 @@
       <AdditionalDependencies>freeglut.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(SolutionDir)freeglut\bin\x64\freeglut.dll $(targetDir) /Y
+xcopy $(SolutionDir)$(ProjectName)\Output $(targetDir)\Output /Y /E /I</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -120,7 +125,8 @@
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y</Command>
+      <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y
+xcopy $(SolutionDir)$(ProjectName)\Output $(targetDir)\Output /Y /E /I</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,6 +145,10 @@
       <AdditionalDependencies>freeglut.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(SolutionDir)freeglut\bin\x64\freeglut.dll $(targetDir) /Y
+xcopy $(SolutionDir)$(ProjectName)\Output $(targetDir)\Output /Y /E /I</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="DataStructure\cyAlphaDistribution.h" />

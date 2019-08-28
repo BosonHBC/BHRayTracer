@@ -56,19 +56,21 @@ void BeginRender() {
 
 	
 	Color24* pixels = renderImage.GetPixels();
-	float* zBuffers = renderImage.GetZBuffer();
 	renderImage.ResetNumRenderedPixels();
+	float* zBuffers = renderImage.GetZBuffer();
+
 	for (size_t i = 0; i < camera.imgWidth; i++)
 	{
 		for (size_t j = 0; j < camera.imgHeight; j++)
 		{
-			pixels[j*camera.imgWidth + i].Set(0, 0, 0);
 
 			Ray tempRay;
 			tempRay.p = rayStart;
 			Vec3f pixelPos = topLeft + (i + 1 / 2) * w / camera.imgWidth * camXAxis - (j + 1 / 2) * h / camera.imgHeight * camYAxis;
 			tempRay.dir = pixelPos - rayStart;
 
+			// For this ray, if it hits or not
+			bool bHit = false;
 			//recursive(pixels, i, j, &rootNode, tempRay);
 			for (size_t s = 0; s < 3; s++)
 			{
@@ -76,16 +78,22 @@ void BeginRender() {
 				if (sps[s].IntersectRay(tempRay, outHit, 1)) {
 					pixels[j*camera.imgWidth + i].Set(255, 255, 255);
 					zBuffers[j*camera.imgWidth + i] = outHit.z;
+					bHit = true;
 					// if it hit, do need to go to next sphere
 					break;
 				}
+			}
+			// if it is not hit, write as black and the z buffer is big float
+			if (!bHit) {
+				pixels[j*camera.imgWidth + i].Set(0, 0, 0);
+				zBuffers[j*camera.imgWidth + i] = BIGFLOAT;
 			}
 			renderImage.IncrementNumRenderPixel(1);
 		}
 	}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("proj1.png");
-	renderImage.SaveZImage("proj1_z.png");
+	renderImage.SaveImage("Output/Result/proj1.png");
+	renderImage.SaveZImage("Output/Result/output/proj1_z.png");
 }
 void StopRender() {
 
@@ -93,7 +101,7 @@ void StopRender() {
 
 
 int main() {
-	const char* filename = "data/proj1.xml";
+	const char* filename = "Output/Data/proj1.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

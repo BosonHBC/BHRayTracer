@@ -89,6 +89,16 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>tinyxml</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <OutDir>$(SolutionDir)$(Configuration)\lib</OutDir>
+    <IntDir>$(SolutionDir)$(Configuration)\lib</IntDir>
+    <TargetName>tinyxml</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <OutDir>$(SolutionDir)$(Configuration)\lib</OutDir>
+    <IntDir>$(SolutionDir)$(Configuration)\lib</IntDir>
+    <TargetName>tinyxml</TargetName>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
