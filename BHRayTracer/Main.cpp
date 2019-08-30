@@ -24,11 +24,11 @@ void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit) {
 			recursive(_i, _j,root->GetChild(i), transformedRay, _bHit);
 
 			HitInfo outHit;
-			outHit.node = root->GetChild(i);
-
 			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 1))
 			{
-				renderImage.GetPixels()[_j*camera.imgWidth + _i].Set(255, 255, 255);
+				outHit.node = root->GetChild(i);
+				Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, lights);
+				renderImage.GetPixels()[_j*camera.imgWidth + _i].Set(outColor.r*255, outColor.g * 255, outColor.b * 255);
 				renderImage.GetZBuffer()[_j*camera.imgWidth + _i] = outHit.z;
 
 				_bHit = true;

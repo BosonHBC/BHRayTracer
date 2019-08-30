@@ -96,10 +96,10 @@
     <ClInclude Include="LoadPNG\lodepng.h">
       <Filter>Source Files\LoadPNG</Filter>
     </ClInclude>
-    <ClInclude Include="materials.h">
+    <ClInclude Include="DataStructure\lights.h">
       <Filter>Source Files\DataStructure</Filter>
     </ClInclude>
-    <ClInclude Include="lights.h">
+    <ClInclude Include="DataStructure\materials.h">
       <Filter>Source Files\DataStructure</Filter>
     </ClInclude>
   </ItemGroup>
@@ -116,11 +116,11 @@
     <ClCompile Include="xmlload.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sphere.cpp">
-      <Filter>Source Files\DataStructure\Sphere</Filter>
-    </ClCompile>
-    <ClCompile Include="MtlBlinn.cpp">
+    <ClCompile Include="DataStructure\MtlBlinn.cpp">
       <Filter>Source Files\DataStructure\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="DataStructure\Sphere.cpp">
+      <Filter>Source Files\DataStructure\Sphere</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
