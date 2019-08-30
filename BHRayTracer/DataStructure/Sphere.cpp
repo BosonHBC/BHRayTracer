@@ -15,7 +15,10 @@ bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 	if (DD > 0) {
 		float t1 = (-B + sqrt(DD)) / (2 * A);
 		float t2 = (-B - sqrt(DD)) / (2 * A);
-		hInfo.z = Min(t1, t2);
+		float t = Min(t1, t2);
+		hInfo.z = t;
+		if(t < 0)
+			hInfo.z = Max(t1, t2);
 		hInfo.p = oc + hInfo.z * dir;
 		hInfo.N = hInfo.p;// - Vec3f(0, 0, 0);
 

@@ -14,24 +14,28 @@ LightList lights;
 #define PI 3.14159265
 int LoadScene(char const *filename);
 
-void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit) {
+void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ) {
 	if (root->GetNumChild() <= 0) return;
 	for (int i = 0; i < root->GetNumChild(); i++)
 	{
 		if (root->GetChild(i)->GetNodeObj() != nullptr) {
 			
 			Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
-			recursive(_i, _j,root->GetChild(i), transformedRay, _bHit);
+			recursive(_i, _j,root->GetChild(i), transformedRay, _bHit, _closestZ);
 
 			HitInfo outHit;
 			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 1))
 			{
-				outHit.node = root->GetChild(i);
-				Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, lights);
-				renderImage.GetPixels()[_j*camera.imgWidth + _i].Set(outColor.r*255, outColor.g * 255, outColor.b * 255);
-				renderImage.GetZBuffer()[_j*camera.imgWidth + _i] = outHit.z;
+				if (outHit.z <= _closestZ) {
+					_closestZ = outHit.z;
 
-				_bHit = true;
+					outHit.node = root->GetChild(i);
+					Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, lights);
+					renderImage.GetPixels()[_j*camera.imgWidth + _i].Set(outColor.r * 255, outColor.g * 255, outColor.b * 255);
+					renderImage.GetZBuffer()[_j*camera.imgWidth + _i] = outHit.z;
+					_bHit = true;
+				}
+
 			}
 		}
 	}
@@ -62,7 +66,8 @@ void BeginRender() {
 			tRay.dir = pixelPos - rayStart;
 			// For this ray, if it hits or not
 			bool bHit = false;
-			recursive(i, j, &rootNode, tRay, bHit);
+			float cloestZ = BIGFLOAT;
+			recursive(i, j, &rootNode, tRay, bHit, cloestZ);
 			// if it is not hit, write as black and the z buffer is big float
 			if (!bHit) {
 				renderImage.GetPixels()[j*camera.imgWidth + i].Set(0, 0, 0);
