@@ -4,6 +4,7 @@
 #include "cyVector.h"
 #include "cyColor.h"
 #include <math.h>
+#include "lights.h"
 
 Node rootNode;
 Camera camera;
@@ -20,8 +21,10 @@ void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ
 	{
 		if (root->GetChild(i)->GetNodeObj() != nullptr) {
 			
+			// transform ray to child coordinate
 			Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
 			recursive(_i, _j,root->GetChild(i), transformedRay, _bHit, _closestZ);
+			// transform light to child coordinate
 
 			HitInfo outHit;
 			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 1))
@@ -31,7 +34,7 @@ void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ
 
 					outHit.node = root->GetChild(i);
 					Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, lights);
-					renderImage.GetPixels()[_j*camera.imgWidth + _i].Set(outColor.r * 255, outColor.g * 255, outColor.b * 255);
+					renderImage.GetPixels()[_j*camera.imgWidth + _i] = Color24(outColor);
 					renderImage.GetZBuffer()[_j*camera.imgWidth + _i] = outHit.z;
 					_bHit = true;
 				}

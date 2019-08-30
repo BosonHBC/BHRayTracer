@@ -28,17 +28,12 @@
     </material>
 
     <!-- Lights -->
-    <light type="ambient" name="ambientLight">
-      <intensity value="0.1"/>
-    </light>
+
     <light type="direct" name="directionalLight">
       <intensity value="0.5"/>
       <direction x="1" y="0.5" z="-1"/>
     </light>
-    <light type="point" name="pointLight">
-      <intensity value="0.5"/>
-      <position x="140" y="40" z="70"/>
-    </light>
+
   </scene>
 
   <camera>
