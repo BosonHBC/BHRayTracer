@@ -184,11 +184,14 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <ClInclude Include="DataStructure\cyVector.h" />
     <ClInclude Include="DataStructure\objects.h" />
     <ClInclude Include="DataStructure\scene.h" />
+    <ClInclude Include="lights.h" />
     <ClInclude Include="LoadPNG\lodepng.h" />
+    <ClInclude Include="materials.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LoadPNG\lodepng.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MtlBlinn.cpp" />
     <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="viewport.cpp" />
     <ClCompile Include="xmlload.cpp" />

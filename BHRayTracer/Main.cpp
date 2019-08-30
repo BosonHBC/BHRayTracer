@@ -9,6 +9,8 @@ Node rootNode;
 Camera camera;
 RenderImage renderImage;
 Sphere theSphere;
+MaterialList materials;
+LightList lights;
 #define PI 3.14159265
 int LoadScene(char const *filename);
 
