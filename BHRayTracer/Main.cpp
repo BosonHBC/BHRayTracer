@@ -2,8 +2,9 @@
 #include "scene.h"
 #include "objects.h"
 #include "cyVector.h"
-#include <math.h>
 #include "cyColor.h"
+#include <math.h>
+
 Node rootNode;
 Camera camera;
 RenderImage renderImage;
@@ -38,13 +39,14 @@ void ShowViewport();
 void BeginRender() {
 	Vec3f rayStart = camera.pos;
 	float aor = camera.imgWidth / (float)camera.imgHeight;
-	float tan_h_pov = tan(camera.fov / 2 * PI / 180.0);
+ 	float tan_h_pov = tan(camera.fov / 2 * PI / 180.0);
 	float l = 1;
 	float h = 2 * l * tan_h_pov;
 	float w = aor * h;
-	Vec3f camZAxis = Vec3f(0, -1, 0);
-	Vec3f camYAxis = Vec3f(0, 0, 1);
-	Vec3f camXAxis = camZAxis.Cross(camYAxis);
+	
+	Vec3f camZAxis = -camera.dir;
+	Vec3f camYAxis = camera.up;
+	Vec3f camXAxis = camYAxis.Cross(camZAxis);
 	Vec3f topLeft = rayStart - camZAxis * l + camYAxis * h / 2 - camXAxis * w / 2;
 	Ray tRay;
 	tRay.p = rayStart;
@@ -68,8 +70,8 @@ void BeginRender() {
 		}
 	}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Output/Result/proj1.png");
-	renderImage.SaveZImage("Output/Result/proj1_z.png");
+	renderImage.SaveImage("Resource/Result/proj2.png");
+	renderImage.SaveZImage("Resource/Result/proj2_z.png");
 }
 void StopRender() {
 
@@ -77,7 +79,7 @@ void StopRender() {
 
 
 int main() {
-	const char* filename = "Output/Data/proj1.xml";
+	const char* filename = "Resource/Data/proj2.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
