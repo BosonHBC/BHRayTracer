@@ -1,20 +1,19 @@
 #include "materials.h"
 #include "scene.h"
 #include <math.h>
-Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lights) const {
+#include "lights.h"
+Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &_lights) const {
 	// fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 	Color outColor = Color::Black();
 	Vec3f vN = hInfo.N.GetNormalized();
 
 	Vec3f vV = (ray.p - hInfo.p).GetNormalized();
 	Color ambientColor = Color::Black();
-	for (auto it = lights.begin(); it!= lights.end(); ++it)
+	for (auto it = _lights.begin(); it != _lights.end(); ++it)
 	{
 		if (!(*it)->IsAmbient()) {
-
-			Vec3f trLight = (*it)->Direction(hInfo.p);
-			trLight = hInfo.node->VectorTransformTo(trLight);
-			Vec3f vL = (-trLight).GetNormalized();
+			// transform light
+			Vec3f vL = (-(*it)->Direction(hInfo.p)).GetNormalized();
 			float cosTheta = vL.Dot(vN);
 			if (cosTheta <= 0) {
 				// from back side
@@ -26,7 +25,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		}
 		else {
 			// it is ambient
-			ambientColor = diffuse *(*it)->Illuminate(hInfo.p, vN);
+			ambientColor = diffuse * (*it)->Illuminate(hInfo.p, vN);
 		}
 	}
 	//outColor.ClampMax();

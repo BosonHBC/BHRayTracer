@@ -15,7 +15,7 @@ LightList lights;
 #define PI 3.14159265
 int LoadScene(char const *filename);
 
-void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ) {
+void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ, const LightList &lights) {
 	if (root->GetNumChild() <= 0) return;
 	for (int i = 0; i < root->GetNumChild(); i++)
 	{
@@ -23,23 +23,42 @@ void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ
 			
 			// transform ray to child coordinate
 			Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
-			recursive(_i, _j,root->GetChild(i), transformedRay, _bHit, _closestZ);
-			// transform light to child coordinate
 
+			// copy lights memory and transform the light to local coordinate
 			HitInfo outHit;
+			LightList copyLight;
+			for (int j = 0; j < lights.size(); j++)
+			{
+				copyLight.push_back(new GenLight());
+				memcpy(&copyLight[j], &lights[j], sizeof(lights[j]));
+			}
+
 			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 1))
 			{
 				if (outHit.z <= _closestZ) {
 					_closestZ = outHit.z;
-
 					outHit.node = root->GetChild(i);
-					Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, lights);
+/*
+					for (int j = 0; j < lights.size(); j++)
+					{
+						if (copyLight[j]->IsPoint()) {
+							// if it is point light, transform the point
+							PointLight* pointLight = (PointLight*)(copyLight[j]);
+							pointLight->SetPosition(root->GetChild(j)->VectorTransformTo(pointLight->GetPosition()));
+						}
+						if (!copyLight[j]->IsAmbient()) {
+							DirectLight* directLight = (DirectLight*)(copyLight[j]);
+							directLight->SetDirection(root->GetChild(j)->VectorTransformTo(directLight->Direction(Vec3f(0, 0, 0))));
+						}
+					}*/
+					Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, copyLight);
 					renderImage.GetPixels()[_j*camera.imgWidth + _i] = Color24(outColor);
 					renderImage.GetZBuffer()[_j*camera.imgWidth + _i] = outHit.z;
 					_bHit = true;
 				}
-
 			}
+			recursive(_i, _j, root->GetChild(i), transformedRay, _bHit, _closestZ, copyLight);
+
 		}
 	}
 }
@@ -70,7 +89,7 @@ void BeginRender() {
 			// For this ray, if it hits or not
 			bool bHit = false;
 			float cloestZ = BIGFLOAT;
-			recursive(i, j, &rootNode, tRay, bHit, cloestZ);
+			recursive(i, j, &rootNode, tRay, bHit, cloestZ, lights);
 			// if it is not hit, write as black and the z buffer is big float
 			if (!bHit) {
 				renderImage.GetPixels()[j*camera.imgWidth + i].Set(0, 0, 0);

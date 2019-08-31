@@ -196,6 +196,7 @@ public:
 	virtual Color Illuminate(Vec3f const &p, Vec3f const &N) const = 0;
 	virtual Vec3f Direction(Vec3f const &p) const = 0;
 	virtual bool  IsAmbient() const { return false; }
+	virtual bool  IsPoint() const { return false; }
 	virtual void  SetViewportLight(int lightID) const {}    // used for OpenGL display
 };
 
