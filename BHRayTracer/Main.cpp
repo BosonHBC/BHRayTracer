@@ -23,15 +23,14 @@ void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ
 			
 			// transform ray to child coordinate
 			Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
-
-			// copy lights memory and transform the light to local coordinate
 			HitInfo outHit;
+/*
 			LightList copyLight;
 			for (int j = 0; j < lights.size(); j++)
 			{
 				copyLight.push_back(new GenLight());
 				memcpy(&copyLight[j], &lights[j], sizeof(lights[j]));
-			}
+			}*/
 
 			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 1))
 			{
@@ -51,14 +50,28 @@ void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ
 							directLight->SetDirection(root->GetChild(j)->VectorTransformTo(directLight->Direction(Vec3f(0, 0, 0))));
 						}
 					}*/
-					Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, copyLight);
+					// transform light to local
+/*
+					for (auto it = lights.begin(); it != lights.end(); ++it)
+					{
+						GenLight* genLight = dynamic_cast<GenLight*>(*it);
+						genLight->ToLocalCoordinate(root->GetChild(i));
+					}*/
+
+					Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, lights);
 					renderImage.GetPixels()[_j*camera.imgWidth + _i] = Color24(outColor);
 					renderImage.GetZBuffer()[_j*camera.imgWidth + _i] = outHit.z;
 					_bHit = true;
 				}
 			}
-			recursive(_i, _j, root->GetChild(i), transformedRay, _bHit, _closestZ, copyLight);
-
+			recursive(_i, _j, root->GetChild(i), transformedRay, _bHit, _closestZ, lights);
+			// transform light back to parent
+/*
+			for (auto it = lights.begin(); it != lights.end(); ++it)
+			{
+				GenLight* genLight = dynamic_cast<GenLight*>(*it);
+				genLight->ToParentCoordinate(root->GetChild(i));
+			}*/
 		}
 	}
 }

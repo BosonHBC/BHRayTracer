@@ -15,7 +15,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &_li
 			// transform light
 			Vec3f vL = (-(*it)->Direction(hInfo.p)).GetNormalized();
 			float cosTheta = vL.Dot(vN);
-			if (cosTheta <= 0) {
+			if (cosTheta < 0) {
 				// from back side
 				break;
 			}

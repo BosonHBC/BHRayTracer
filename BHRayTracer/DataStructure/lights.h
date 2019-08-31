@@ -22,6 +22,8 @@ class GenLight : public Light
 public:
 	virtual Color Illuminate(Vec3f const &p, Vec3f const &N) const { return Color::Black(); };
 	virtual Vec3f Direction(Vec3f const &p) const { return Vec3f(0,0,0); };
+	virtual void ToLocalCoordinate(Node* root) {};
+	virtual void ToParentCoordinate(Node* root) {};
 protected:
 	void SetViewportParam(int lightID, ColorA ambient, ColorA intensity, Vec4f pos) const;
 };
@@ -51,7 +53,6 @@ public:
 	virtual Color Illuminate(Vec3f const &p, Vec3f const &N) const override { return intensity; }
 	virtual Vec3f Direction(Vec3f const &p) const override { return direction; }
 	virtual void SetViewportLight(int lightID) const { SetViewportParam(lightID, ColorA(0.0f), ColorA(intensity), Vec4f(-direction, 0.0f)); }
-
 	void SetIntensity(Color intens) { intensity = intens; }
 	void SetDirection(Vec3f dir) { direction = dir.GetNormalized(); }
 private:
@@ -70,6 +71,9 @@ public:
 	virtual void SetViewportLight(int lightID) const { SetViewportParam(lightID, ColorA(0.0f), ColorA(intensity), Vec4f(position, 1.0f)); }
 	void SetIntensity(Color intens) { intensity = intens; }
 	void SetPosition(Vec3f pos) { position = pos; }
+	virtual void ToLocalCoordinate(Node* root) override { position = root->VectorTransformTo(position); }
+	virtual void ToParentCoordinate(Node* root) override { position = root->VectorTransformFrom(position); }
+
 	Vec3f GetPosition() { return position; }
 
 	virtual bool IsPoint() const override{ return true; }
