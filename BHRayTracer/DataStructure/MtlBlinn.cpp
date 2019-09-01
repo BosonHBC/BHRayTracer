@@ -17,11 +17,11 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &_li
 			float cosTheta = vL.Dot(vN);
 			if (cosTheta < 0) {
 				// from back side
-				break;
+				continue;
 			}
 			Vec3f vH = (vL + vV).GetNormalized();
-			Color bdrf = diffuse * cosTheta + specular * pow(vH.Dot(vN), glossiness);
-			outColor += bdrf * (*it)->Illuminate(hInfo.p, vN);
+			Color bdrf = diffuse  + specular * pow(vH.Dot(vN), glossiness);
+			outColor += bdrf * (*it)->Illuminate(hInfo.p, vN)* cosTheta;
 		}
 		else {
 			// it is ambient

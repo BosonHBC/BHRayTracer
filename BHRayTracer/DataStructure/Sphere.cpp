@@ -24,7 +24,6 @@ bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 		hInfo.N = hInfo.p;// - Vec3f(0, 0, 0);
 
 		hInfo.front = true;
-
 		return true;
 	}
 	

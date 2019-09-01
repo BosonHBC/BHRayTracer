@@ -24,39 +24,14 @@ void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ
 			// transform ray to child coordinate
 			Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
 			HitInfo outHit;
-/*
-			LightList copyLight;
-			for (int j = 0; j < lights.size(); j++)
-			{
-				copyLight.push_back(new GenLight());
-				memcpy(&copyLight[j], &lights[j], sizeof(lights[j]));
-			}*/
 
 			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 1))
 			{
 				if (outHit.z <= _closestZ) {
 					_closestZ = outHit.z;
 					outHit.node = root->GetChild(i);
-/*
-					for (int j = 0; j < lights.size(); j++)
-					{
-						if (copyLight[j]->IsPoint()) {
-							// if it is point light, transform the point
-							PointLight* pointLight = (PointLight*)(copyLight[j]);
-							pointLight->SetPosition(root->GetChild(j)->VectorTransformTo(pointLight->GetPosition()));
-						}
-						if (!copyLight[j]->IsAmbient()) {
-							DirectLight* directLight = (DirectLight*)(copyLight[j]);
-							directLight->SetDirection(root->GetChild(j)->VectorTransformTo(directLight->Direction(Vec3f(0, 0, 0))));
-						}
-					}*/
-					// transform light to local
-/*
-					for (auto it = lights.begin(); it != lights.end(); ++it)
-					{
-						GenLight* genLight = dynamic_cast<GenLight*>(*it);
-						genLight->ToLocalCoordinate(root->GetChild(i));
-					}*/
+
+					root->GetChild(i)->FromNodeCoords(outHit);
 
 					Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, lights);
 					renderImage.GetPixels()[_j*camera.imgWidth + _i] = Color24(outColor);
@@ -65,13 +40,7 @@ void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ
 				}
 			}
 			recursive(_i, _j, root->GetChild(i), transformedRay, _bHit, _closestZ, lights);
-			// transform light back to parent
-/*
-			for (auto it = lights.begin(); it != lights.end(); ++it)
-			{
-				GenLight* genLight = dynamic_cast<GenLight*>(*it);
-				genLight->ToParentCoordinate(root->GetChild(i));
-			}*/
+
 		}
 	}
 }
