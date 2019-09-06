@@ -86,8 +86,8 @@ void BeginRender() {
 		}
 	}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj3.png");
-	renderImage.SaveZImage("Resource/Result/proj3_z.png");
+	renderImage.SaveImage("Resource/Result/proj3Test.png");
+	renderImage.SaveZImage("Resource/Result/proj3_zTest.png");
 }
 void StopRender() {
 
@@ -130,7 +130,7 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 
 
 int main() {
-	const char* filename = "Resource/Data/proj3.xml";
+	const char* filename = "Resource/Data/proj3Test.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
