@@ -13,26 +13,30 @@ Sphere theSphere;
 MaterialList materials;
 LightList lights;
 #define PI 3.14159265
+#define  Bias 0.0001f
 int LoadScene(char const *filename);
 
 void recursive(int _i, int _j, Node* root, Ray ray, HitInfo & outHit, bool &_bHit) {
 	if (root->GetNumChild() <= 0) return;
 	for (int i = 0; i < root->GetNumChild(); i++)
 	{
+		Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
 		if (root->GetChild(i)->GetNodeObj() != nullptr) {
 
 			// transform ray to child coordinate
-			Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
-
 			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 1))
 			{
 				outHit.node = root->GetChild(i);
 				_bHit = true;
-
+				root->GetChild(i)->FromNodeCoords(outHit);
 			}
-
-			recursive(_i, _j, root->GetChild(i), transformedRay, outHit, _bHit);
-			root->GetChild(i)->FromNodeCoords(outHit);
+		}
+		recursive(_i, _j, root->GetChild(i), transformedRay, outHit, _bHit);
+		for (int i = 0; i < root->GetNumChild(); i++) {
+			if (root->GetChild(i) == outHit.node) {
+				root->FromNodeCoords(outHit);
+				break;
+			}
 		}
 	}
 }
@@ -87,10 +91,45 @@ void BeginRender() {
 void StopRender() {
 
 }
+bool ShadowRayRecursive(Node* root, const Ray& ray, float t_max) {
+	Ray transformedRay = root->ToNodeCoords(ray);
+	for (int i = 0; i < root->GetNumChild(); i++)
+	{
+		if (ShadowRayRecursive(root->GetChild(i), transformedRay, t_max)) return true;
+	}
+	if (root->GetNodeObj() != nullptr) {
+
+		// transform ray to child coordinate
+		Vec3f dir = transformedRay.dir;
+		Vec3f oc = transformedRay.p;
+		float A = dir.Dot(dir);
+		float B = 2 * dir.Dot(oc);
+		float C = oc.Dot(oc) - 1;
+
+		float DD = B * B - 4 * A*C;
+		if (DD > 0) {
+			float t1 = (-B + sqrt(DD)) / (2 * A);
+			float t2 = (-B - sqrt(DD)) / (2 * A);
+			float t = Min(t1, t2);
+			if (t < 0) return false;
+			if (t < t_max && t > Bias)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
+{
+
+	return /*ShadowRayRecursive(&rootNode, ray, t_max) ? 0.f : */1.f;
+}
+
 
 
 int main() {
-	const char* filename = "Resource/Data/proj2.xml";
+	const char* filename = "Resource/Data/proj3.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
