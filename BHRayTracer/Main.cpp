@@ -13,7 +13,7 @@ Sphere theSphere;
 MaterialList materials;
 LightList lights;
 #define PI 3.14159265
-#define  Bias 0.0001f
+#define  Bias 0.00001f
 int LoadScene(char const *filename);
 
 void recursive(int _i, int _j, Node* root, Ray ray, HitInfo & outHit, bool &_bHit) {
@@ -30,13 +30,14 @@ void recursive(int _i, int _j, Node* root, Ray ray, HitInfo & outHit, bool &_bHi
 				_bHit = true;
 				root->GetChild(i)->FromNodeCoords(outHit);
 			}
+
 		}
 		recursive(_i, _j, root->GetChild(i), transformedRay, outHit, _bHit);
-		for (int i = 0; i < root->GetNumChild(); i++) {
-			if (root->GetChild(i) == outHit.node) {
-				root->FromNodeCoords(outHit);
-				break;
-			}
+	}
+	for (int i = 0; i < root->GetNumChild(); i++) {
+		if (root->GetChild(i) == outHit.node) {
+			root->FromNodeCoords(outHit);
+			break;
 		}
 	}
 }
@@ -85,8 +86,8 @@ void BeginRender() {
 		}
 	}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj2.png");
-	renderImage.SaveZImage("Resource/Result/proj2_z.png");
+	renderImage.SaveImage("Resource/Result/proj3.png");
+	renderImage.SaveZImage("Resource/Result/proj3_z.png");
 }
 void StopRender() {
 
@@ -123,7 +124,7 @@ bool ShadowRayRecursive(Node* root, const Ray& ray, float t_max) {
 float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 {
 
-	return /*ShadowRayRecursive(&rootNode, ray, t_max) ? 0.f : */1.f;
+	return ShadowRayRecursive(&rootNode, ray, t_max) ? 0.f : 1.f;
 }
 
 
