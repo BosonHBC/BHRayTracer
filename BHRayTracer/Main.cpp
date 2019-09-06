@@ -15,32 +15,24 @@ LightList lights;
 #define PI 3.14159265
 int LoadScene(char const *filename);
 
-void recursive(int _i, int _j,Node* root, Ray ray, bool &_bHit, float& _closestZ, const LightList &lights) {
+void recursive(int _i, int _j, Node* root, Ray ray, HitInfo & outHit, bool &_bHit) {
 	if (root->GetNumChild() <= 0) return;
 	for (int i = 0; i < root->GetNumChild(); i++)
 	{
 		if (root->GetChild(i)->GetNodeObj() != nullptr) {
-			
+
 			// transform ray to child coordinate
 			Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
-			HitInfo outHit;
 
 			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 1))
 			{
-				if (outHit.z <= _closestZ) {
-					_closestZ = outHit.z;
-					outHit.node = root->GetChild(i);
+				outHit.node = root->GetChild(i);
+				_bHit = true;
 
-					root->GetChild(i)->FromNodeCoords(outHit);
-
-					Color outColor = outHit.node->GetMaterial()->Shade(transformedRay, outHit, lights);
-					renderImage.GetPixels()[_j*camera.imgWidth + _i] = Color24(outColor);
-					renderImage.GetZBuffer()[_j*camera.imgWidth + _i] = outHit.z;
-					_bHit = true;
-				}
 			}
-			recursive(_i, _j, root->GetChild(i), transformedRay, _bHit, _closestZ, lights);
 
+			recursive(_i, _j, root->GetChild(i), transformedRay, outHit, _bHit);
+			root->GetChild(i)->FromNodeCoords(outHit);
 		}
 	}
 }
@@ -49,11 +41,11 @@ void ShowViewport();
 void BeginRender() {
 	Vec3f rayStart = camera.pos;
 	float aor = camera.imgWidth / (float)camera.imgHeight;
- 	float tan_h_pov = tan(camera.fov / 2 * PI / 180.0);
+	float tan_h_pov = tan(camera.fov / 2 * PI / 180.0);
 	float l = 1;
 	float h = 2 * l * tan_h_pov;
 	float w = aor * h;
-	
+
 	Vec3f camZAxis = -camera.dir;
 	Vec3f camYAxis = camera.up;
 	Vec3f camXAxis = camYAxis.Cross(camZAxis);
@@ -70,10 +62,18 @@ void BeginRender() {
 			tRay.dir = pixelPos - rayStart;
 			// For this ray, if it hits or not
 			bool bHit = false;
-			float cloestZ = BIGFLOAT;
-			recursive(i, j, &rootNode, tRay, bHit, cloestZ, lights);
-			// if it is not hit, write as black and the z buffer is big float
-			if (!bHit) {
+			HitInfo outHit;
+			recursive(i, j, &rootNode, tRay, outHit, bHit);
+			if (bHit) {
+				Ray worldRay;
+				worldRay.dir = pixelPos - rayStart;
+				worldRay.p = rayStart;
+				Color outColor = outHit.node->GetMaterial()->Shade(worldRay, outHit, lights);
+
+				renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
+				renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
+			}
+			else {
 				renderImage.GetPixels()[j*camera.imgWidth + i].Set(0, 0, 0);
 				renderImage.GetZBuffer()[j*camera.imgWidth + i] = BIGFLOAT;
 			}
