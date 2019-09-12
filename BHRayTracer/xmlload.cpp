@@ -3,7 +3,7 @@
 ///
 /// \file       xmlload.cpp 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    2.0
+/// \version    4.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -259,6 +259,23 @@ void LoadMaterial(TiXmlElement *element)
 					ReadFloat(child, f);
 					m->SetGlossiness(f);
 					printf("   glossiness %f\n", f);
+				}
+				else if (COMPARE(child->Value(), "reflection")) {
+					ReadColor(child, c);
+					m->SetReflection(c);
+					printf("   reflection %f %f %f\n", c.r, c.g, c.b);
+				}
+				else if (COMPARE(child->Value(), "refraction")) {
+					ReadColor(child, c);
+					m->SetRefraction(c);
+					ReadFloat(child, f, "index");
+					m->SetRefractionIndex(f);
+					printf("   refraction %f %f %f (index %f)\n", c.r, c.g, c.b, f);
+				}
+				else if (COMPARE(child->Value(), "absorption")) {
+					ReadColor(child, c);
+					m->SetAbsorption(c);
+					printf("   absorption %f %f %f\n", c.r, c.g, c.b);
 				}
 			}
 		}

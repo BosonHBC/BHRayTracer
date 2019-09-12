@@ -14,6 +14,9 @@ MaterialList materials;
 LightList lights;
 #define PI 3.14159265
 #define  Bias 0.00001f
+#define REFLECTION_BOUNCE 3
+#define REFRACTION_BOUNCE 3
+
 int LoadScene(char const *filename);
 
 void recursive(int _i, int _j, Node* root, Ray ray, HitInfo & outHit, bool &_bHit) {
@@ -73,7 +76,7 @@ void BeginRender() {
 				Ray worldRay;
 				worldRay.dir = pixelPos - rayStart;
 				worldRay.p = rayStart;
-				Color outColor = outHit.node->GetMaterial()->Shade(worldRay, outHit, lights);
+				Color outColor = outHit.node->GetMaterial()->Shade(worldRay, outHit, lights,REFLECTION_BOUNCE);
 
 				renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
 				renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
@@ -86,8 +89,8 @@ void BeginRender() {
 		}
 	}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj3Test.png");
-	renderImage.SaveZImage("Resource/Result/proj3_zTest.png");
+	renderImage.SaveImage("Resource/Result/proj4.png");
+	renderImage.SaveZImage("Resource/Result/proj4.png");
 }
 void StopRender() {
 
