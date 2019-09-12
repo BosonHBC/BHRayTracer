@@ -20,7 +20,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &_li
 				continue;
 			}
 			Vec3f vH = (vL + vV).GetNormalized();
-			Color bdrf = diffuse  + specular * pow(vH.Dot(vN), glossiness);
+			Color bdrf = diffuse  + specular * pow(vH.Dot(vN), glossiness) * 1/cosTheta;
 			outColor += bdrf * (*it)->Illuminate(hInfo.p, vN)* cosTheta;
 		}
 		else {
