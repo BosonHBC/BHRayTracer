@@ -55,7 +55,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 			HitInfo refraHInfo_in;
 			refraHInfo_in.z = BIGFLOAT;
 			bool bRefractionOutHit;
-			RefractionInternalRecursive(&rootNode, hInfo.node, refractionRay_in, refraHInfo_in, bRefractionOutHit);
+			recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionOutHit, 0);
 			if (bRefractionOutHit) {
 				Color refractionColor = Color::Black();
 				bool bGoingOut;
@@ -76,7 +76,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 					{
 						HitInfo internalHitInfo;
 						bool bInternalHit;
-						RefractionInternalRecursive(&rootNode, hInfo.node, internalRay, internalHitInfo, bInternalHit);
+						recursive(&rootNode, internalRay, internalHitInfo, bInternalHit, 0);
 						if (bInternalHit) {
 							bool bGoOut = false;
 							Ray nextRay_internal = HandleRayWhenRefractionRayOut(internalRay, internalHitInfo, ior, bGoOut);
@@ -155,8 +155,8 @@ void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInf
 }
 
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut) {
-	Vec3f vN = inRayHitInfo.N.GetNormalized(); // to up
-	Vec3f vV = (inRay.p - inRayHitInfo.p).GetNormalized(); // opposite to up
+	Vec3f vN = -inRayHitInfo.N.GetNormalized(); // to up
+	Vec3f vV = -inRay.dir; // opposite to up
 
 	float cosPhi1 = vV.Dot(-vN);
 	float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
