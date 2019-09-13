@@ -19,7 +19,7 @@ LightList lights;
 
 int LoadScene(char const *filename);
 
-void recursive(int _i, int _j, Node* root, Ray ray, HitInfo & outHit, bool &_bHit) {
+void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit) {
 	if (root->GetNumChild() <= 0) return;
 	for (int i = 0; i < root->GetNumChild(); i++)
 	{
@@ -27,7 +27,7 @@ void recursive(int _i, int _j, Node* root, Ray ray, HitInfo & outHit, bool &_bHi
 		if (root->GetChild(i)->GetNodeObj() != nullptr) {
 
 			// transform ray to child coordinate
-			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 1))
+			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 0))
 			{
 				outHit.node = root->GetChild(i);
 				_bHit = true;
@@ -35,7 +35,7 @@ void recursive(int _i, int _j, Node* root, Ray ray, HitInfo & outHit, bool &_bHi
 			}
 
 		}
-		recursive(_i, _j, root->GetChild(i), transformedRay, outHit, _bHit);
+		recursive(root->GetChild(i), transformedRay, outHit, _bHit);
 	}
 	for (int i = 0; i < root->GetNumChild(); i++) {
 		if (root->GetChild(i) == outHit.node) {
@@ -71,7 +71,7 @@ void BeginRender() {
 			// For this ray, if it hits or not
 			bool bHit = false;
 			HitInfo outHit;
-			recursive(i, j, &rootNode, tRay, outHit, bHit);
+			recursive(&rootNode, tRay, outHit, bHit);
 			if (bHit) {
 				Ray worldRay;
 				worldRay.dir = pixelPos - rayStart;
@@ -86,6 +86,7 @@ void BeginRender() {
 				renderImage.GetZBuffer()[j*camera.imgWidth + i] = BIGFLOAT;
 			}
 			renderImage.IncrementNumRenderPixel(1);
+
 		}
 	}
 	renderImage.ComputeZBufferImage();
@@ -133,7 +134,7 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 
 
 int main() {
-	const char* filename = "Resource/Data/proj3.xml";
+	const char* filename = "Resource/Data/proj4.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
