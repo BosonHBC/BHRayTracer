@@ -51,6 +51,12 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 					Vec3f vTp = -sinPhi2 * (vV - cosPhi1 * vN);
 					Vec3f vT = vTn + vTp;
 
+					Ray refractionRay;
+					refractionRay.p = hInfo.p;
+					refractionRay.dir = vT;
+					HitInfo refraHInfo;
+					hInfo.node->GetNodeObj()->IntersectRay(refractionRay, refraHInfo, 1); // we need back face
+
 				}
 			}
 
