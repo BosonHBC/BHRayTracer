@@ -19,7 +19,7 @@ LightList lights;
 
 int LoadScene(char const *filename);
 
-void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit) {
+void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/) {
 	if (root->GetNumChild() <= 0) return;
 	for (int i = 0; i < root->GetNumChild(); i++)
 	{
@@ -27,7 +27,7 @@ void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit) {
 		if (root->GetChild(i)->GetNodeObj() != nullptr) {
 
 			// transform ray to child coordinate
-			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 0))
+			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, hitSide))
 			{
 				outHit.node = root->GetChild(i);
 				_bHit = true;
@@ -35,7 +35,7 @@ void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit) {
 			}
 
 		}
-		recursive(root->GetChild(i), transformedRay, outHit, _bHit);
+		recursive(root->GetChild(i), transformedRay, outHit, _bHit, hitSide);
 	}
 	for (int i = 0; i < root->GetNumChild(); i++) {
 		if (root->GetChild(i) == outHit.node) {
@@ -71,7 +71,7 @@ void BeginRender() {
 			// For this ray, if it hits or not
 			bool bHit = false;
 			HitInfo outHit;
-			recursive(&rootNode, tRay, outHit, bHit);
+			recursive(&rootNode, tRay, outHit, bHit, 0);
 			if (bHit) {
 				Ray worldRay;
 				worldRay.dir = pixelPos - rayStart;
@@ -90,8 +90,8 @@ void BeginRender() {
 		}
 	}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj4.png");
-	renderImage.SaveZImage("Resource/Result/proj4.png");
+	renderImage.SaveImage("Resource/Result/prj4.png");
+	renderImage.SaveZImage("Resource/Result/prj4.png");
 }
 void StopRender() {
 
