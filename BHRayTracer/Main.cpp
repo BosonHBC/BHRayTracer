@@ -86,7 +86,7 @@ void BeginRender() {
 				renderImage.GetZBuffer()[j*camera.imgWidth + i] = BIGFLOAT;
 			}
 			renderImage.IncrementNumRenderPixel(1);
-
+			//printf("Percent: %f\n", renderImage.GetNumRenderedPixels() / (float)(renderImage.GetWidth() * renderImage.GetHeight()));
 		}
 	}
 	renderImage.ComputeZBufferImage();

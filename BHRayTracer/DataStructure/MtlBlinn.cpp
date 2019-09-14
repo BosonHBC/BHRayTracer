@@ -2,7 +2,7 @@
 #include "scene.h"
 #include <math.h>
 #include "lights.h"
-#define Bias 0.001f
+#define Bias 0.01f
 extern Node rootNode;
 extern LightList lights;
 void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -46,17 +46,17 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 			Vec3f vTn = -cosPhi2 * vN;
 			Vec3f vNxV = vN.Cross(vV);
-			Vec3f vTp = vNxV.Cross(vTn).GetNormalized()*sinPhi2;
+			Vec3f vTp = vN.Cross(vNxV).GetNormalized()*sinPhi2;
 			Vec3f vT = vTn + vTp;
 
 			Ray refractionRay_in;
 			refractionRay_in.dir = vT.GetNormalized();
-			refractionRay_in.p = hInfo.p + refractionRay_in.dir * Bias;
+			refractionRay_in.p = hInfo.p +refractionRay_in.dir * Bias;
 			HitInfo refraHInfo_in;
 			refraHInfo_in.z = BIGFLOAT;
-			bool bRefractionOutHit;
-			recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionOutHit, 0);
-			if (bRefractionOutHit) {
+			bool bRefractionInHit;
+			recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, 0);
+			if (bRefractionInHit) {
 				Color refractionColor = Color::Black();
 				bool bGoingOut;
 				Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut);
@@ -70,6 +70,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				}
 				else {
 					// internal reflection
+
 					int bounceCount = 3;
 					Ray internalRay = nextRay;
 					while (bounceCount > 0)
@@ -90,10 +91,10 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 								break;
 							}
 							else {
-								bounceCount--;
 								internalRay = nextRay_internal;
 							}
 						}
+						bounceCount--;
 					}
 				}
 				outColor += refractionColor;
@@ -155,8 +156,8 @@ void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInf
 }
 
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut) {
-	Vec3f vN = -inRayHitInfo.N.GetNormalized(); // to up
-	Vec3f vV = -inRay.dir; // opposite to up
+	Vec3f vN = inRayHitInfo.N.GetNormalized(); // to up
+	Vec3f vV = -inRay.dir.GetNormalized(); // opposite to up
 
 	float cosPhi1 = vV.Dot(-vN);
 	float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
