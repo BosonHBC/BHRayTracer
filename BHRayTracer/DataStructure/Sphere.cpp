@@ -17,38 +17,21 @@ bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 	if (DD > 0) {
 		float t1 = (-B + sqrt(DD)) / (2 * A);
 		float t2 = (-B - sqrt(DD)) / (2 * A);
-		
-		float t;
-		if (t1 * t2 <= 0) {
-			t = Max(t1, t2);
-		}
-		else {
-			if (hitSide == HIT_FRONT) {
-				if (t1 < 0) {
-					return false;
-				}
-				else {
-					t = Min(t1, t2);
-				}
-			}
-			else if(hitSide == HIT_BACK){
-				if (t1 < 0) {
-					t = Min(t1, t2);
-				}
-				else {
-					t = Max(t1, t2);
-				}
-			}
-		}
-
-
-		if (t < 0) {
+		float t = BIGFLOAT;
+		if (t1 < 0 && t2 < 0) {
 			return false;
 		}
-		else {
-			if (hInfo.z < t) return false;
-			hInfo.z = t;
+		else if (t1 *t2 <= 0) {
+			t = cy::Max(t1, t2);
 		}
+		else if (t1 > 0 && t2 > 0) {
+			t = Min(t1, t2);
+		}
+
+		if (hInfo.z < t) return false;
+
+		hInfo.z = t;
+
 		hInfo.p = oc + hInfo.z * dir;
 		hInfo.N = hInfo.p; // - Vec3f(0, 0, 0);
 

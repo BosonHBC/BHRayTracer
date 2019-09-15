@@ -2,7 +2,7 @@
 #include "scene.h"
 #include <math.h>
 #include "lights.h"
-#define Bias 0.01f
+#define Bias 0.001f
 extern Node rootNode;
 extern LightList lights;
 void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -15,117 +15,121 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	Color outColor = Color::Black();
 	Vec3f vN = hInfo.N.GetNormalized();
 	Vec3f vV = (ray.p - hInfo.p).GetNormalized();
-
-	// Phi is dot product of View and Normal
-	float cosPhi1 = vN.Dot(vV);
-	// Reflection color
-	float R0 = pow((1 - ior) / (1 + ior), 2);
-	float RPhi = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
+	// Diffuse and Specular
 	{
-		Color FresnelReflectionFactor = refraction * RPhi;
-		Color reflectionFactor = reflection + FresnelReflectionFactor; //add Fresnel Reflection later
-		if (!reflectionFactor.IsBlack()) {
-			Ray reflectionRay;
-			reflectionRay.p = hInfo.p;
-			reflectionRay.dir = 2 * cosPhi1 * vN - vV;
-			HitInfo reflHInfo;
-			bool bReflectionHit = false;
-			recursive(&rootNode, reflectionRay, reflHInfo, bReflectionHit, 0);
-			if (bReflectionHit && reflHInfo.node != nullptr && bounceCount > 0) {
-				bounceCount--;
-				outColor += reflectionFactor * reflHInfo.node->GetMaterial()->Shade(reflectionRay, reflHInfo, lights, bounceCount);
+		for (auto it = lights.begin(); it != lights.end(); ++it)
+		{
+			if (!(*it)->IsAmbient()) {
+				// transform light
+				Vec3f vL = (-(*it)->Direction(hInfo.p)).GetNormalized();
+				// Theta is  dot product of Normal and light
+				float cosTheta = vL.Dot(vN);
+
+				if (cosTheta < 0) {
+					// from back side
+					continue;
+				}
+				// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
+				Vec3f vH = (vL + vV).GetNormalized();
+				Color bdrf = diffuse + specular * pow(vH.Dot(vN), glossiness) * 1 / cosTheta;
+				outColor += bdrf * (*it)->Illuminate(hInfo.p, vN)* cosTheta;
+
+			}
+			else {
+				// it is ambient
+				ambientColor = diffuse * (*it)->Illuminate(hInfo.p, vN);
 			}
 		}
 	}
-	// Refraction color
+	// Color doesn't matter with light
 	{
-		if (!refraction.IsBlack()) {
-			float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
-			float sinPhi2 = sinPhi1 / ior;
-			float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
-
-			Vec3f vTn = -cosPhi2 * vN;
-			Vec3f vNxV = vN.Cross(vV);
-			Vec3f vTp = vN.Cross(vNxV).GetNormalized()*sinPhi2;
-			Vec3f vT = vTn + vTp;
-
-			Ray refractionRay_in;
-			refractionRay_in.dir = vT.GetNormalized();
-			refractionRay_in.p = hInfo.p +refractionRay_in.dir * Bias;
-			HitInfo refraHInfo_in;
-			refraHInfo_in.z = BIGFLOAT;
-			bool bRefractionInHit;
-			recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, 0);
-			if (bRefractionInHit) {
-				Color refractionColor = Color::Black();
-				bool bGoingOut;
-				Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut);
-				if (bGoingOut) {
-					HitInfo refraHinfo_out;
-					bool bRefraction_out_Hit = false;
-					recursive(&rootNode, nextRay, refraHinfo_out, bRefraction_out_Hit, 0);
-					if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
-						refractionColor = (1 - RPhi)*refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, 0);
-					}
+		// Phi is dot product of View and Normal
+		float cosPhi1 = vN.Dot(vV);
+		float R0 = pow((1 - ior) / (1 + ior), 2);
+		float RPhi = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
+		// Reflection color
+		{
+			Color FresnelReflectionFactor = refraction * RPhi;
+			Color reflectionFactor = reflection + FresnelReflectionFactor; //add Fresnel Reflection later
+			if (!reflectionFactor.IsBlack()) {
+				Ray reflectionRay;
+				reflectionRay.p = hInfo.p;
+				reflectionRay.dir = 2 * cosPhi1 * vN - vV;
+				HitInfo reflHInfo;
+				bool bReflectionHit = false;
+				recursive(&rootNode, reflectionRay, reflHInfo, bReflectionHit, 0);
+				if (bReflectionHit && reflHInfo.node != nullptr && bounceCount > 0) {
+					bounceCount--;
+					outColor += reflectionFactor * reflHInfo.node->GetMaterial()->Shade(reflectionRay, reflHInfo, lights, bounceCount);
 				}
-				else {
-					// internal reflection
+			}
+		}
+		// Refraction color
+		{
+			if (!refraction.IsBlack()) {
+				float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
+				float sinPhi2 = sinPhi1 / ior;
+				float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
 
-					int bounceCount = 3;
-					Ray internalRay = nextRay;
-					while (bounceCount > 0)
-					{
-						HitInfo internalHitInfo;
-						bool bInternalHit;
-						recursive(&rootNode, internalRay, internalHitInfo, bInternalHit, 0);
-						if (bInternalHit) {
-							bool bGoOut = false;
-							Ray nextRay_internal = HandleRayWhenRefractionRayOut(internalRay, internalHitInfo, ior, bGoOut);
-							if (bGoOut) {
-								HitInfo refraHinfo_out;
-								bool bRefraction_out_Hit = false;
-								recursive(&rootNode, nextRay_internal, refraHinfo_out, bRefraction_out_Hit, 0);
-								if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
-									refractionColor = (1 - RPhi)*refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
-								}
-								break;
-							}
-							else {
-								internalRay = nextRay_internal;
-							}
+				Vec3f vTn = -cosPhi2 * vN;
+				Vec3f vNxV = vN.Cross(vV);
+				Vec3f vTp = vN.Cross(vNxV).GetNormalized()*sinPhi2;
+				Vec3f vT = vTn + vTp;
+
+				Ray refractionRay_in;
+				refractionRay_in.dir = vT.GetNormalized();
+				refractionRay_in.p = hInfo.p + refractionRay_in.dir * Bias;
+				HitInfo refraHInfo_in;
+				refraHInfo_in.z = BIGFLOAT;
+				bool bRefractionInHit;
+				recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, 0);
+				if (bRefractionInHit) {
+					Color refractionColor = Color::Black();
+					bool bGoingOut;
+					Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut);
+					if (bGoingOut) {
+						HitInfo refraHinfo_out;
+						bool bRefraction_out_Hit = false;
+						recursive(&rootNode, nextRay, refraHinfo_out, bRefraction_out_Hit, 0);
+						if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
+							refractionColor = (1 - RPhi)*refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, 0);
 						}
-						bounceCount--;
 					}
+					else {
+						// internal reflection
+
+						int bounceCount = 3;
+						Ray internalRay = nextRay;
+						while (bounceCount > 0)
+						{
+							HitInfo internalHitInfo;
+							bool bInternalHit;
+							recursive(&rootNode, internalRay, internalHitInfo, bInternalHit, 0);
+							if (bInternalHit) {
+								bool bGoOut = false;
+								Ray nextRay_internal = HandleRayWhenRefractionRayOut(internalRay, internalHitInfo, ior, bGoOut);
+								if (bGoOut) {
+									HitInfo refraHinfo_out;
+									bool bRefraction_out_Hit = false;
+									recursive(&rootNode, nextRay_internal, refraHinfo_out, bRefraction_out_Hit, 0);
+									if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
+										refractionColor = (1 - RPhi)*refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
+									}
+									break;
+								}
+								else {
+									internalRay = nextRay_internal;
+								}
+							}
+							bounceCount--;
+						}
+					}
+					outColor += refractionColor;
 				}
-				outColor += refractionColor;
-			}
 
+			}
 		}
 	}
-	for (auto it = lights.begin(); it != lights.end(); ++it)
-	{
-		if (!(*it)->IsAmbient()) {
-			// transform light
-			Vec3f vL = (-(*it)->Direction(hInfo.p)).GetNormalized();
-			// Theta is  dot product of Normal and light
-			float cosTheta = vL.Dot(vN);
-
-			if (cosTheta < 0) {
-				// from back side
-				continue;
-			}
-			// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
-			Vec3f vH = (vL + vV).GetNormalized();
-			Color bdrf = diffuse + specular * pow(vH.Dot(vN), glossiness) * 1 / cosTheta;
-			outColor += bdrf * (*it)->Illuminate(hInfo.p, vN)* cosTheta;
-
-		}
-		else {
-			// it is ambient
-			ambientColor = diffuse * (*it)->Illuminate(hInfo.p, vN);
-		}
-	}
-
 	outColor += ambientColor;
 	return outColor;
 }
