@@ -15,7 +15,7 @@ LightList lights;
 #define PI 3.14159265
 #define  Bias 0.00001f
 #define REFLECTION_BOUNCE 3
-#define REFRACTION_BOUNCE 3
+
 
 int LoadScene(char const *filename);
 

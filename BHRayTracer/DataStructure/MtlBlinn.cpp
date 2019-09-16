@@ -4,6 +4,7 @@
 #include "lights.h"
 #define Bias 0.001f
 #define EulerN 2.7182818f
+#define REFRACTION_BOUNCE 3
 extern Node rootNode;
 extern LightList lights;
 void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -98,7 +99,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 							float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
 							float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
 							Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
-							refractionColor = (1 - RPhi)*refraction *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, 3);
+							refractionColor = (1 - RPhi)*refraction *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, REFRACTION_BOUNCE);
 						}
 					}
 					else {
