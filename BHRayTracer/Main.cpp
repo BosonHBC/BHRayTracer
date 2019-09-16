@@ -90,8 +90,8 @@ void BeginRender() {
 		}
 	}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/prj4.png");
 	renderImage.SaveZImage("Resource/Result/prj4.png");
+	renderImage.SaveImage("Resource/Result/prj4.png");
 }
 void StopRender() {
 

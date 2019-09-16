@@ -3,6 +3,7 @@
 #include <math.h>
 #include "lights.h"
 #define Bias 0.001f
+#define EulerN 2.7182818f
 extern Node rootNode;
 extern LightList lights;
 void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -41,7 +42,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 			}
 		}
 	}
-	// Color doesn't matter with light
+	// Color that doesn't matter with light
 	{
 		// Phi is dot product of View and Normal
 		float cosPhi1 = vN.Dot(vV);
@@ -53,8 +54,9 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 			Color reflectionFactor = reflection + FresnelReflectionFactor; //add Fresnel Reflection later
 			if (!reflectionFactor.IsBlack()) {
 				Ray reflectionRay;
-				reflectionRay.p = hInfo.p;
-				reflectionRay.dir = 2 * cosPhi1 * vN - vV;
+				reflectionRay.dir = (2 * cosPhi1 * vN - vV).GetNormalized();
+				reflectionRay.p = hInfo.p + reflectionRay.dir * Bias;
+
 				HitInfo reflHInfo;
 				bool bReflectionHit = false;
 				recursive(&rootNode, reflectionRay, reflHInfo, bReflectionHit, 0);
@@ -92,12 +94,15 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 						bool bRefraction_out_Hit = false;
 						recursive(&rootNode, nextRay, refraHinfo_out, bRefraction_out_Hit, 0);
 						if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
-							refractionColor = (1 - RPhi)*refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, 0);
+							float absorptionFactorR = pow(EulerN, -absorption.r*refraHinfo_out.z);
+							float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
+							float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
+							Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
+							refractionColor = (1 - RPhi)*refraction *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, 3);
 						}
 					}
 					else {
 						// internal reflection
-
 						int bounceCount = 3;
 						Ray internalRay = nextRay;
 						while (bounceCount > 0)
@@ -113,6 +118,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 									bool bRefraction_out_Hit = false;
 									recursive(&rootNode, nextRay_internal, refraHinfo_out, bRefraction_out_Hit, 0);
 									if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
+
 										refractionColor = (1 - RPhi)*refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
 									}
 									break;
