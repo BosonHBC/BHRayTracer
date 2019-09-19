@@ -22,6 +22,9 @@
     <Filter Include="Source Files\DataStructure\Sphere">
       <UniqueIdentifier>{a4b94873-c029-4301-a360-d5fe8757d59e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DataStructure\Materials">
+      <UniqueIdentifier>{278cfa6b-f188-4b93-b025-087be1a91d27}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataStructure\cyAlphaDistribution.h">
@@ -93,6 +96,12 @@
     <ClInclude Include="LoadPNG\lodepng.h">
       <Filter>Source Files\LoadPNG</Filter>
     </ClInclude>
+    <ClInclude Include="DataStructure\lights.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\materials.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LoadPNG\lodepng.cpp">
@@ -107,7 +116,10 @@
     <ClCompile Include="xmlload.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sphere.cpp">
+    <ClCompile Include="DataStructure\MtlBlinn.cpp">
+      <Filter>Source Files\DataStructure\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="DataStructure\Sphere.cpp">
       <Filter>Source Files\DataStructure\Sphere</Filter>
     </ClCompile>
   </ItemGroup>
