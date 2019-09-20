@@ -3,7 +3,7 @@
 ///
 /// \file       viewport.cpp 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    2.0
+/// \version    5.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -439,6 +439,38 @@ void Sphere::ViewportDisplay(const Material *mtl) const
 		q = gluNewQuadric();
 	}
 	gluSphere(q, 1, 50, 50);
+}
+void Plane::ViewportDisplay(const Material *mtl) const
+{
+	const int resolution = 32;
+	glPushMatrix();
+	glScalef(2.0f / resolution, 2.0f / resolution, 2.0f / resolution);
+	glNormal3f(0, 0, 1);
+	glBegin(GL_QUADS);
+	for (int y = 0; y < resolution; y++) {
+		int yy = y - resolution / 2;
+		for (int x = 0; x < resolution; x++) {
+			int xx = x - resolution / 2;
+			glVertex3i(yy, xx, 0);
+			glVertex3i(yy + 1, xx, 0);
+			glVertex3i(yy + 1, xx + 1, 0);
+			glVertex3i(yy, xx + 1, 0);
+		}
+	}
+	glEnd();
+	glPopMatrix();
+}
+void TriObj::ViewportDisplay(const Material *mtl) const
+{
+	glBegin(GL_TRIANGLES);
+	for (unsigned int i = 0; i < NF(); i++) {
+		for (int j = 0; j < 3; j++) {
+			if (HasTextureVertices()) glTexCoord3fv(&VT(FT(i).v[j]).x);
+			if (HasNormals()) glNormal3fv(&VN(FN(i).v[j]).x);
+			glVertex3fv(&V(F(i).v[j]).x);
+		}
+	}
+	glEnd();
 }
 void MtlBlinn::SetViewportMaterial(int subMtlID) const
 {

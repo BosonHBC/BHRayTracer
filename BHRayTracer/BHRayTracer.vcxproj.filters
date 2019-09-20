@@ -25,6 +25,9 @@
     <Filter Include="Source Files\DataStructure\Materials">
       <UniqueIdentifier>{278cfa6b-f188-4b93-b025-087be1a91d27}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DataStructure\TrianglarObj">
+      <UniqueIdentifier>{1831fac2-8aa6-4154-b8b3-479e6a885e8d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataStructure\cyAlphaDistribution.h">
@@ -102,6 +105,9 @@
     <ClInclude Include="DataStructure\materials.h">
       <Filter>Source Files\DataStructure</Filter>
     </ClInclude>
+    <ClInclude Include="cyTriMesh.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LoadPNG\lodepng.cpp">
@@ -121,6 +127,12 @@
     </ClCompile>
     <ClCompile Include="DataStructure\Sphere.cpp">
       <Filter>Source Files\DataStructure\Sphere</Filter>
+    </ClCompile>
+    <ClCompile Include="TriObj.cpp">
+      <Filter>Source Files\DataStructure\TrianglarObj</Filter>
+    </ClCompile>
+    <ClCompile Include="Plane.cpp">
+      <Filter>Source Files\DataStructure\TrianglarObj</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -33,8 +33,8 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				}
 				// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 				Vec3f vH = (vL + vV).GetNormalized();
-				Color bdrf = diffuse + specular * pow(vH.Dot(vN), glossiness) * 1 / cosTheta;
-				outColor += bdrf * (*it)->Illuminate(hInfo.p, vN)* cosTheta;
+				Color bdrf = diffuse * cosTheta + specular * pow(vH.Dot(vN), glossiness);
+				outColor += bdrf * (*it)->Illuminate(hInfo.p, vN);
 
 			}
 			else {
