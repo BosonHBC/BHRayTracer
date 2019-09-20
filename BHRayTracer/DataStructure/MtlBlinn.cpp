@@ -44,6 +44,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		}
 	}
 	// Color that doesn't matter with light
+/*
 	{
 		// Phi is dot product of View and Normal
 		float cosPhi1 = vN.Dot(vV);
@@ -136,7 +137,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 			}
 		}
-	}
+	}*/
 	outColor += ambientColor;
 	return outColor;
 }

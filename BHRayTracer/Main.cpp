@@ -94,7 +94,7 @@ void BeginRender() {
 	}
 	renderImage.ComputeZBufferImage();
 	renderImage.SaveZImage("Resource/Result/prj5.png");
-	renderImage.SaveImage("Resource/Result/prj5.png");
+	//renderImage.SaveImage("Resource/Result/prj5.png");
 }
 void StopRender() {
 
@@ -137,12 +137,12 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 
 
 int main() {
-	const char* filename = "Resource/Data/proj4.xml";
+	const char* filename = "Resource/Data/proj5.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
 	printf("Render image height: %d", renderImage.GetHeight());
-
 	ShowViewport();
+
 	return 0;
 }
