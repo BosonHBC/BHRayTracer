@@ -55,7 +55,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 			Color reflectionFactor = reflection + FresnelReflectionFactor; //add Fresnel Reflection later
 			if (!reflectionFactor.IsBlack()) {
 				Ray reflectionRay;
-				reflectionRay.dir = (2 * cosPhi1 * vN - vV).GetNormalized();
+				reflectionRay.dir = (2 * cosPhi1 * vN - vV);
 				reflectionRay.p = hInfo.p + reflectionRay.dir * Bias;
 
 				HitInfo reflHInfo;
@@ -80,7 +80,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				Vec3f vT = vTn + vTp;
 
 				Ray refractionRay_in;
-				refractionRay_in.dir = vT.GetNormalized();
+				refractionRay_in.dir = vT;
 				refractionRay_in.p = hInfo.p + refractionRay_in.dir * Bias;
 				HitInfo refraHInfo_in;
 				refraHInfo_in.z = BIGFLOAT;
@@ -167,8 +167,8 @@ void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInf
 }
 
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut) {
-	Vec3f vN = inRayHitInfo.N.GetNormalized(); // to up
-	Vec3f vV = -inRay.dir.GetNormalized(); // opposite to up
+	Vec3f vN = inRayHitInfo.N; // to up
+	Vec3f vV = -inRay.dir; // opposite to up
 
 	float cosPhi1 = vV.Dot(-vN);
 	float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
@@ -182,14 +182,14 @@ Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo,
 		Vec3f vT = vTn + vTp;
 
 		Ray outsideRay;
-		outsideRay.dir = vT.GetNormalized();
+		outsideRay.dir = vT;
 		outsideRay.p = inRayHitInfo.p + outsideRay.dir*Bias;
 		toOut = true;
 		return outsideRay;
 	}
 	else {
 		// internal reflection
-		Vec3f vR = (-2 * cosPhi1 * vN - vV).GetNormalized();
+		Vec3f vR = (-2 * cosPhi1 * vN - vV);
 		Ray internalRay;
 		internalRay.dir = vR;
 		internalRay.p = inRayHitInfo.p + internalRay.dir*Bias;

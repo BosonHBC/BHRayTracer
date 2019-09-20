@@ -137,7 +137,7 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 
 
 int main() {
-	const char* filename = "Resource/Data/proj5.xml";
+	const char* filename = "Resource/Data/proj4.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
