@@ -65,9 +65,10 @@ void BeginRender() {
 	tRay.p = rayStart;
 
 	renderImage.ResetNumRenderedPixels();
-	for (size_t i = 0; i < camera.imgWidth; i++)
+
+	for (int i = 0; i < camera.imgWidth; i++)
 	{
-		for (size_t j = 0; j < camera.imgHeight; j++)
+		for (int j = 0; j < camera.imgHeight; j++)
 		{
 			Vec3f pixelPos = topLeft + (i + 1 / 2) * w / camera.imgWidth * camXAxis - (j + 1 / 2) * h / camera.imgHeight * camYAxis;
 			tRay.dir = pixelPos - rayStart;
@@ -79,7 +80,7 @@ void BeginRender() {
 				Ray worldRay;
 				worldRay.dir = pixelPos - rayStart;
 				worldRay.p = rayStart;
-				Color outColor = outHit.node->GetMaterial()->Shade(worldRay, outHit, lights,REFLECTION_BOUNCE);
+				Color outColor = outHit.node->GetMaterial()->Shade(worldRay, outHit, lights, REFLECTION_BOUNCE);
 
 				renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
 				renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
@@ -92,9 +93,10 @@ void BeginRender() {
 			//printf("Percent: %f\n", renderImage.GetNumRenderedPixels() / (float)(renderImage.GetWidth() * renderImage.GetHeight()));
 		}
 	}
+
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveZImage("Resource/Result/prj5.png");
-	//renderImage.SaveImage("Resource/Result/prj5.png");
+	//renderImage.SaveZImage("Resource/Result/prj5.png");
+	renderImage.SaveImage("Resource/Result/prj5.png");
 }
 void StopRender() {
 
@@ -105,7 +107,7 @@ bool ShadowRayRecursive(Node* root, const Ray& ray, float t_max) {
 	{
 		if (ShadowRayRecursive(root->GetChild(i), transformedRay, t_max)) return true;
 	}
-	if (root->GetNodeObj() != nullptr ) {
+	if (root->GetNodeObj() != nullptr) {
 		// it is a sphere
 		if (Sphere* ptr = dynamic_cast<Sphere*>(root->GetNodeObj())) {
 			// transform ray to child coordinate
@@ -147,7 +149,17 @@ bool ShadowRayRecursive(Node* root, const Ray& ray, float t_max) {
 			}
 			return false;
 		}
-	
+		else if (TriObj* ptr = dynamic_cast<TriObj*>(root->GetNodeObj())) {
+			bool bHit;
+			for (int i = 0; i < ptr->NF(); i++)
+			{
+				HitInfo hinfo;
+				if (ptr->IntersectTriangle(transformedRay, hinfo, 0, i)) {
+					if (hinfo.z < t_max && hinfo.z > Bias)
+						return true;
+				}
+			}
+		}
 	}
 	return false;
 }

@@ -56,9 +56,8 @@ public:
 		ComputeBoundingBox();
 		return true;
 	}
-
-private:
 	bool IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsigned int faceID) const;
+private:
 };
 
 
