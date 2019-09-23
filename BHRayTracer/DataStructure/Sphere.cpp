@@ -1,7 +1,5 @@
 #include "objects.h"
 #include "cyVector.h"
-#define HIT_FRONT 0
-#define HIT_BACK 1
 bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
 {
 	// dot(p, p) = (x)^2 + (y)^2 + (z)^2 = 1

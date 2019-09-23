@@ -3,7 +3,7 @@
 bool TriObj::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
 {
 	bool bHit;
-	for (int i = 0; i < nf; i++)
+	for (unsigned int i = 0; i < nf; i++)
 	{
 		if (IntersectTriangle(ray, hInfo, hitSide, i)) {
 			bHit = true;

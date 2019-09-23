@@ -2,6 +2,7 @@
 #include "scene.h"
 #include <math.h>
 #include "lights.h"
+#include <omp.h>
 #define Bias 0.001f
 #define EulerN 2.7182818f
 #define REFRACTION_BOUNCE 3

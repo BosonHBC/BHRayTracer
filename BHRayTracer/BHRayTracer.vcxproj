@@ -89,7 +89,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <OpenMPSupport>false</OpenMPSupport>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -129,7 +129,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <OpenMPSupport>false</OpenMPSupport>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

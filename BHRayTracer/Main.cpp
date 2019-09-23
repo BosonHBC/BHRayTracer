@@ -5,6 +5,7 @@
 #include "cyColor.h"
 #include <math.h>
 #include "lights.h"
+//#include <omp.h>
 
 Node rootNode;
 Camera camera;
@@ -61,16 +62,17 @@ void BeginRender() {
 	Vec3f camYAxis = camera.up;
 	Vec3f camXAxis = camYAxis.Cross(camZAxis);
 	Vec3f topLeft = rayStart - camZAxis * l + camYAxis * h / 2 - camXAxis * w / 2;
-	Ray tRay;
-	tRay.p = rayStart;
+
 
 	renderImage.ResetNumRenderedPixels();
-
-	for (int i = 0; i < camera.imgWidth; i++)
+//#pragma omp parallel for
+	for (int i = 0; i < camera.imgWidth; ++i)
 	{
-		for (int j = 0; j < camera.imgHeight; j++)
+		for (int j = 0; j < camera.imgHeight; ++j)
 		{
 			Vec3f pixelPos = topLeft + (i + 1 / 2) * w / camera.imgWidth * camXAxis - (j + 1 / 2) * h / camera.imgHeight * camYAxis;
+			Ray tRay;
+			tRay.p = rayStart;
 			tRay.dir = pixelPos - rayStart;
 			// For this ray, if it hits or not
 			bool bHit = false;
@@ -150,7 +152,6 @@ bool ShadowRayRecursive(Node* root, const Ray& ray, float t_max) {
 			return false;
 		}
 		else if (TriObj* ptr = dynamic_cast<TriObj*>(root->GetNodeObj())) {
-			bool bHit;
 			for (int i = 0; i < ptr->NF(); i++)
 			{
 				HitInfo hinfo;
@@ -171,6 +172,8 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 
 
 int main() {
+	
+//	omp_set_num_threads(16);
 	const char* filename = "Resource/Data/proj5.xml";
 	LoadScene(filename);
 
