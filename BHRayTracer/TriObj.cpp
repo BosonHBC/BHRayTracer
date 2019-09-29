@@ -105,3 +105,13 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 	return true;
 }
 
+
+bool TriObj::TraceBVHNode(Ray const &ray, HitInfo &hInfo, int hitSide, unsigned int nodeID) const
+{
+	if (bvh.IsLeafNode(nodeID)) {
+		
+
+		//IntersectTriangle(ray, hInfo, hitSide, )
+	}
+	return false;
+}

@@ -3,7 +3,7 @@
 ///
 /// \file       objects.h 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    5.0
+/// \version    6.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -15,6 +15,7 @@
 
 #include "scene.h"
 #include "cyTriMesh.h"
+#include "cyBVH.h"
 
 //-------------------------------------------------------------------------------
 
@@ -51,16 +52,18 @@ public:
 
 	bool Load(char const *filename)
 	{
+		bvh.Clear();
 		if (!LoadFromFileObj(filename)) return false;
 		if (!HasNormals()) ComputeNormals();
 		ComputeBoundingBox();
+		bvh.SetMesh(this, 4);
 		return true;
 	}
 	bool IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsigned int faceID) const;
 private:
+	cyBVHTriMesh bvh;
+	bool TraceBVHNode(Ray const &ray, HitInfo &hInfo, int hitSide, unsigned int nodeID) const;
 };
-
-
 
 //-------------------------------------------------------------------------------
 

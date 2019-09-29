@@ -65,7 +65,7 @@ void BeginRender() {
 
 
 	renderImage.ResetNumRenderedPixels();
-//#pragma omp parallel for
+	//#pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
 	{
 		for (int j = 0; j < camera.imgHeight; ++j)
@@ -172,8 +172,8 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 
 
 int main() {
-	
-//	omp_set_num_threads(16);
+
+	//	omp_set_num_threads(16);
 	const char* filename = "Resource/Data/proj5.xml";
 	LoadScene(filename);
 

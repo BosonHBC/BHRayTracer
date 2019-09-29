@@ -194,6 +194,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <ClInclude Include="LoadPNG\lodepng.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Box.cpp" />
     <ClCompile Include="DataStructure\MtlBlinn.cpp" />
     <ClCompile Include="DataStructure\Sphere.cpp" />
     <ClCompile Include="LoadPNG\lodepng.cpp" />

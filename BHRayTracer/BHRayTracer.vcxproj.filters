@@ -28,6 +28,9 @@
     <Filter Include="Source Files\DataStructure\TrianglarObj">
       <UniqueIdentifier>{1831fac2-8aa6-4154-b8b3-479e6a885e8d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DataStructure\Box">
+      <UniqueIdentifier>{35de0111-5cb9-42c9-b0de-33a4f7d71399}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataStructure\cyAlphaDistribution.h">
@@ -133,6 +136,9 @@
     </ClCompile>
     <ClCompile Include="Plane.cpp">
       <Filter>Source Files\DataStructure\TrianglarObj</Filter>
+    </ClCompile>
+    <ClCompile Include="Box.cpp">
+      <Filter>Source Files\DataStructure\Box</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
