@@ -129,6 +129,7 @@ bool TriObj::TraceBVHNode(Ray const &ray, HitInfo &hInfo, int hitSide, unsigned 
 		auto elements = bvh.GetNodeElements(nodeID);
 		auto elementCount = bvh.GetNodeElementCount(nodeID);
 		bool bHit = false;
+		
 #ifdef SHOW_BOUNDINGBOX
 		bHit = GetBoundBox().IntersectRayWithHitInfo(ray, hInfo);
 #else
@@ -150,25 +151,40 @@ bool TriObj::TraceBVHNode(Ray const &ray, HitInfo &hInfo, int hitSide, unsigned 
 		Box child2 = Box(bvh.GetNodeBounds(child2Id));
 		float tmin1 = BIGFLOAT;
 		float tmin2 = BIGFLOAT;
-		bool bChild1Hit = child1.IntersectRay(ray, BIGFLOAT, tmin1);
-		bool bChild2Hit = child2.IntersectRay(ray, BIGFLOAT, tmin2);
+		bool bChild1Hit = child1.IntersectRay(ray, hInfo.z, tmin1);
+		bool bChild2Hit = child2.IntersectRay(ray, hInfo.z, tmin2);
 
 		if (tmin1 < tmin2) {
-			if (tmin1 < hInfo.z&& bChild1Hit) {
+			if (bChild1Hit) {
 				if (TraceBVHNode(ray, hInfo, hitSide, child1Id)) return true;
-				if (tmin2 < hInfo.z && bChild2Hit) {
+				if (bChild2Hit) {
 					return TraceBVHNode(ray, hInfo, hitSide, child2Id);
 				}
 			}
 		}
-		else if (tmin1 >= tmin2) {
-			if (tmin2 < hInfo.z && bChild2Hit) {
+		else if (tmin1 > tmin2) {
+			if (bChild2Hit) {
 				if(TraceBVHNode(ray, hInfo, hitSide, child2Id)) return true;
-				if (tmin1 < hInfo.z  && bChild1Hit) {
+				if (bChild1Hit) {
 					return TraceBVHNode(ray, hInfo, hitSide, child1Id);
 				}
 			}
 		}
+		else {
+			if (bvh.IsLeafNode(bvh.GetFirstChildNode(nodeID)) && bvh.IsLeafNode(bvh.GetSecondChildNode(nodeID))) {
+				auto firstElements = bvh.GetNodeElements(child1Id);
+				auto secondElements = bvh.GetNodeElements(child2Id);
+			}
+			else {
+				if (bChild2Hit) {
+					if (TraceBVHNode(ray, hInfo, hitSide, child2Id)) return true;
+					if (bChild1Hit) {
+						return TraceBVHNode(ray, hInfo, hitSide, child1Id);
+					}
+				}
+			}
+		}
+
 	}
 	return false;
 }
