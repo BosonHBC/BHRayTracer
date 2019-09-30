@@ -98,7 +98,7 @@ void BeginRender() {
 
 	renderImage.ComputeZBufferImage();
 	//renderImage.SaveZImage("Resource/Result/prj5.png");
-	renderImage.SaveImage("Resource/Result/prj5.png");
+	renderImage.SaveImage("Resource/Result/prj6.png");
 }
 void StopRender() {
 
@@ -152,15 +152,8 @@ bool ShadowRayRecursive(Node* root, const Ray& ray, float t_max) {
 			return false;
 		}
 		else if (TriObj* ptr = dynamic_cast<TriObj*>(root->GetNodeObj())) {
-			return false;
-			for (int i = 0; i < ptr->NF(); i++)
-			{
-				HitInfo hinfo;
-				if (ptr->IntersectTriangle(transformedRay, hinfo, 0, i)) {
-					if (hinfo.z < t_max && hinfo.z > Bias)
-						return true;
-				}
-			}
+			HitInfo hit;
+			return ptr->ShadowRecursive(transformedRay, hit, t_max);
 		}
 	}
 	return false;
