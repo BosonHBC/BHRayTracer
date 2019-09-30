@@ -152,6 +152,7 @@ bool ShadowRayRecursive(Node* root, const Ray& ray, float t_max) {
 			return false;
 		}
 		else if (TriObj* ptr = dynamic_cast<TriObj*>(root->GetNodeObj())) {
+			return false;
 			for (int i = 0; i < ptr->NF(); i++)
 			{
 				HitInfo hinfo;

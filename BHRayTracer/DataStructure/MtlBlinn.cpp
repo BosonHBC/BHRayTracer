@@ -6,6 +6,8 @@
 #define Bias 0.001f
 #define EulerN 2.7182818f
 #define REFRACTION_BOUNCE 3
+#define ENABLE_REFLEC_REFRAC
+
 extern Node rootNode;
 extern LightList lights;
 void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -45,7 +47,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		}
 	}
 	// Color that doesn't matter with light
-
+#ifdef ENABLE_REFLEC_REFRAC
 	{
 		// Phi is dot product of View and Normal
 		float cosPhi1 = vN.Dot(vV);
@@ -138,7 +140,10 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 			}
 		}
-	}
+}
+#endif // ENABLE_REFLEC_REFRAC
+
+
 	outColor += ambientColor;
 	return outColor;
 }

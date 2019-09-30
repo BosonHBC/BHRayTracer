@@ -54,6 +54,27 @@ public:
 	void Normalize() { dir.Normalize(); }
 };
 
+
+class Node;
+
+#define HIT_NONE            0
+#define HIT_FRONT           1
+#define HIT_BACK            2
+#define HIT_FRONT_AND_BACK  (HIT_FRONT|HIT_BACK)
+
+struct HitInfo
+{
+	float       z;      // the distance from the ray center to the hit point
+	Vec3f       p;      // position of the hit point
+	Vec3f       N;      // surface normal at the hit point
+	Node const *node;   // the object node that was hit
+	bool        front;  // true if the ray hits the front side, false if the ray hits the back side
+
+	HitInfo() { Init(); }
+	void Init() { z = BIGFLOAT; node = nullptr; front = true; }
+};
+
+//-------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------
 
 class Box
@@ -109,28 +130,9 @@ public:
 	bool IsInside(Vec3f const &p) const { for (int i = 0; i < 3; i++) if (pmin[i] > p[i] || pmax[i] < p[i]) return false; return true; }
 
 	// Returns true if the ray intersects with the box for any parameter that is smaller than t_max; otherwise, returns false.
-	bool IntersectRay(Ray const &r, float t_max) const;
-};
+	bool IntersectRay(Ray const &r, float t_max, float& t_min) const;
 
-//-------------------------------------------------------------------------------
-
-class Node;
-
-#define HIT_NONE            0
-#define HIT_FRONT           1
-#define HIT_BACK            2
-#define HIT_FRONT_AND_BACK  (HIT_FRONT|HIT_BACK)
-
-struct HitInfo
-{
-	float       z;      // the distance from the ray center to the hit point
-	Vec3f       p;      // position of the hit point
-	Vec3f       N;      // surface normal at the hit point
-	Node const *node;   // the object node that was hit
-	bool        front;  // true if the ray hits the front side, false if the ray hits the back side
-
-	HitInfo() { Init(); }
-	void Init() { z = BIGFLOAT; node = nullptr; front = true; }
+	bool IntersectRayWithHitInfo(Ray const &r, HitInfo& hInfo) const;
 };
 
 //-------------------------------------------------------------------------------

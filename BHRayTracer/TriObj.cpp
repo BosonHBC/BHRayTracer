@@ -1,8 +1,22 @@
 #include "objects.h"
+#define USE_BVH
+#ifdef USE_BVH
+//#define SHOW_BOUNDINGBOX
+#endif // USE_BVH
 
 bool TriObj::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
 {
-	bool bHit;
+#ifdef USE_BVH
+	auto rootNodeId = bvh.GetRootNodeID();
+	Box rootBox = Box(bvh.GetNodeBounds(rootNodeId));
+	float tmin = -1;
+	if (rootBox.IntersectRay(ray, BIGFLOAT, tmin)) {
+		return TraceBVHNode(ray, hInfo, hitSide, rootNodeId);
+	}
+	return false;
+#else
+	// Do not use BVH
+	bool bHit = false;
 	for (unsigned int i = 0; i < nf; i++)
 	{
 		if (IntersectTriangle(ray, hInfo, hitSide, i)) {
@@ -10,6 +24,7 @@ bool TriObj::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 		}
 	}
 	return bHit;
+#endif // USE_BVH
 }
 
 
@@ -108,10 +123,52 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 
 bool TriObj::TraceBVHNode(Ray const &ray, HitInfo &hInfo, int hitSide, unsigned int nodeID) const
 {
+	// if it is a leaf, intersect triangles
 	if (bvh.IsLeafNode(nodeID)) {
-		
+		// if it is a leaf
+		auto elements = bvh.GetNodeElements(nodeID);
+		auto elementCount = bvh.GetNodeElementCount(nodeID);
+		bool bHit = false;
+#ifdef SHOW_BOUNDINGBOX
+		bHit = GetBoundBox().IntersectRayWithHitInfo(ray, hInfo);
+#else
+		for (size_t i = 0; i < elementCount; ++i)
+		{
+			if (IntersectTriangle(ray, hInfo, hitSide, elements[i]))
+			{
+				bHit = true;
+			}
+		}
+#endif
+		return bHit;
+	}
+	else {
+		unsigned int child1Id = 0;
+		unsigned int child2Id = 0;
+		bvh.GetChildNodes(nodeID, child1Id, child2Id);
+		Box child1 = Box(bvh.GetNodeBounds(child1Id));
+		Box child2 = Box(bvh.GetNodeBounds(child2Id));
+		float tmin1 = BIGFLOAT;
+		float tmin2 = BIGFLOAT;
+		bool bChild1Hit = child1.IntersectRay(ray, BIGFLOAT, tmin1);
+		bool bChild2Hit = child2.IntersectRay(ray, BIGFLOAT, tmin2);
 
-		//IntersectTriangle(ray, hInfo, hitSide, )
+		if (tmin1 < tmin2) {
+			if (tmin1 < hInfo.z&& bChild1Hit) {
+				if (TraceBVHNode(ray, hInfo, hitSide, child1Id)) return true;
+				if (tmin2 < hInfo.z && bChild2Hit) {
+					return TraceBVHNode(ray, hInfo, hitSide, child2Id);
+				}
+			}
+		}
+		else if (tmin1 >= tmin2) {
+			if (tmin2 < hInfo.z && bChild2Hit) {
+				if(TraceBVHNode(ray, hInfo, hitSide, child2Id)) return true;
+				if (tmin1 < hInfo.z  && bChild1Hit) {
+					return TraceBVHNode(ray, hInfo, hitSide, child1Id);
+				}
+			}
+		}
 	}
 	return false;
 }
