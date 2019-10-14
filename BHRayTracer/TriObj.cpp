@@ -181,32 +181,50 @@ bool TriObj::TraceBVHNode(Ray const &ray, HitInfo &hInfo, int hitSide, unsigned 
 		float tmin2 = BIGFLOAT;
 		bool bChild1Hit = child1.IntersectRay(ray, hInfo.z, tmin1);
 		bool bChild2Hit = child2.IntersectRay(ray, hInfo.z, tmin2);
-		/*
-				if (tmin1 < tmin2) {
-					if (bChild1Hit) {
-						if (TraceBVHNode(ray, hInfo, hitSide, child1Id)) return true;
-						if (bChild2Hit) {
-							return TraceBVHNode(ray, hInfo, hitSide, child2Id);
-						}
-					}
-				}
-				else if (tmin1 > tmin2) {
-					if (bChild2Hit) {
-						if (TraceBVHNode(ray, hInfo, hitSide, child2Id)) return true;
-						if (bChild1Hit) {
-							return TraceBVHNode(ray, hInfo, hitSide, child1Id);
-						}
-					}
-				}
-				else {
-					if (bChild1Hit && bChild2Hit)
-					{*/
-		if (!bChild1Hit && !bChild2Hit) return false;
-		return TraceBVHNode(ray, hInfo, hitSide, child1Id) | TraceBVHNode(ray, hInfo, hitSide, child2Id);
-		/*
-					}
-				}*/
 
+		if (!bChild1Hit && !bChild2Hit) return false;
+
+		if (tmin1 < tmin2) {
+			// Trace left child first
+			if (TraceBVHNode(ray, hInfo, hitSide, child1Id)) {
+				// Store the left hit info for tracing right child
+				HitInfo tempHitInfo = hInfo;
+				// It trace something on left child
+				// If the hit result is even smaller than the right child's bounding box, do not need to trace the right child
+				// but in the following case, hit point is inside right child bounding box, needs to trace right child
+				if (tempHitInfo.z > tmin2)
+				{
+					if (TraceBVHNode(ray, tempHitInfo, hitSide, child2Id)) {
+						// Right child gets a closer result, use right child's hit info
+						hInfo = tempHitInfo;
+					}
+				}
+				// since left child already trace something, so it has to return true
+				return true;
+			}
+			else {
+				// trace right child
+				return TraceBVHNode(ray, hInfo, hitSide, child2Id);
+			}
+		}
+		else {
+			// Trace right child first
+			if (TraceBVHNode(ray, hInfo, hitSide, child2Id)) {
+				HitInfo tempHitInfo = hInfo;
+
+				if (tempHitInfo.z > tmin1)
+				{
+					if (TraceBVHNode(ray, tempHitInfo, hitSide, child1Id)) {
+						hInfo = tempHitInfo;
+					}
+				}
+				return true;
+			}
+			else {
+				// trace right child
+				return TraceBVHNode(ray, hInfo, hitSide, child1Id);
+			}
+		}
 	}
 	return false;
 }
