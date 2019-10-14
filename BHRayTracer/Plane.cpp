@@ -14,9 +14,17 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	if (x.x < -1 || x.x > 1 || x.y < -1 || x.y > 1) {
 		return false;
 	}
+
+	// Set hit info
 	hInfo.p = x;
 	hInfo.N = Vec3f(0, 0, 1);
 	hInfo.front = true;
 	hInfo.z = t;
+	// Set uv Info
+	Vec3f uvw;
+	uvw.x = (0.5f + hInfo.p.x) / 2.f;
+	uvw.y = (0.5f + hInfo.p.y) / 2.f;
+	hInfo.uvw = uvw;
+
 	return true;
 }

@@ -60,11 +60,14 @@ public:
 		return true;
 	}
 	bool IntersectTriangle(const Ray &ray, HitInfo &hInfo, int hitSide, unsigned int faceID) const;
-	bool ShadowRecursive(Ray const&ray, HitInfo &hInfo, float t_max);
+	bool ShadowRecursive(Ray const&ray, float t_max);
 private:
 	cyBVHTriMesh bvh;
 	bool TraceBVHNode(const Ray &ray, HitInfo &hInfo, int hitSide, unsigned int nodeID) const;
+	bool TraceBVHShadow(const Ray &ray, float& t_min,bool& hitOnce, unsigned int nodeID)const;
 };
+
+
 
 //-------------------------------------------------------------------------------
 

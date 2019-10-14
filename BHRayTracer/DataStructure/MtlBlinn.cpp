@@ -10,6 +10,7 @@
 
 extern Node rootNode;
 extern LightList lights;
+extern TexturedColor environment;
 void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
 void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInfo & outHit, bool &_bHit);
 // get the ray from sphere inside to outside or doing internal reflection
@@ -36,13 +37,14 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				}
 				// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 				Vec3f vH = (vL + vV).GetNormalized();
-				Color bdrf = diffuse.GetColor() * cosTheta + specular.GetColor() * pow(vH.Dot(vN), glossiness);
+
+				Color bdrf = diffuse.Sample(hInfo.uvw) * cosTheta + diffuse.Sample(hInfo.uvw) * pow(vH.Dot(vN), glossiness);
 				outColor += bdrf * (*it)->Illuminate(hInfo.p, vN);
 
 			}
 			else {
 				// it is ambient
-				ambientColor = diffuse.GetColor() * (*it)->Illuminate(hInfo.p, vN);
+				ambientColor = diffuse.Sample(hInfo.uvw) * (*it)->Illuminate(hInfo.p, vN);
 			}
 		}
 	}
@@ -68,6 +70,10 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				if (bReflectionHit && reflHInfo.node != nullptr && bounceCount > 0) {
 					bounceCount--;
 					outColor += reflectionFactor * reflHInfo.node->GetMaterial()->Shade(reflectionRay, reflHInfo, lights, bounceCount);
+				}
+				else {
+					// doesn't bounce to anything
+					outColor += environment.SampleEnvironment(reflectionRay.dir);
 				}
 			}
 		}
@@ -105,6 +111,10 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 							Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
 							refractionColor = (1 - RPhi)*refraction.GetColor() *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, REFRACTION_BOUNCE);
 						}
+						else {
+							// refraction out hit doesn't hit anything
+							refractionColor = environment.SampleEnvironment(nextRay.dir);
+						}
 					}
 					else {
 						// internal reflection
@@ -125,6 +135,10 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 									if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
 
 										refractionColor = (1 - RPhi)*refraction.GetColor() * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
+									}
+									else {
+										// refraction out hit doesn't hit anything
+										refractionColor = environment.SampleEnvironment(nextRay.dir);
 									}
 									break;
 								}

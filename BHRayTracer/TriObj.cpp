@@ -6,7 +6,10 @@
 #endif // USE_BVH
 
 #ifndef Bias
-#define  Bias 0.00001f
+#define  Bias 0.001f
+#endif
+#ifndef PI
+#define PI 3.14159265
 #endif
 
 bool TriObj::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
@@ -16,6 +19,7 @@ bool TriObj::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 	Box rootBox = Box(bvh.GetNodeBounds(rootNodeId));
 	float tmin = -1;
 	if (rootBox.IntersectRay(ray, hInfo.z, tmin)) {
+
 		return TraceBVHNode(ray, hInfo, hitSide, rootNodeId);
 	}
 	return false;
@@ -32,16 +36,19 @@ bool TriObj::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 #endif // USE_BVH
 }
 
-bool TriObj::ShadowRecursive(Ray const&ray, HitInfo &hInfo, float t_max)
+bool TriObj::ShadowRecursive(Ray const&ray, float t_max)
 {
 #ifdef USE_BVH_SHADOW
 	auto rootNodeId = bvh.GetRootNodeID();
 	Box rootBox = Box(bvh.GetNodeBounds(rootNodeId));
 	float tmin = -1;
-	if (rootBox.IntersectRay(ray, hInfo.z, tmin)) {
-		TraceBVHNode(ray, hInfo, HIT_FRONT, rootNodeId);
+	float t_min = BIGFLOAT;
+	bool bHit = false;
+	if (rootBox.IntersectRay(ray, BIGFLOAT, tmin)) {
+		TraceBVHShadow(ray, t_min, bHit, rootNodeId);
 	}
-	if (hInfo.z < t_max && hInfo.z > Bias) return true;
+	if(bHit && t_min > Bias && t_min < t_max)
+		return true;
 	return false;
 #else
 	for (int i = 0; i < NF(); i++)
@@ -141,10 +148,16 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 	float a_2d = a0_2d + a1_2d + a2_2d;
 	Vec3f bc = Vec3f(a0_2d / a_2d, a1_2d / a_2d, a2_2d / a_2d);
 	Vec3f hitPointNormal = GetNormal(faceID, bc);
+	// Set hit info
 	hInfo.z = t;
 	hInfo.N = hitPointNormal;
 	hInfo.p = vX;
 	hInfo.front = true;
+	// Set uv info
+	Vec3f uvw;
+	Vec3f tc = GetTexCoord(faceID, bc);
+	hInfo.uvw = tc;
+
 	return true;
 }
 
@@ -225,6 +238,43 @@ bool TriObj::TraceBVHNode(Ray const &ray, HitInfo &hInfo, int hitSide, unsigned 
 				return TraceBVHNode(ray, hInfo, hitSide, child1Id);
 			}
 		}
+	}
+	return false;
+}
+
+bool TriObj::TraceBVHShadow(const Ray &ray, float& t_min, bool& hitOnce, unsigned int nodeID) const
+{
+	if (hitOnce) return hitOnce;
+	if (bvh.IsLeafNode(nodeID)) {
+		// if it is a leaf
+		auto elements = bvh.GetNodeElements(nodeID);
+		auto elementCount = bvh.GetNodeElementCount(nodeID);
+
+		HitInfo hInfo;
+		for (size_t i = 0; i < elementCount; ++i)
+		{
+			if (IntersectTriangle(ray, hInfo, 0, elements[i]))
+			{
+				hitOnce = true;
+				t_min = hInfo.z;
+			}
+		}
+
+		return hitOnce;
+	}
+	else {
+		unsigned int child1Id = 0;
+		unsigned int child2Id = 0;
+		bvh.GetChildNodes(nodeID, child1Id, child2Id);
+		Box child1 = Box(bvh.GetNodeBounds(child1Id));
+		Box child2 = Box(bvh.GetNodeBounds(child2Id));
+		float tmin1 = BIGFLOAT;
+		float tmin2 = BIGFLOAT;
+		bool bChild1Hit = child1.IntersectRay(ray, BIGFLOAT, tmin1);
+		bool bChild2Hit = child2.IntersectRay(ray, BIGFLOAT, tmin2);
+
+		if (!bChild1Hit && !bChild2Hit) return false;
+		return TraceBVHShadow(ray, t_min, hitOnce, child1Id) | TraceBVHShadow(ray, t_min, hitOnce, child2Id);
 	}
 	return false;
 }

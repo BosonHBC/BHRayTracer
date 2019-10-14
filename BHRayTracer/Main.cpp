@@ -23,7 +23,7 @@ TexturedColor environment;
 TextureList textureList;
 
 #define PI 3.14159265
-#define  Bias 0.00001f
+#define Bias 0.00001f
 #define REFLECTION_BOUNCE 3
 
 
@@ -85,19 +85,18 @@ void BeginRender() {
 			bool bHit = false;
 			HitInfo outHit;
 			recursive(&rootNode, tRay, outHit, bHit, 0);
+			Color outColor = Color::Black();
 			if (bHit) {
-				Ray worldRay;
-				worldRay.dir = pixelPos - rayStart;
-				worldRay.p = rayStart;
-				Color outColor = outHit.node->GetMaterial()->Shade(worldRay, outHit, lights, REFLECTION_BOUNCE);
-
-				renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
-				renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
+				// Shade the hit object 
+				outColor = outHit.node->GetMaterial()->Shade(tRay, outHit, lights, REFLECTION_BOUNCE);
 			}
 			else {
-				renderImage.GetPixels()[j*camera.imgWidth + i].Set(0, 0, 0);
-				renderImage.GetZBuffer()[j*camera.imgWidth + i] = BIGFLOAT;
+				// Shade Background color
+				Vec3f bguvw = Vec3f((float)i / camera.imgWidth, (float)j / camera.imgHeight, 0.0f);
+				outColor = background.Sample(bguvw);
 			}
+			renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
+			renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
 			renderImage.IncrementNumRenderPixel(1);
 			//printf("Percent: %f\n", renderImage.GetNumRenderedPixels() / (float)(renderImage.GetWidth() * renderImage.GetHeight()));
 		}
@@ -158,8 +157,7 @@ bool ShadowRayRecursive(Node* root, const Ray& ray, float t_max) {
 			return false;
 		}
 		else if (TriObj* ptr = dynamic_cast<TriObj*>(root->GetNodeObj())) {
-			HitInfo hit;
-			return ptr->ShadowRecursive(transformedRay, hit, t_max);
+			return ptr->ShadowRecursive(transformedRay, t_max);
 		}
 	}
 	return false;
