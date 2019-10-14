@@ -3,7 +3,7 @@
 ///
 /// \file       materials.h 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    4.0
+/// \version    7.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -24,22 +24,44 @@ public:
 		reflection(0, 0, 0), refraction(0, 0, 0), absorption(0, 0, 0), ior(1) {}
 	virtual Color Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lights, int bounceCount) const;
 
-	void SetDiffuse(Color dif) { diffuse = dif; }
-	void SetSpecular(Color spec) { specular = spec; }
+	void SetDiffuse(Color dif) { diffuse.SetColor(dif); }
+	void SetSpecular(Color spec) { specular.SetColor(spec); }
 	void SetGlossiness(float gloss) { glossiness = gloss; }
 
-	void SetReflection(Color reflect) { reflection = reflect; }
-	void SetRefraction(Color refract) { refraction = refract; }
+	void SetReflection(Color reflect) { reflection.SetColor(reflect); }
+	void SetRefraction(Color refract) { refraction.SetColor(refract); }
 	void SetAbsorption(Color absorp) { absorption = absorp; }
 	void SetRefractionIndex(float _ior) { ior = _ior; }
+
+	void SetDiffuseTexture(TextureMap *map) { diffuse.SetTexture(map); }
+	void SetSpecularTexture(TextureMap *map) { specular.SetTexture(map); }
+	void SetReflectionTexture(TextureMap *map) { reflection.SetTexture(map); }
+	void SetRefractionTexture(TextureMap *map) { refraction.SetTexture(map); }
 
 	virtual void SetViewportMaterial(int subMtlID = 0) const; // used for OpenGL display
 
 private:
-	Color diffuse, specular, reflection, refraction;
+	TexturedColor diffuse, specular, reflection, refraction;
 	float glossiness;
 	Color absorption;
 	float ior;  // index of refraction
+};
+
+//-------------------------------------------------------------------------------
+
+class MultiMtl : public Material
+{
+public:
+	virtual ~MultiMtl() { for (unsigned int i = 0; i < mtls.size(); i++) delete mtls[i]; }
+
+	virtual Color Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lights, int bounceCount) const { return hInfo.mtlID < (int)mtls.size() ? mtls[hInfo.mtlID]->Shade(ray, hInfo, lights, bounceCount) : Color(1, 1, 1); }
+
+	virtual void SetViewportMaterial(int subMtlID = 0) const { if (subMtlID < (int)mtls.size()) mtls[subMtlID]->SetViewportMaterial(); }
+
+	void AppendMaterial(Material *m) { mtls.push_back(m); }
+
+private:
+	std::vector<Material*> mtls;
 };
 
 //-------------------------------------------------------------------------------

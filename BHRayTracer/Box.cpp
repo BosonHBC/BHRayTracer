@@ -45,7 +45,7 @@ bool Box::IntersectRay(Ray const &r, float t_max, float& t_min) const
 	return false;
 }
 
-bool Box::IntersectRayWithHitInfo(Ray const &r, HitInfo& hInfo) const
+bool Box::IntersectRayWithHitInfo(const Ray  &r, HitInfo& hInfo) const
 {
 	// Reference points in box
 	Vec3f v0 = Box::Corner(0); // in XY plane1 and ZX plane1 and YZ plane1

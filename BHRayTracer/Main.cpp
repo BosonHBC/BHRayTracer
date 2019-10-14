@@ -12,9 +12,15 @@ Camera camera;
 RenderImage renderImage;
 Sphere theSphere;
 Plane thePlane;
+// Lights & Materials
 MaterialList materials;
 LightList lights;
+// Triangular meshes
 ObjFileList objList;
+// Textures
+TexturedColor background;
+TexturedColor environment;
+TextureList textureList;
 
 #define PI 3.14159265
 #define  Bias 0.00001f
@@ -97,8 +103,7 @@ void BeginRender() {
 	}
 
 	renderImage.ComputeZBufferImage();
-	//renderImage.SaveZImage("Resource/Result/prj5.png");
-	renderImage.SaveImage("Resource/Result/prj6.png");
+	renderImage.SaveImage("Resource/Result/prj7.png");
 }
 void StopRender() {
 
@@ -168,7 +173,7 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 int main() {
 
 	//	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj5.xml";
+	const char* filename = "Resource/Data/proj7.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

@@ -36,13 +36,13 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				}
 				// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 				Vec3f vH = (vL + vV).GetNormalized();
-				Color bdrf = diffuse * cosTheta + specular * pow(vH.Dot(vN), glossiness);
+				Color bdrf = diffuse.GetColor() * cosTheta + specular.GetColor() * pow(vH.Dot(vN), glossiness);
 				outColor += bdrf * (*it)->Illuminate(hInfo.p, vN);
 
 			}
 			else {
 				// it is ambient
-				ambientColor = diffuse * (*it)->Illuminate(hInfo.p, vN);
+				ambientColor = diffuse.GetColor() * (*it)->Illuminate(hInfo.p, vN);
 			}
 		}
 	}
@@ -55,8 +55,8 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		float RPhi = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
 		// Reflection color
 		{
-			Color FresnelReflectionFactor = refraction * RPhi;
-			Color reflectionFactor = reflection + FresnelReflectionFactor; //add Fresnel Reflection later
+			Color FresnelReflectionFactor = refraction.GetColor() * RPhi;
+			Color reflectionFactor = reflection.GetColor() + FresnelReflectionFactor; //add Fresnel Reflection later
 			if (!reflectionFactor.IsBlack()) {
 				Ray reflectionRay;
 				reflectionRay.dir = (2 * cosPhi1 * vN - vV);
@@ -73,7 +73,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		}
 		// Refraction color
 		{
-			if (!refraction.IsBlack()) {
+			if (!refraction.GetColor().IsBlack()) {
 				float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
 				float sinPhi2 = sinPhi1 / ior;
 				float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
@@ -103,7 +103,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 							float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
 							float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
 							Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
-							refractionColor = (1 - RPhi)*refraction *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, REFRACTION_BOUNCE);
+							refractionColor = (1 - RPhi)*refraction.GetColor() *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, REFRACTION_BOUNCE);
 						}
 					}
 					else {
@@ -124,7 +124,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 									recursive(&rootNode, nextRay_internal, refraHinfo_out, bRefraction_out_Hit, 0);
 									if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
 
-										refractionColor = (1 - RPhi)*refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
+										refractionColor = (1 - RPhi)*refraction.GetColor() * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
 									}
 									break;
 								}

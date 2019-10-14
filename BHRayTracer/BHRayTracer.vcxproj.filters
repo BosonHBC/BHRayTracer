@@ -19,17 +19,29 @@
     <Filter Include="Source Files\LoadPNG">
       <UniqueIdentifier>{d942d8c2-167e-4e0a-8e59-755190d1426e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Sphere">
-      <UniqueIdentifier>{a4b94873-c029-4301-a360-d5fe8757d59e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\DataStructure\Materials">
       <UniqueIdentifier>{278cfa6b-f188-4b93-b025-087be1a91d27}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\TrianglarObj">
+    <Filter Include="Source Files\DataStructure\Obejcts">
+      <UniqueIdentifier>{17bb6621-4bb3-4407-94e0-626ad524faf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DataStructure\Obejcts\TrianglarObj">
       <UniqueIdentifier>{1831fac2-8aa6-4154-b8b3-479e6a885e8d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Box">
+    <Filter Include="Source Files\DataStructure\Obejcts\Sphere">
+      <UniqueIdentifier>{a4b94873-c029-4301-a360-d5fe8757d59e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DataStructure\Obejcts\Box">
       <UniqueIdentifier>{35de0111-5cb9-42c9-b0de-33a4f7d71399}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DataStructure\Textures">
+      <UniqueIdentifier>{d380334a-0be8-4e1e-ad52-0e296b0dd380}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DataStructure\Scenes">
+      <UniqueIdentifier>{5a0cd78a-1a94-4129-921c-d1972bc3f81f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DataStructure\Lights">
+      <UniqueIdentifier>{b45eda6c-9697-46a4-a4ce-926f0ccb98a5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -93,23 +105,26 @@
     <ClInclude Include="DataStructure\cyVector.h">
       <Filter>Source Files\DataStructure</Filter>
     </ClInclude>
-    <ClInclude Include="DataStructure\objects.h">
-      <Filter>Source Files\DataStructure</Filter>
-    </ClInclude>
-    <ClInclude Include="DataStructure\scene.h">
-      <Filter>Source Files\DataStructure</Filter>
-    </ClInclude>
     <ClInclude Include="LoadPNG\lodepng.h">
       <Filter>Source Files\LoadPNG</Filter>
     </ClInclude>
-    <ClInclude Include="DataStructure\lights.h">
-      <Filter>Source Files\DataStructure</Filter>
-    </ClInclude>
-    <ClInclude Include="DataStructure\materials.h">
-      <Filter>Source Files\DataStructure</Filter>
-    </ClInclude>
     <ClInclude Include="cyTriMesh.h">
       <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="texture.h">
+      <Filter>Source Files\DataStructure\Textures</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\materials.h">
+      <Filter>Source Files\DataStructure\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\objects.h">
+      <Filter>Source Files\DataStructure\Obejcts</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\scene.h">
+      <Filter>Source Files\DataStructure\Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStructure\lights.h">
+      <Filter>Source Files\DataStructure\Lights</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -129,16 +144,19 @@
       <Filter>Source Files\DataStructure\Materials</Filter>
     </ClCompile>
     <ClCompile Include="DataStructure\Sphere.cpp">
-      <Filter>Source Files\DataStructure\Sphere</Filter>
+      <Filter>Source Files\DataStructure\Obejcts\Sphere</Filter>
     </ClCompile>
     <ClCompile Include="TriObj.cpp">
-      <Filter>Source Files\DataStructure\TrianglarObj</Filter>
+      <Filter>Source Files\DataStructure\Obejcts\TrianglarObj</Filter>
     </ClCompile>
     <ClCompile Include="Plane.cpp">
-      <Filter>Source Files\DataStructure\TrianglarObj</Filter>
+      <Filter>Source Files\DataStructure\Obejcts\TrianglarObj</Filter>
     </ClCompile>
     <ClCompile Include="Box.cpp">
-      <Filter>Source Files\DataStructure\Box</Filter>
+      <Filter>Source Files\DataStructure\Obejcts\Box</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Source Files\DataStructure\Textures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
