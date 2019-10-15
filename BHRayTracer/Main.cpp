@@ -22,10 +22,12 @@ TexturedColor background;
 TexturedColor environment;
 TextureList textureList;
 
+Vec3f dd_x;
+Vec3f dd_y;
 #define PI 3.14159265
 #define Bias 0.00001f
 #define REFLECTION_BOUNCE 3
-
+#define DTHRESHOLD 0.1f
 
 
 int LoadScene(char const *filename);
@@ -68,8 +70,11 @@ void BeginRender() {
 	Vec3f camZAxis = -camera.dir;
 	Vec3f camYAxis = camera.up;
 	Vec3f camXAxis = camYAxis.Cross(camZAxis);
+
 	Vec3f topLeft = rayStart - camZAxis * l + camYAxis * h / 2 - camXAxis * w / 2;
 
+	dd_x = camXAxis * w / camera.imgWidth;
+	dd_y = camYAxis * h / camera.imgHeight;
 
 	renderImage.ResetNumRenderedPixels();
 	//#pragma omp parallel for
@@ -81,6 +86,7 @@ void BeginRender() {
 			Ray tRay;
 			tRay.p = rayStart;
 			tRay.dir = pixelPos - rayStart;
+
 			// For this ray, if it hits or not
 			bool bHit = false;
 			HitInfo outHit;

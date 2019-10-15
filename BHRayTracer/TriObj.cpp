@@ -158,6 +158,14 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 	Vec3f tc = GetTexCoord(faceID, bc);
 	hInfo.uvw = tc;
 
+	// Ray differential
+	Vec3f duvw[2];
+	duvw[0] = Vec3f(0, 0, 0);
+	duvw[1] = Vec3f(0, 0, 0);
+
+	hInfo.duvw[0] = duvw[0];
+	hInfo.duvw[1] = duvw[1];
+
 	return true;
 }
 

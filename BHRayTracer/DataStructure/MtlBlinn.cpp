@@ -38,13 +38,13 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 				Vec3f vH = (vL + vV).GetNormalized();
 
-				Color bdrf = diffuse.Sample(hInfo.uvw) * cosTheta + specular.Sample(hInfo.uvw) * pow(vH.Dot(vN), glossiness);
+				Color bdrf = diffuse.Sample(hInfo.uvw, hInfo.duvw) * diffuse.GetColor() * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw)* specular.GetColor() * pow(vH.Dot(vN), glossiness);
 				outColor += bdrf * (*it)->Illuminate(hInfo.p, vN);
 
 			}
 			else {
 				// it is ambient
-				ambientColor = diffuse.Sample(hInfo.uvw) * (*it)->Illuminate(hInfo.p, vN);
+				ambientColor = diffuse.Sample(hInfo.uvw, hInfo.duvw) * diffuse.GetColor() * (*it)->Illuminate(hInfo.p, vN);
 			}
 		}
 	}

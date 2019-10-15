@@ -41,6 +41,14 @@ bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 		uvw.x = 0.5f + atan2(hInfo.p.y, hInfo.p.x) / (2 * PI);
 		uvw.y = 0.5f - asin(hInfo.p.z) / (PI);
 		hInfo.uvw = uvw;
+
+		// Ray differential
+		Vec3f duvw[2];
+		duvw[0] = Vec3f(0, 0, 0);
+		duvw[1] = Vec3f(0, 0, 0);
+		hInfo.duvw[0] = duvw[0];
+		hInfo.duvw[1] = duvw[1];
+
 		return true;
 	}
 
