@@ -22,13 +22,18 @@ TexturedColor background;
 TexturedColor environment;
 TextureList textureList;
 
+Vec3f topLeft;
 Vec3f dd_x;
 Vec3f dd_y;
 #define PI 3.14159265
-#define Bias 0.00001f
+#define Bias 0.001f
 #define REFLECTION_BOUNCE 3
-#define DTHRESHOLD 0.1f
 
+//#define USE_MSAA
+#ifdef USE_MSAA
+#define MSAA_AdaptiveThreshold 0.2f
+#define  MSAA_InitialRayCount 4
+#endif // USE_MSAA
 
 int LoadScene(char const *filename);
 
@@ -59,6 +64,28 @@ void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /
 }
 
 void ShowViewport();
+
+// Trace only single ray
+Color TraceRaySingle(Ray &ray, HitInfo &outHit, int i, int j)
+{
+	Vec3f pixelPos = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
+	ray.dir = pixelPos - ray.p;
+	// For this ray, if it hits or not
+	bool bHit = false;
+	recursive(&rootNode, ray, outHit, bHit, 0);
+	if (bHit) {
+		// Shade the hit object 
+		return outHit.node->GetMaterial()->Shade(ray, outHit, lights, REFLECTION_BOUNCE);
+	}
+	else {
+		// Shade Background color
+		Vec3f bguvw = Vec3f((float)i / camera.imgWidth, (float)j / camera.imgHeight, 0.0f);
+		return background.Sample(bguvw);
+	}
+}
+// Multi-Sampling
+Color TraceRayMultiple(Ray &ray, HitInfo &outHit, int i, int j){}
+
 void BeginRender() {
 	Vec3f rayStart = camera.pos;
 	float aor = camera.imgWidth / (float)camera.imgHeight;
@@ -71,7 +98,7 @@ void BeginRender() {
 	Vec3f camYAxis = camera.up;
 	Vec3f camXAxis = camYAxis.Cross(camZAxis);
 
-	Vec3f topLeft = rayStart - camZAxis * l + camYAxis * h / 2 - camXAxis * w / 2;
+	topLeft = rayStart - camZAxis * l + camYAxis * h / 2 - camXAxis * w / 2;
 
 	dd_x = camXAxis * w / camera.imgWidth;
 	dd_y = camYAxis * h / camera.imgHeight;
@@ -82,25 +109,18 @@ void BeginRender() {
 	{
 		for (int j = 0; j < camera.imgHeight; ++j)
 		{
-			Vec3f pixelPos = topLeft + (i + 1 / 2) * w / camera.imgWidth * camXAxis - (j + 1 / 2) * h / camera.imgHeight * camYAxis;
+			Color outColor = Color::Black();
 			Ray tRay;
 			tRay.p = rayStart;
-			tRay.dir = pixelPos - rayStart;
-
-			// For this ray, if it hits or not
-			bool bHit = false;
 			HitInfo outHit;
-			recursive(&rootNode, tRay, outHit, bHit, 0);
-			Color outColor = Color::Black();
-			if (bHit) {
-				// Shade the hit object 
-				outColor = outHit.node->GetMaterial()->Shade(tRay, outHit, lights, REFLECTION_BOUNCE);
-			}
-			else {
-				// Shade Background color
-				Vec3f bguvw = Vec3f((float)i / camera.imgWidth, (float)j / camera.imgHeight, 0.0f);
-				outColor = background.Sample(bguvw);
-			}
+			
+#ifdef USE_MSAA
+			outColor = TraceRayMultiple(tRay, outHit, i, j);
+#else
+			outColor = TraceRaySingle(tRay, outHit, i, j);
+#endif // USE_MSAA
+
+			// Set out color
 			renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
 			renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
 			renderImage.IncrementNumRenderPixel(1);
