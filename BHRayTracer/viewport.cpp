@@ -3,7 +3,7 @@
 ///
 /// \file       viewport.cpp 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    7.0
+/// \version    8.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -56,6 +56,7 @@ enum ViewMode
 	VIEWMODE_OPENGL,
 	VIEWMODE_IMAGE,
 	VIEWMODE_Z,
+	VIEWMODE_SAMPLECOUNT,
 };
 
 enum MouseMode {
@@ -332,9 +333,12 @@ void GlutDisplay()
 		DrawRenderProgressBar();
 		break;
 	case VIEWMODE_Z:
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		if (!renderImage.GetZBufferImage()) renderImage.ComputeZBufferImage();
 		DrawImage(renderImage.GetZBufferImage(), GL_UNSIGNED_BYTE, GL_LUMINANCE);
+		break;
+	case VIEWMODE_SAMPLECOUNT:
+		if (!renderImage.GetSampleCountImage()) renderImage.ComputeSampleCountImage();
+		DrawImage(renderImage.GetSampleCountImage(), GL_UNSIGNED_BYTE, GL_LUMINANCE);
 		break;
 	}
 
@@ -415,6 +419,10 @@ void GlutKeyboard(unsigned char key, int x, int y)
 		break;
 	case '3':
 		viewMode = VIEWMODE_Z;
+		glutPostRedisplay();
+		break;
+	case '4':
+		viewMode = VIEWMODE_SAMPLECOUNT;
 		glutPostRedisplay();
 		break;
 	}
