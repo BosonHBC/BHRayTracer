@@ -29,10 +29,10 @@ Vec3f dd_y;
 #define Bias 0.001f
 #define REFLECTION_BOUNCE 3
 
-//#define USE_MSAA
+#define USE_MSAA
 #ifdef USE_MSAA
 #define MSAA_AdaptiveThreshold 0.2f
-#define  MSAA_InitialRayCount 4
+#define  MSAA_RayCountPerSlot 4
 #endif // USE_MSAA
 
 int LoadScene(char const *filename);
@@ -83,8 +83,78 @@ Color TraceRaySingle(Ray &ray, HitInfo &outHit, int i, int j)
 		return background.Sample(bguvw);
 	}
 }
+#ifdef USE_MSAA
+
+Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
+	Vec3f result = i_center;
+	result += dd_x.GetNormalized() *(((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
+	result += dd_y.GetNormalized() *(((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
+	return result;
+}
+
 // Multi-Sampling
-Color TraceRayMultiple(Ray &ray, HitInfo &outHit, int i, int j) { return Color::Black(); }
+Color TraceRayMultiple(Ray &ray, HitInfo &outHit, int i, int j)
+{
+	int currentSubDivision = MSAA_RayCountPerSlot;
+	float lengthPerSubPixel = dd_x.Length() / MSAA_RayCountPerSlot;
+	Vec3f pixelCenter = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
+
+	float variance = 1;
+	Color average;
+
+	// Keep split the sub-pixel
+/*
+	while (variance > MSAA_AdaptiveThreshold)
+	{*/
+	Color subPixelColor[4];
+	Color subPixelColor_Sum;
+	for (int i = 0; i < 4; ++i)
+	{
+		Ray tRay = ray;
+		switch (i)
+		{
+		case 0:
+			tRay.dir = RandomPositionInPixel(pixelCenter /*- dd_x / MSAA_RayCountPerSlot - dd_y / MSAA_RayCountPerSlot*/, dd_x.Length()) - ray.p;
+			break;
+		case 1:
+			tRay.dir = RandomPositionInPixel(pixelCenter/* + dd_x / MSAA_RayCountPerSlot - dd_y / MSAA_RayCountPerSlot*/, dd_x.Length()) - ray.p;
+			break;
+		case 2:
+			tRay.dir = RandomPositionInPixel(pixelCenter/* + dd_x / MSAA_RayCountPerSlot + dd_y / MSAA_RayCountPerSlot*/, dd_x.Length()) - ray.p;
+			break;
+		case 3:
+			tRay.dir = RandomPositionInPixel(pixelCenter/* - dd_x / MSAA_RayCountPerSlot + dd_y / MSAA_RayCountPerSlot*/, dd_x.Length()) - ray.p;
+			break;
+		default:
+			break;
+		}
+
+		bool bHit = false;
+		HitInfo tHitInfo;
+		recursive(&rootNode, tRay, tHitInfo, bHit, 0);
+		if (bHit) {
+			// Shade the hit object 
+			subPixelColor[i] = tHitInfo.node->GetMaterial()->Shade(tRay, tHitInfo, lights, REFLECTION_BOUNCE);
+		}
+		else {
+			// Shade Background color
+			Vec3f bguvw = Vec3f((float)i / camera.imgWidth, (float)j / camera.imgHeight, 0.0f);
+			subPixelColor[i] = background.Sample(bguvw);
+		}
+		subPixelColor_Sum += subPixelColor[i];
+	}
+	average = subPixelColor_Sum / currentSubDivision;
+	Color variance_Sum;
+	for (int i = 0; i < 4; i++)
+	{
+		variance_Sum += (subPixelColor[i] - average) * (subPixelColor[i] - average);
+	}
+	variance = sqrt(variance_Sum.Sum() / currentSubDivision);
+	/*	}*/
+
+	return average;
+}
+#endif
 
 void BeginRender() {
 	Vec3f rayStart = camera.pos;
@@ -102,7 +172,6 @@ void BeginRender() {
 
 	dd_x = camXAxis * w / camera.imgWidth;
 	dd_y = camYAxis * h / camera.imgHeight;
-
 	renderImage.ResetNumRenderedPixels();
 	//#pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
@@ -113,7 +182,7 @@ void BeginRender() {
 			Ray tRay;
 			tRay.p = rayStart;
 			HitInfo outHit;
-			
+
 #ifdef USE_MSAA
 			outColor = TraceRayMultiple(tRay, outHit, i, j);
 #else
