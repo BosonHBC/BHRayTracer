@@ -33,6 +33,7 @@ Vec3f dd_y;
 #ifdef USE_MSAA
 #define MSAA_AdaptiveThreshold 0.2f
 #define  MSAA_RayCountPerSlot 4
+#define  MSAA_AddadptiveStopLevel 3
 #endif // USE_MSAA
 
 int LoadScene(char const *filename);
@@ -91,39 +92,33 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	result += dd_y.GetNormalized() *(((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
 	return result;
 }
-
-// Multi-Sampling
-Color TraceRayMultiple(Ray &ray, HitInfo &outHit, int i, int j)
-{
-	int currentSubDivision = MSAA_RayCountPerSlot;
-	float lengthPerSubPixel = dd_x.Length() / MSAA_RayCountPerSlot;
-	Vec3f pixelCenter = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
+Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int& subPixelCount) {
+	level++;
+	subPixelCount += 4;
+	Color overallColor = Color::Black();
 
 	float variance = 1;
 	Color average;
 
-	// Keep split the sub-pixel
-/*
-	while (variance > MSAA_AdaptiveThreshold)
-	{*/
-	Color subPixelColor[4];
-	Color subPixelColor_Sum;
+	Color subPixelColor[] = { Color::Black() ,Color::Black() ,Color::Black() ,Color::Black() };
+	Color subPixelColor_Sum = Color::Black();
 	for (int i = 0; i < 4; ++i)
 	{
-		Ray tRay = ray;
+		Ray tRay;
+		tRay.p = camera.pos;
 		switch (i)
 		{
 		case 0:
-			tRay.dir = RandomPositionInPixel(pixelCenter /*- dd_x / MSAA_RayCountPerSlot - dd_y / MSAA_RayCountPerSlot*/, dd_x.Length()) - ray.p;
+			tRay.dir = RandomPositionInPixel(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (level * MSAA_RayCountPerSlot)) - tRay.p;
 			break;
 		case 1:
-			tRay.dir = RandomPositionInPixel(pixelCenter/* + dd_x / MSAA_RayCountPerSlot - dd_y / MSAA_RayCountPerSlot*/, dd_x.Length()) - ray.p;
+			tRay.dir = RandomPositionInPixel(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (level * MSAA_RayCountPerSlot)) - tRay.p;
 			break;
 		case 2:
-			tRay.dir = RandomPositionInPixel(pixelCenter/* + dd_x / MSAA_RayCountPerSlot + dd_y / MSAA_RayCountPerSlot*/, dd_x.Length()) - ray.p;
+			tRay.dir = RandomPositionInPixel(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (level * MSAA_RayCountPerSlot)) - tRay.p;
 			break;
 		case 3:
-			tRay.dir = RandomPositionInPixel(pixelCenter/* - dd_x / MSAA_RayCountPerSlot + dd_y / MSAA_RayCountPerSlot*/, dd_x.Length()) - ray.p;
+			tRay.dir = RandomPositionInPixel(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (level * MSAA_RayCountPerSlot)) - tRay.p;
 			break;
 		default:
 			break;
@@ -143,16 +138,40 @@ Color TraceRayMultiple(Ray &ray, HitInfo &outHit, int i, int j)
 		}
 		subPixelColor_Sum += subPixelColor[i];
 	}
-	average = subPixelColor_Sum / currentSubDivision;
+	average = subPixelColor_Sum / MSAA_RayCountPerSlot;
 	Color variance_Sum;
 	for (int i = 0; i < 4; i++)
 	{
 		variance_Sum += (subPixelColor[i] - average) * (subPixelColor[i] - average);
 	}
-	variance = sqrt(variance_Sum.Sum() / currentSubDivision);
-	/*	}*/
+	variance = sqrt(variance_Sum.Sum() / MSAA_RayCountPerSlot);
+	// top left
+	if (abs(subPixelColor[0].Sum() - variance) > MSAA_AdaptiveThreshold) {
+		subPixelColor[0] = JitteredAddaptiveSampling(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level *MSAA_RayCountPerSlot), level, subPixelCount);
+	}
+	//	
+	// top right
+	if (abs(subPixelColor[1].Sum() - variance) > MSAA_AdaptiveThreshold) {
+		subPixelColor[1] = JitteredAddaptiveSampling(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level *MSAA_RayCountPerSlot), level, subPixelCount);
+	}
+	// bottom left
+	if (abs(subPixelColor[2].Sum() - variance) > MSAA_AdaptiveThreshold) {
+		subPixelColor[2] = JitteredAddaptiveSampling(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level *MSAA_RayCountPerSlot), level, subPixelCount);
+	}
+	// bottom right
+	if (abs(subPixelColor[3].Sum() - variance) > MSAA_AdaptiveThreshold) {
+		subPixelColor[3] = JitteredAddaptiveSampling(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level *MSAA_RayCountPerSlot), level, subPixelCount);
+	}
+}
+// Multi-Sampling
+Color TraceRayMultiple(Ray &ray, HitInfo &outHit, int i, int j)
+{
+	Vec3f pixelCenter = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
 
-	return average;
+	int subPixelCount;
+	Color overallColor = JitteredAddaptiveSampling(pixelCenter, 0, subPixelCount);
+
+	return Color::Black();
 }
 #endif
 
