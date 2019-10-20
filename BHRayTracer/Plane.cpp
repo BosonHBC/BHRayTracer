@@ -34,22 +34,23 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	duvw[0] = Vec3f(0, 0, 0);
 	duvw[1] = Vec3f(0, 0, 0);
 
-	// dx = dd
+	// d_: prefix of dervitive;
+	// Direction: the direction of original ray
 	{
-		Vec3f d = ray.dir.GetNormalized();
-		float _t = (t * ray.dir).Length();
-		Vec3f dDx = (d.Dot(d) * dd_x - d.Dot(dd_x) *	d) / pow(d.Dot(d), 1.5f);
-		Vec3f dDy = (d.Dot(d) * dd_y - d.Dot(dd_y) *	d) / pow(d.Dot(d), 1.5f);
+		Vec3f normalized_dir = ray.dir.GetNormalized();
+		float scaled_t = (t * ray.dir).Length();
+		Vec3f d_Direction_X = (normalized_dir.Dot(normalized_dir) * dd_x - normalized_dir.Dot(dd_x) *	normalized_dir) / pow(normalized_dir.Dot(normalized_dir), 1.5f);
+		Vec3f d_Direction_Y = (normalized_dir.Dot(normalized_dir) * dd_y - normalized_dir.Dot(dd_y) *	normalized_dir) / pow(normalized_dir.Dot(normalized_dir), 1.5f);
 
-		float dtx = -(0 + _t * dDx.Dot(hInfo.N) / d.Dot(hInfo.N));
-		float dty = -(0 + _t * dDy.Dot(hInfo.N) / d.Dot(hInfo.N));
+		float d_t_x = -(0 + scaled_t * d_Direction_X.Dot(hInfo.N) / normalized_dir.Dot(hInfo.N));
+		float d_t_y = -(0 + scaled_t * d_Direction_Y.Dot(hInfo.N) / normalized_dir.Dot(hInfo.N));
 																					  
 		// delta hit point on plane
-		Vec3f dXx = 0 +_t* dDx + dtx * d;
-		Vec3f dXy = 0 +_t* dDy + dty * d;
+		Vec3f d_HitPont_x = 0 +scaled_t* d_Direction_X + d_t_x * normalized_dir;
+		Vec3f d_HitPont_y = 0 +scaled_t* d_Direction_Y + d_t_y * normalized_dir;
 
-		duvw[0] = dXx / 2.f;
-		duvw[1] = dXy / 2.f;
+		duvw[0] = d_HitPont_x / 2.f;
+		duvw[1] = d_HitPont_y / 2.f;
 	}
 
 	hInfo.duvw[0] = duvw[0];

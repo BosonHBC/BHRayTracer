@@ -84,7 +84,7 @@ Color TraceRaySingle(Ray &ray, HitInfo &outHit, int i, int j)
 	}
 }
 // Multi-Sampling
-Color TraceRayMultiple(Ray &ray, HitInfo &outHit, int i, int j){}
+Color TraceRayMultiple(Ray &ray, HitInfo &outHit, int i, int j) { return Color::Black(); }
 
 void BeginRender() {
 	Vec3f rayStart = camera.pos;
