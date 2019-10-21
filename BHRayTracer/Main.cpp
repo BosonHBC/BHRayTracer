@@ -31,7 +31,7 @@ Vec3f dd_y;
 
 #define USE_MSAA
 #ifdef USE_MSAA
-#define MSAA_AdaptiveThreshold_Sqr 0.02f * 0.02f
+#define MSAA_AdaptiveThreshold_Sqr 0.01f * 0.01f
 #define  MSAA_RayCountPerSlot 4
 #define  MSAA_AddadptiveStopLevel 3
 #endif // USE_MSAA
@@ -99,9 +99,9 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 	renderImage.GetSampleCount()[i_j*camera.imgWidth + i_i] += MSAA_RayCountPerSlot;
 	Color overallColor = Color::Black();
 	// square of variance
-	float varianceSqr = 1;
-	// average of gray channel
-	float average;
+	float varianceSqr[3] = { 1 ,1, 1 };
+	// average of r,g,b channel
+	float average[3];
 
 	Color subPixelColor[] = { Color::Black() ,Color::Black() ,Color::Black() ,Color::Black() };
 	Color subPixelColor_Sum = Color::Black();
@@ -143,38 +143,38 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 		subPixelColor_Sum += subPixelColor[i];
 	}
 	// Get the average color of 4 sub-pixels
-	average = subPixelColor_Sum.Sum() / (3.f * MSAA_RayCountPerSlot);
-	float variance_Sum = 0;
+	average[0] = subPixelColor_Sum.r / (MSAA_RayCountPerSlot);
+	average[1] = subPixelColor_Sum.g / (MSAA_RayCountPerSlot);
+	average[2] = subPixelColor_Sum.b / (MSAA_RayCountPerSlot);
+
+	float variance_Sum[3] = { 0,0,0 };
 	for (int i = 0; i < 4; i++)
 	{
-		variance_Sum += (subPixelColor[i].Sum() / 3.f - average) * (subPixelColor[i].Sum() / 3.f - average);
+		variance_Sum[0] += (subPixelColor[i].r - average[0]) * (subPixelColor[i].r - average[0]);
+		variance_Sum[1] += (subPixelColor[i].g - average[1]) * (subPixelColor[i].g - average[1]);
+		variance_Sum[2] += (subPixelColor[i].b - average[2]) * (subPixelColor[i].b - average[2]);
 	}
-	varianceSqr = variance_Sum / MSAA_RayCountPerSlot;
+	varianceSqr[0] = variance_Sum[0] / MSAA_RayCountPerSlot;
+	varianceSqr[1] = variance_Sum[1] / MSAA_RayCountPerSlot;
+	varianceSqr[2] = variance_Sum[2] / MSAA_RayCountPerSlot;
+
 	float widthPerSubPixel = level * MSAA_RayCountPerSlot;
 	// top left
-	if (varianceSqr > MSAA_AdaptiveThreshold_Sqr && level < MSAA_AddadptiveStopLevel) {
+	if (
+		(varianceSqr[0] > MSAA_AdaptiveThreshold_Sqr ||
+		varianceSqr[1] > MSAA_AdaptiveThreshold_Sqr ||
+		varianceSqr[2] > MSAA_AdaptiveThreshold_Sqr)
+		&& level < MSAA_AddadptiveStopLevel
+		) {
 		// return the mean color of all sub pixel
-		return (	
+		return (
 			JitteredAddaptiveSampling(pixelCenter - dd_x / widthPerSubPixel - dd_y / widthPerSubPixel, level, i_i, i_j) +
 			JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel - dd_y / widthPerSubPixel, level, i_i, i_j) +
 			JitteredAddaptiveSampling(pixelCenter - dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j) +
 			JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j)
 			) / MSAA_RayCountPerSlot;
 	}
-/*
-	//	
-	// top right
-	if (abs(subPixelColor[1].Sum() - variance) > MSAA_AdaptiveThreshold_Sqr && level < MSAA_AddadptiveStopLevel) {
-		subPixelColor[1] = JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel - dd_y / widthPerSubPixel, level, i_i, i_j);
-	}
-	// bottom left
-	if (abs(subPixelColor[2].Sum() - variance) > MSAA_AdaptiveThreshold_Sqr && level < MSAA_AddadptiveStopLevel) {
-		subPixelColor[2] = JitteredAddaptiveSampling(pixelCenter - dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j);
-	}
-	// bottom right
-	if (abs(subPixelColor[3].Sum() - variance) > MSAA_AdaptiveThreshold_Sqr && level < MSAA_AddadptiveStopLevel) {
-		subPixelColor[3] = JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j);
-	}*/
+
 	return subPixelColor_Sum / MSAA_RayCountPerSlot;
 }
 
@@ -226,7 +226,7 @@ void BeginRender() {
 			//renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
 			renderImage.IncrementNumRenderPixel(1);
 			//printf("Percent: %f\n", renderImage.GetNumRenderedPixels() / (float)(renderImage.GetWidth() * renderImage.GetHeight()));
-}
+		}
 	}
 	renderImage.ComputeZBufferImage();
 	renderImage.SaveImage("Resource/Result/prj8.png");
