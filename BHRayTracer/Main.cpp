@@ -5,7 +5,7 @@
 #include "cyColor.h"
 #include <math.h>
 #include "lights.h"
-//#include <omp.h>
+#include <omp.h>
 
 Node rootNode;
 Camera camera;
@@ -26,12 +26,12 @@ Vec3f topLeft;
 Vec3f dd_x;
 Vec3f dd_y;
 #define PI 3.14159265
-#define Bias 0.001f
+#define Bias 0.01f
 #define REFLECTION_BOUNCE 3
 
 #define USE_MSAA
 #ifdef USE_MSAA
-#define MSAA_AdaptiveThreshold 0.2f
+#define MSAA_AdaptiveThreshold 0.3f
 #define  MSAA_RayCountPerSlot 4
 #define  MSAA_AddadptiveStopLevel 3
 #endif // USE_MSAA
@@ -67,9 +67,11 @@ void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /
 void ShowViewport();
 
 // Trace only single ray
-Color TraceRaySingle(Ray &ray, HitInfo &outHit, int i, int j)
+Color TraceRaySingle(HitInfo &outHit, int i, int j)
 {
 	Vec3f pixelPos = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
+	Ray ray;
+	ray.p = camera.pos;
 	ray.dir = pixelPos - ray.p;
 	// For this ray, if it hits or not
 	bool bHit = false;
@@ -92,16 +94,16 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	result += dd_y.GetNormalized() *(((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
 	return result;
 }
-Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int& subPixelCount) {
+Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) {
 	level++;
-	subPixelCount += 4;
 	Color overallColor = Color::Black();
 
 	float variance = 1;
-	Color average;
+	float average;
 
 	Color subPixelColor[] = { Color::Black() ,Color::Black() ,Color::Black() ,Color::Black() };
 	Color subPixelColor_Sum = Color::Black();
+	// Trace 4 rays for 4 sub-pixels
 	for (int i = 0; i < 4; ++i)
 	{
 		Ray tRay;
@@ -109,16 +111,16 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int& subPixelCount
 		switch (i)
 		{
 		case 0:
-			tRay.dir = RandomPositionInPixel(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (level * MSAA_RayCountPerSlot)) - tRay.p;
+			tRay.dir = RandomPositionInPixel(pixelCenter - dd_x / (float)(level * MSAA_RayCountPerSlot) - dd_y / (float)(level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (float)(level * MSAA_RayCountPerSlot)) - tRay.p;
 			break;
 		case 1:
-			tRay.dir = RandomPositionInPixel(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (level * MSAA_RayCountPerSlot)) - tRay.p;
+			tRay.dir = RandomPositionInPixel(pixelCenter + dd_x / (float)(level * MSAA_RayCountPerSlot) - dd_y / (float)(level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (float)(level * MSAA_RayCountPerSlot)) - tRay.p;
 			break;
 		case 2:
-			tRay.dir = RandomPositionInPixel(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (level * MSAA_RayCountPerSlot)) - tRay.p;
+			tRay.dir = RandomPositionInPixel(pixelCenter + dd_x / (float)(level * MSAA_RayCountPerSlot) + dd_y / (float)(level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (float)(level * MSAA_RayCountPerSlot)) - tRay.p;
 			break;
 		case 3:
-			tRay.dir = RandomPositionInPixel(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (level * MSAA_RayCountPerSlot)) - tRay.p;
+			tRay.dir = RandomPositionInPixel(pixelCenter - dd_x / (float)(level * MSAA_RayCountPerSlot) + dd_y / (float)(level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (float)(level * MSAA_RayCountPerSlot)) - tRay.p;
 			break;
 		default:
 			break;
@@ -133,45 +135,53 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int& subPixelCount
 		}
 		else {
 			// Shade Background color
-			Vec3f bguvw = Vec3f((float)i / camera.imgWidth, (float)j / camera.imgHeight, 0.0f);
+			Vec3f bguvw = Vec3f((float)i_i / camera.imgWidth, (float)i_j / camera.imgHeight, 0.0f);
 			subPixelColor[i] = background.Sample(bguvw);
 		}
 		subPixelColor_Sum += subPixelColor[i];
 	}
-	average = subPixelColor_Sum / MSAA_RayCountPerSlot;
-	Color variance_Sum;
+	// Get the average color of 4 sub-pixels
+	average = subPixelColor_Sum.Sum() / MSAA_RayCountPerSlot;
+	float variance_Sum = 0;
 	for (int i = 0; i < 4; i++)
 	{
-		variance_Sum += (subPixelColor[i] - average) * (subPixelColor[i] - average);
+		variance_Sum += (subPixelColor[i].Sum() - average) * (subPixelColor[i].Sum() - average);
 	}
-	variance = sqrt(variance_Sum.Sum() / MSAA_RayCountPerSlot);
+	variance = sqrt(variance_Sum / MSAA_RayCountPerSlot);
 	// top left
-	if (abs(subPixelColor[0].Sum() - variance) > MSAA_AdaptiveThreshold) {
-		subPixelColor[0] = JitteredAddaptiveSampling(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level *MSAA_RayCountPerSlot), level, subPixelCount);
+	if (abs(subPixelColor[0].Sum() - variance) > MSAA_AdaptiveThreshold && level < MSAA_AddadptiveStopLevel) {
+		subPixelColor[0] = JitteredAddaptiveSampling(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level *MSAA_RayCountPerSlot), level, i_i, i_j);
 	}
 	//	
 	// top right
-	if (abs(subPixelColor[1].Sum() - variance) > MSAA_AdaptiveThreshold) {
-		subPixelColor[1] = JitteredAddaptiveSampling(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level *MSAA_RayCountPerSlot), level, subPixelCount);
+	if (abs(subPixelColor[1].Sum() - variance) > MSAA_AdaptiveThreshold && level < MSAA_AddadptiveStopLevel) {
+		subPixelColor[1] = JitteredAddaptiveSampling(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level *MSAA_RayCountPerSlot), level, i_i, i_j);
 	}
 	// bottom left
-	if (abs(subPixelColor[2].Sum() - variance) > MSAA_AdaptiveThreshold) {
-		subPixelColor[2] = JitteredAddaptiveSampling(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level *MSAA_RayCountPerSlot), level, subPixelCount);
+	if (abs(subPixelColor[2].Sum() - variance) > MSAA_AdaptiveThreshold && level < MSAA_AddadptiveStopLevel) {
+		subPixelColor[2] = JitteredAddaptiveSampling(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level *MSAA_RayCountPerSlot), level, i_i, i_j);
 	}
 	// bottom right
-	if (abs(subPixelColor[3].Sum() - variance) > MSAA_AdaptiveThreshold) {
-		subPixelColor[3] = JitteredAddaptiveSampling(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level *MSAA_RayCountPerSlot), level, subPixelCount);
+	if (abs(subPixelColor[3].Sum() - variance) > MSAA_AdaptiveThreshold && level < MSAA_AddadptiveStopLevel) {
+		subPixelColor[3] = JitteredAddaptiveSampling(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level *MSAA_RayCountPerSlot), level, i_i, i_j);
 	}
+	Color resultColor = Color::Black();
+	for (int i = 0; i < 4; i++)
+	{
+		resultColor += subPixelColor[i];
+	}
+
+	return resultColor / MSAA_RayCountPerSlot;
 }
+
 // Multi-Sampling
-Color TraceRayMultiple(Ray &ray, HitInfo &outHit, int i, int j)
+Color TraceRayMultiple(int i, int j)
 {
 	Vec3f pixelCenter = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
 
-	int subPixelCount;
-	Color overallColor = JitteredAddaptiveSampling(pixelCenter, 0, subPixelCount);
+	Color overallColor = JitteredAddaptiveSampling(pixelCenter, 0, i, j);
 
-	return Color::Black();
+	return overallColor;
 }
 #endif
 
@@ -192,32 +202,30 @@ void BeginRender() {
 	dd_x = camXAxis * w / camera.imgWidth;
 	dd_y = camYAxis * h / camera.imgHeight;
 	renderImage.ResetNumRenderedPixels();
-	//#pragma omp parallel for
+	#pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
 	{
 		for (int j = 0; j < camera.imgHeight; ++j)
 		{
 			Color outColor = Color::Black();
+#ifdef USE_MSAA
+			outColor = TraceRayMultiple(i, j);
+#else
 			Ray tRay;
 			tRay.p = rayStart;
 			HitInfo outHit;
-
-#ifdef USE_MSAA
-			outColor = TraceRayMultiple(tRay, outHit, i, j);
-#else
-			outColor = TraceRaySingle(tRay, outHit, i, j);
+			outColor = TraceRaySingle(outHit, i, j);
 #endif // USE_MSAA
 
 			// Set out color
 			renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
-			renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
+			//renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
 			renderImage.IncrementNumRenderPixel(1);
 			//printf("Percent: %f\n", renderImage.GetNumRenderedPixels() / (float)(renderImage.GetWidth() * renderImage.GetHeight()));
 		}
 	}
-
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/prj7.png");
+	renderImage.SaveImage("Resource/Result/prj8.png");
 }
 void StopRender() {
 
@@ -285,7 +293,7 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 
 int main() {
 
-	//	omp_set_num_threads(16);
+	omp_set_num_threads(16);
 	const char* filename = "Resource/Data/proj7.xml";
 	LoadScene(filename);
 
