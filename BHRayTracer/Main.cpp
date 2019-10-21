@@ -31,7 +31,7 @@ Vec3f dd_y;
 
 #define USE_MSAA
 #ifdef USE_MSAA
-#define MSAA_AdaptiveThreshold 0.3f
+#define MSAA_AdaptiveThreshold_Sqr 0.02f * 0.02f
 #define  MSAA_RayCountPerSlot 4
 #define  MSAA_AddadptiveStopLevel 3
 #endif // USE_MSAA
@@ -96,9 +96,11 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 }
 Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) {
 	level++;
+	renderImage.GetSampleCount()[i_j*camera.imgWidth + i_i] += MSAA_RayCountPerSlot;
 	Color overallColor = Color::Black();
-
-	float variance = 1;
+	// square of variance
+	float varianceSqr = 1;
+	// average of gray channel
 	float average;
 
 	Color subPixelColor[] = { Color::Black() ,Color::Black() ,Color::Black() ,Color::Black() };
@@ -141,37 +143,39 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 		subPixelColor_Sum += subPixelColor[i];
 	}
 	// Get the average color of 4 sub-pixels
-	average = subPixelColor_Sum.Sum() / MSAA_RayCountPerSlot;
+	average = subPixelColor_Sum.Sum() / (3.f * MSAA_RayCountPerSlot);
 	float variance_Sum = 0;
 	for (int i = 0; i < 4; i++)
 	{
-		variance_Sum += (subPixelColor[i].Sum() - average) * (subPixelColor[i].Sum() - average);
+		variance_Sum += (subPixelColor[i].Sum() / 3.f - average) * (subPixelColor[i].Sum() / 3.f - average);
 	}
-	variance = sqrt(variance_Sum / MSAA_RayCountPerSlot);
+	varianceSqr = variance_Sum / MSAA_RayCountPerSlot;
+	float widthPerSubPixel = level * MSAA_RayCountPerSlot;
 	// top left
-	if (abs(subPixelColor[0].Sum() - variance) > MSAA_AdaptiveThreshold && level < MSAA_AddadptiveStopLevel) {
-		subPixelColor[0] = JitteredAddaptiveSampling(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level *MSAA_RayCountPerSlot), level, i_i, i_j);
+	if (varianceSqr > MSAA_AdaptiveThreshold_Sqr && level < MSAA_AddadptiveStopLevel) {
+		// return the mean color of all sub pixel
+		return (	
+			JitteredAddaptiveSampling(pixelCenter - dd_x / widthPerSubPixel - dd_y / widthPerSubPixel, level, i_i, i_j) +
+			JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel - dd_y / widthPerSubPixel, level, i_i, i_j) +
+			JitteredAddaptiveSampling(pixelCenter - dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j) +
+			JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j)
+			) / MSAA_RayCountPerSlot;
 	}
+/*
 	//	
 	// top right
-	if (abs(subPixelColor[1].Sum() - variance) > MSAA_AdaptiveThreshold && level < MSAA_AddadptiveStopLevel) {
-		subPixelColor[1] = JitteredAddaptiveSampling(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) - dd_y / (level *MSAA_RayCountPerSlot), level, i_i, i_j);
+	if (abs(subPixelColor[1].Sum() - variance) > MSAA_AdaptiveThreshold_Sqr && level < MSAA_AddadptiveStopLevel) {
+		subPixelColor[1] = JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel - dd_y / widthPerSubPixel, level, i_i, i_j);
 	}
 	// bottom left
-	if (abs(subPixelColor[2].Sum() - variance) > MSAA_AdaptiveThreshold && level < MSAA_AddadptiveStopLevel) {
-		subPixelColor[2] = JitteredAddaptiveSampling(pixelCenter - dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level *MSAA_RayCountPerSlot), level, i_i, i_j);
+	if (abs(subPixelColor[2].Sum() - variance) > MSAA_AdaptiveThreshold_Sqr && level < MSAA_AddadptiveStopLevel) {
+		subPixelColor[2] = JitteredAddaptiveSampling(pixelCenter - dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j);
 	}
 	// bottom right
-	if (abs(subPixelColor[3].Sum() - variance) > MSAA_AdaptiveThreshold && level < MSAA_AddadptiveStopLevel) {
-		subPixelColor[3] = JitteredAddaptiveSampling(pixelCenter + dd_x / (level * MSAA_RayCountPerSlot) + dd_y / (level *MSAA_RayCountPerSlot), level, i_i, i_j);
-	}
-	Color resultColor = Color::Black();
-	for (int i = 0; i < 4; i++)
-	{
-		resultColor += subPixelColor[i];
-	}
-
-	return resultColor / MSAA_RayCountPerSlot;
+	if (abs(subPixelColor[3].Sum() - variance) > MSAA_AdaptiveThreshold_Sqr && level < MSAA_AddadptiveStopLevel) {
+		subPixelColor[3] = JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j);
+	}*/
+	return subPixelColor_Sum / MSAA_RayCountPerSlot;
 }
 
 // Multi-Sampling
@@ -202,7 +206,7 @@ void BeginRender() {
 	dd_x = camXAxis * w / camera.imgWidth;
 	dd_y = camYAxis * h / camera.imgHeight;
 	renderImage.ResetNumRenderedPixels();
-	#pragma omp parallel for
+#pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
 	{
 		for (int j = 0; j < camera.imgHeight; ++j)
@@ -222,10 +226,13 @@ void BeginRender() {
 			//renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
 			renderImage.IncrementNumRenderPixel(1);
 			//printf("Percent: %f\n", renderImage.GetNumRenderedPixels() / (float)(renderImage.GetWidth() * renderImage.GetHeight()));
-		}
+}
 	}
 	renderImage.ComputeZBufferImage();
 	renderImage.SaveImage("Resource/Result/prj8.png");
+	renderImage.ComputeSampleCountImage();
+	renderImage.SaveSampleCountImage("Resource/Result/prj8_sample.png");
+
 }
 void StopRender() {
 

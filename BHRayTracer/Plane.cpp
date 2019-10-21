@@ -3,6 +3,7 @@
 extern Vec3f dd_x;
 extern Vec3f dd_y;
 
+#define RAY_DIFFERENTIAL
 
 bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
 {
@@ -34,8 +35,9 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	duvw[0] = Vec3f(0, 0, 0);
 	duvw[1] = Vec3f(0, 0, 0);
 
+#ifdef RAY_DIFFERENTIAL
 	// d_: prefix of dervitive;
-	// Direction: the direction of original ray
+// Direction: the direction of original ray
 	{
 		Vec3f normalized_dir = ray.dir.GetNormalized();
 		float scaled_t = (t * ray.dir).Length();
@@ -44,14 +46,16 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 
 		float d_t_x = -(0 + scaled_t * d_Direction_X.Dot(hInfo.N) / normalized_dir.Dot(hInfo.N));
 		float d_t_y = -(0 + scaled_t * d_Direction_Y.Dot(hInfo.N) / normalized_dir.Dot(hInfo.N));
-																					  
+
 		// delta hit point on plane
-		Vec3f d_HitPont_x = 0 +scaled_t* d_Direction_X + d_t_x * normalized_dir;
-		Vec3f d_HitPont_y = 0 +scaled_t* d_Direction_Y + d_t_y * normalized_dir;
+		Vec3f d_HitPont_x = 0 + scaled_t * d_Direction_X + d_t_x * normalized_dir;
+		Vec3f d_HitPont_y = 0 + scaled_t * d_Direction_Y + d_t_y * normalized_dir;
 
 		duvw[0] = d_HitPont_x / 2.f;
 		duvw[1] = d_HitPont_y / 2.f;
 	}
+#endif // RAY_DIFFERENTIAL
+
 
 	hInfo.duvw[0] = duvw[0];
 	hInfo.duvw[1] = duvw[1];
