@@ -7,11 +7,16 @@
 #define EulerN 2.7182818f
 #define REFRACTION_BOUNCE 3
 #define ENABLE_REFLEC_REFRAC
+#ifdef ENABLE_REFLEC_REFRAC
+#define ENABLE_REFLECTION
+//#define ENABLE_RFRACTION
+#endif // ENABLE_REFLEC_REFRAC
+
 
 extern Node rootNode;
 extern LightList lights;
 extern TexturedColor environment;
-void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
+void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
 void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInfo & outHit, bool &_bHit);
 // get the ray from sphere inside to outside or doing internal reflection
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut);
@@ -21,6 +26,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	Color outColor = Color::Black();
 	Vec3f vN = hInfo.N.GetNormalized();
 	Vec3f vV = (ray.p - hInfo.p).GetNormalized();
+
 	// Diffuse and Specular
 	{
 		for (auto it = lights.begin(); it != lights.end(); ++it)
@@ -55,6 +61,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		float cosPhi1 = vN.Dot(vV);
 		float R0 = pow((1 - ior) / (1 + ior), 2);
 		float RPhi = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
+#ifdef ENABLE_REFLECTION
 		// Reflection color
 		{
 			Color FresnelReflectionFactor = refraction.GetColor() * RPhi;
@@ -63,20 +70,24 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				Ray reflectionRay;
 				reflectionRay.dir = (2 * cosPhi1 * vN - vV);
 				reflectionRay.p = hInfo.p + reflectionRay.dir * Bias;
-
 				HitInfo reflHInfo;
 				bool bReflectionHit = false;
 				recursive(&rootNode, reflectionRay, reflHInfo, bReflectionHit, 0);
 				if (bReflectionHit && reflHInfo.node != nullptr && bounceCount > 0) {
 					bounceCount--;
 					outColor += reflectionFactor * reflHInfo.node->GetMaterial()->Shade(reflectionRay, reflHInfo, lights, bounceCount);
+
 				}
 				else {
 					// doesn't bounce to anything
-					outColor += environment.SampleEnvironment(reflectionRay.dir);
+					Vec3f dir_norm= reflectionRay.dir.GetNormalized();
+					outColor += environment.SampleEnvironment(dir_norm);
+
 				}
 			}
 		}
+#endif // ENABLE_REFLECTION
+#ifdef ENABLE_RFRACTION
 		// Refraction color
 		{
 			if (!refraction.GetColor().IsBlack()) {
@@ -154,9 +165,9 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 			}
 		}
-}
+#endif // ENABLE_RFRACTION
+	}
 #endif // ENABLE_REFLEC_REFRAC
-
 
 	outColor += ambientColor;
 	return outColor;

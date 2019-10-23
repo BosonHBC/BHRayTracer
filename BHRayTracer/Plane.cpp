@@ -25,6 +25,7 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	hInfo.N = Vec3f(0, 0, 1);
 	hInfo.front = true;
 	hInfo.z = t;
+
 	// Set uv Info
 	Vec3f uvw;
 	uvw.x = (1 + hInfo.p.x) / 2.f;

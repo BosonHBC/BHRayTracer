@@ -38,7 +38,7 @@ Vec3f dd_y;
 
 int LoadScene(char const *filename);
 
-void recursive(Node* root, Ray ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/) {
+void recursive(Node* root,const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/) {
 	if (root->GetNumChild() <= 0) return;
 	for (int i = 0; i < root->GetNumChild(); i++)
 	{
@@ -130,6 +130,12 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 
 		bool bHit = false;
 		HitInfo tHitInfo;
+		tHitInfo.z = BIGFLOAT;
+
+		if (isnan(tRay.dir.x) || isnan(tRay.dir.y) || isnan(tRay.dir.z) || isnan(tRay.p.x) || isnan(tRay.p.y) || isnan(tRay.p.z)) {
+			printf("tRay.Dir.x is NaN");
+		}
+
 		recursive(&rootNode, tRay, tHitInfo, bHit, 0);
 		if (bHit) {
 			// Shade the hit object 
@@ -140,7 +146,7 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 			Vec3f bguvw = Vec3f((float)i_i / camera.imgWidth, (float)i_j / camera.imgHeight, 0.0f);
 			subPixelColor[i] = background.Sample(bguvw);
 		}
-		subPixelColor_Sum += subPixelColor[i];
+		subPixelColor_Sum +=subPixelColor[i];
 	}
 	// Get the average color of 4 sub-pixels
 	average[0] = subPixelColor_Sum.r / (MSAA_RayCountPerSlot);
@@ -162,8 +168,8 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 	// top left
 	if (
 		(varianceSqr[0] > MSAA_AdaptiveThreshold_Sqr ||
-		varianceSqr[1] > MSAA_AdaptiveThreshold_Sqr ||
-		varianceSqr[2] > MSAA_AdaptiveThreshold_Sqr)
+			varianceSqr[1] > MSAA_AdaptiveThreshold_Sqr ||
+			varianceSqr[2] > MSAA_AdaptiveThreshold_Sqr)
 		&& level < MSAA_AddadptiveStopLevel
 		) {
 		// return the mean color of all sub pixel
@@ -226,7 +232,7 @@ void BeginRender() {
 			//renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
 			renderImage.IncrementNumRenderPixel(1);
 			//printf("Percent: %f\n", renderImage.GetNumRenderedPixels() / (float)(renderImage.GetWidth() * renderImage.GetHeight()));
-		}
+}
 	}
 	renderImage.ComputeZBufferImage();
 	renderImage.SaveImage("Resource/Result/prj8.png");

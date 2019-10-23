@@ -36,10 +36,12 @@ bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 		hInfo.p = oc + hInfo.z * dir;
 		hInfo.N = hInfo.p; // - Vec3f(0, 0, 0);
 		hInfo.front = true;
+
 		// Set uv Info
 		Vec3f uvw;
-		uvw.x = 0.5f + atan2(hInfo.p.y, hInfo.p.x) / (2 * PI);
-		uvw.y = 0.5f - asin(hInfo.p.z) / (PI);
+		Vec3f d = hInfo.N.GetNormalized();
+		uvw.x = 0.5f + atan2(d.y, d.x) / (2 * PI);
+		uvw.y = 0.5f - asin(d.z) / (PI);
 		hInfo.uvw = uvw;
 
 		// Ray differential
