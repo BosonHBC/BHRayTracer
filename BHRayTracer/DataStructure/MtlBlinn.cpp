@@ -1,7 +1,6 @@
 #include "materials.h"
 #include "scene.h"
 #include <math.h>
-#include "lights.h"
 #include <omp.h>
 #define Bias 0.001f
 #define EulerN 2.7182818f
@@ -9,7 +8,7 @@
 #define ENABLE_REFLEC_REFRAC
 #ifdef ENABLE_REFLEC_REFRAC
 #define ENABLE_REFLECTION
-//#define ENABLE_RFRACTION
+#define ENABLE_RFRACTION
 #endif // ENABLE_REFLEC_REFRAC
 
 
@@ -57,115 +56,121 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	// Color that doesn't matter with light
 #ifdef ENABLE_REFLEC_REFRAC
 	{
-		// Phi is dot product of View and Normal
-		float cosPhi1 = vN.Dot(vV);
-		float R0 = pow((1 - ior) / (1 + ior), 2);
-		float RPhi = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
+		if (bounceCount > 0) {
+			bounceCount--;
+			// Phi is dot product of View and Normal
+			float cosPhi1 = vN.Dot(vV);
+			float R0 = pow((1 - ior) / (1 + ior), 2);
+			float RPhi = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
+
 #ifdef ENABLE_REFLECTION
-		// Reflection color
-		{
-			Color FresnelReflectionFactor = refraction.GetColor() * RPhi;
-			Color reflectionFactor = reflection.GetColor() + FresnelReflectionFactor; //add Fresnel Reflection later
-			if (!reflectionFactor.IsBlack()) {
-				Ray reflectionRay;
-				reflectionRay.dir = (2 * cosPhi1 * vN - vV);
-				reflectionRay.p = hInfo.p + reflectionRay.dir * Bias;
-				HitInfo reflHInfo;
-				bool bReflectionHit = false;
-				recursive(&rootNode, reflectionRay, reflHInfo, bReflectionHit, 0);
-				if (bReflectionHit && reflHInfo.node != nullptr && bounceCount > 0) {
-					bounceCount--;
-					outColor += reflectionFactor * reflHInfo.node->GetMaterial()->Shade(reflectionRay, reflHInfo, lights, bounceCount);
+			// Reflection color
+			{
+				Color FresnelReflectionFactor = refraction.GetColor() * RPhi;
+				Color reflectionFactor = reflection.GetColor() + FresnelReflectionFactor; //add Fresnel Reflection later
 
-				}
-				else {
-					// doesn't bounce to anything
-					Vec3f dir_norm= reflectionRay.dir.GetNormalized();
-					outColor += environment.SampleEnvironment(dir_norm);
+				if (!reflectionFactor.IsBlack()) {
+					Ray reflectionRay;
+					reflectionRay.dir = (2 * cosPhi1 * vN - vV).GetNormalized();
+					reflectionRay.p = hInfo.p + reflectionRay.dir * Bias;
+					HitInfo reflHInfo = HitInfo();
+					bool bReflectionHit = false;
+					recursive(&rootNode, reflectionRay, reflHInfo, bReflectionHit, 0);
 
-				}
-			}
-		}
-#endif // ENABLE_REFLECTION
-#ifdef ENABLE_RFRACTION
-		// Refraction color
-		{
-			if (!refraction.GetColor().IsBlack()) {
-				float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
-				float sinPhi2 = sinPhi1 / ior;
-				float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
+					if (bReflectionHit && reflHInfo.node != nullptr) {
+						Color reflectionColor = reflectionFactor * reflHInfo.node->GetMaterial()->Shade(reflectionRay, reflHInfo, lights, bounceCount);
+						outColor += reflectionColor;
 
-				Vec3f vTn = -cosPhi2 * vN;
-				Vec3f vNxV = vN.Cross(vV);
-				Vec3f vTp = vN.Cross(vNxV).GetNormalized()*sinPhi2;
-				Vec3f vT = vTn + vTp;
-
-				Ray refractionRay_in;
-				refractionRay_in.dir = vT;
-				refractionRay_in.p = hInfo.p + refractionRay_in.dir * Bias;
-				HitInfo refraHInfo_in;
-				refraHInfo_in.z = BIGFLOAT;
-				bool bRefractionInHit;
-				recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, 0);
-				if (bRefractionInHit) {
-					Color refractionColor = Color::Black();
-					bool bGoingOut;
-					Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut);
-					if (bGoingOut) {
-						HitInfo refraHinfo_out;
-						bool bRefraction_out_Hit = false;
-						recursive(&rootNode, nextRay, refraHinfo_out, bRefraction_out_Hit, 0);
-						if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
-							float absorptionFactorR = pow(EulerN, -absorption.r*refraHinfo_out.z);
-							float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
-							float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
-							Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
-							refractionColor = (1 - RPhi)*refraction.GetColor() *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, REFRACTION_BOUNCE);
-						}
-						else {
-							// refraction out hit doesn't hit anything
-							refractionColor = environment.SampleEnvironment(nextRay.dir);
-						}
 					}
 					else {
-						// internal reflection
-						int bounceCount = 3;
-						Ray internalRay = nextRay;
-						while (bounceCount > 0)
-						{
-							HitInfo internalHitInfo;
-							bool bInternalHit;
-							recursive(&rootNode, internalRay, internalHitInfo, bInternalHit, 0);
-							if (bInternalHit) {
-								bool bGoOut = false;
-								Ray nextRay_internal = HandleRayWhenRefractionRayOut(internalRay, internalHitInfo, ior, bGoOut);
-								if (bGoOut) {
-									HitInfo refraHinfo_out;
-									bool bRefraction_out_Hit = false;
-									recursive(&rootNode, nextRay_internal, refraHinfo_out, bRefraction_out_Hit, 0);
-									if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
+						// doesn't bounce to anything
+						Vec3f dir_norm = reflectionRay.dir.GetNormalized();
+						outColor += environment.SampleEnvironment(dir_norm);
 
-										refractionColor = (1 - RPhi)*refraction.GetColor() * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
+					}
+				}
+			}
+#endif // ENABLE_REFLECTION
+#ifdef ENABLE_RFRACTION
+			// Refraction color
+			{
+				if (!refraction.GetColor().IsBlack()) {
+					float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
+					float sinPhi2 = sinPhi1 / ior;
+					float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
+
+					Vec3f vTn = -cosPhi2 * vN;
+					Vec3f vNxV = vN.Cross(vV);
+					Vec3f vTp = vN.Cross(vNxV).GetNormalized()*sinPhi2;
+					Vec3f vT = vTn + vTp;
+
+					Ray refractionRay_in;
+					refractionRay_in.dir = vT;
+					refractionRay_in.p = hInfo.p + refractionRay_in.dir * Bias;
+					HitInfo refraHInfo_in;
+					refraHInfo_in.z = BIGFLOAT;
+					bool bRefractionInHit;
+					recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, 0);
+					if (bRefractionInHit) {
+						Color refractionColor = Color::Black();
+						bool bGoingOut;
+						Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut);
+						if (bGoingOut) {
+							HitInfo refraHinfo_out;
+							bool bRefraction_out_Hit = false;
+							recursive(&rootNode, nextRay, refraHinfo_out, bRefraction_out_Hit, 0);
+							if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
+								float absorptionFactorR = pow(EulerN, -absorption.r*refraHinfo_out.z);
+								float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
+								float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
+								Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
+								refractionColor = (1 - RPhi)*refraction.GetColor() *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, REFRACTION_BOUNCE);
+							}
+							else {
+								// refraction out hit doesn't hit anything
+								refractionColor = environment.SampleEnvironment(nextRay.dir);
+							}
+						}
+						else {
+							// internal reflection
+							int bounceCount = 3;
+							Ray internalRay = nextRay;
+							while (bounceCount > 0)
+							{
+								HitInfo internalHitInfo;
+								bool bInternalHit;
+								recursive(&rootNode, internalRay, internalHitInfo, bInternalHit, 0);
+								if (bInternalHit) {
+									bool bGoOut = false;
+									Ray nextRay_internal = HandleRayWhenRefractionRayOut(internalRay, internalHitInfo, ior, bGoOut);
+									if (bGoOut) {
+										HitInfo refraHinfo_out;
+										bool bRefraction_out_Hit = false;
+										recursive(&rootNode, nextRay_internal, refraHinfo_out, bRefraction_out_Hit, 0);
+										if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
+
+											refractionColor = (1 - RPhi)*refraction.GetColor() * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
+										}
+										else {
+											// refraction out hit doesn't hit anything
+											refractionColor = environment.SampleEnvironment(nextRay.dir);
+										}
+										break;
 									}
 									else {
-										// refraction out hit doesn't hit anything
-										refractionColor = environment.SampleEnvironment(nextRay.dir);
+										internalRay = nextRay_internal;
 									}
-									break;
 								}
-								else {
-									internalRay = nextRay_internal;
-								}
+								bounceCount--;
 							}
-							bounceCount--;
 						}
+						outColor += refractionColor;
 					}
-					outColor += refractionColor;
-				}
 
+				}
 			}
-		}
 #endif // ENABLE_RFRACTION
+		}
 	}
 #endif // ENABLE_REFLEC_REFRAC
 

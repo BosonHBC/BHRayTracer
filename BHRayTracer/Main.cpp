@@ -129,17 +129,14 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 		}
 
 		bool bHit = false;
-		HitInfo tHitInfo;
+		HitInfo tHitInfo = HitInfo();
 		tHitInfo.z = BIGFLOAT;
-
-		if (isnan(tRay.dir.x) || isnan(tRay.dir.y) || isnan(tRay.dir.z) || isnan(tRay.p.x) || isnan(tRay.p.y) || isnan(tRay.p.z)) {
-			printf("tRay.Dir.x is NaN");
-		}
 
 		recursive(&rootNode, tRay, tHitInfo, bHit, 0);
 		if (bHit) {
 			// Shade the hit object 
 			subPixelColor[i] = tHitInfo.node->GetMaterial()->Shade(tRay, tHitInfo, lights, REFLECTION_BOUNCE);
+
 		}
 		else {
 			// Shade Background color

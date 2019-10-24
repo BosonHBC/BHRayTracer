@@ -29,7 +29,7 @@ bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 			t = Min(t1, t2);
 		}
 		// if this hit is longer than current closet hit, return false
-		if (hInfo.z < t) return false;
+		if (hInfo.z < t || t <= 0) return false;
 		
 		// Set hit info
 		hInfo.z = t;

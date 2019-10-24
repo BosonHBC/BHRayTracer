@@ -10,7 +10,6 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	// in obj space
 	float rayPz = ray.p.z;
 	float rayDz = ray.dir.z;
-
 	float t = -rayPz / rayDz;
 	// hit the opposite face, or not the closest one
 	if (t < 0 || t > hInfo.z) return false;
