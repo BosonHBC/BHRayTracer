@@ -4,7 +4,6 @@
 #include <omp.h>
 #define Bias 0.001f
 #define EulerN 2.7182818f
-#define REFRACTION_BOUNCE 3
 #define ENABLE_REFLEC_REFRAC
 #ifdef ENABLE_REFLEC_REFRAC
 #define ENABLE_REFLECTION
@@ -124,7 +123,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 								float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
 								float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
 								Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
-								refractionColor = (1 - RPhi)*refraction.GetColor() *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, REFRACTION_BOUNCE);
+								refractionColor = (1 - RPhi)*refraction.GetColor() *absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, bounceCount);
 							}
 							else {
 								// refraction out hit doesn't hit anything
@@ -133,6 +132,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 						}
 						else {
 							// internal reflection
+/*
 							int bounceCount = 3;
 							Ray internalRay = nextRay;
 							while (bounceCount > 0)
@@ -162,7 +162,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 									}
 								}
 								bounceCount--;
-							}
+							}*/
 						}
 						outColor += refractionColor;
 					}

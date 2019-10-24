@@ -11,9 +11,9 @@
       <scale value="1000"/>
       <rotate angle="30" z="1"/>
     </object>
-    <object type="obj" name="Resource/Data/teapot.obj" material="bricks">
-      <scale value="0.8"/>
-      <rotate angle="-50" z="1"/>
+    <object type="obj" name="Resource/Data/cat.obj" material="refractive">
+      <scale value="0.1"/>
+      <rotate angle="90" x="1"/>
       <translate x="2" y="-5" z="0"/>
     </object>
     <object type="sphere" name="sphere1" material="checkerMtl">

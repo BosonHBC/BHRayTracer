@@ -80,7 +80,7 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 
 	t = (vN.Dot(v0) - vN.Dot(ray.p)) / (vN.Dot(ray.dir));
 	// on the back side or the distance is larger than the current shortest one
-	if (t < 0 || t > hInfo.z) return false;
+	if (t <= 0 || t > hInfo.z) return false;
 
 	// vX is the hit point on the XY plane
 	Vec3f vX = ray.p + t * ray.dir;
