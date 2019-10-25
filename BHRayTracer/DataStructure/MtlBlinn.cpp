@@ -8,6 +8,9 @@
 #ifdef ENABLE_REFLEC_REFRAC
 #define ENABLE_REFLECTION
 #define ENABLE_RFRACTION
+#ifdef ENABLE_RFRACTION
+//#define ENABLE_INTERNAL_REFLECTION
+#endif
 #endif // ENABLE_REFLEC_REFRAC
 
 
@@ -51,6 +54,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				ambientColor = diffuse.Sample(hInfo.uvw, hInfo.duvw) * diffuse.GetColor() * (*it)->Illuminate(hInfo.p, vN);
 			}
 		}
+		outColor += ambientColor;
 	}
 	// Color that doesn't matter with light
 #ifdef ENABLE_REFLEC_REFRAC
@@ -59,6 +63,10 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 			bounceCount--;
 			// Phi is dot product of View and Normal
 			float cosPhi1 = vN.Dot(vV);
+			// floating point precision issues
+			if (cosPhi1 > 1) cosPhi1 = 1;
+			// 
+			if (cosPhi1 <= 0) return outColor;
 			float R0 = pow((1 - ior) / (1 + ior), 2);
 			float RPhi = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
 
@@ -71,7 +79,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 				if (!reflectionFactor.IsBlack()) {
 					Ray reflectionRay;
 					reflectionRay.dir = (2 * cosPhi1 * vN - vV).GetNormalized();
-					reflectionRay.p = hInfo.p + reflectionRay.dir * Bias;
+					reflectionRay.p = hInfo.p + vN * Bias;
 					HitInfo reflHInfo = HitInfo();
 					bool bReflectionHit = false;
 					recursive(&rootNode, reflectionRay, reflHInfo, bReflectionHit, 0);
@@ -79,13 +87,11 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 					if (bReflectionHit && reflHInfo.node != nullptr) {
 						Color reflectionColor = reflectionFactor * reflHInfo.node->GetMaterial()->Shade(reflectionRay, reflHInfo, lights, bounceCount);
 						outColor += reflectionColor;
-
 					}
 					else {
 						// doesn't bounce to anything
 						Vec3f dir_norm = reflectionRay.dir.GetNormalized();
 						outColor += environment.SampleEnvironment(dir_norm);
-
 					}
 				}
 			}
@@ -95,6 +101,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 			{
 				if (!refraction.GetColor().IsBlack()) {
 					float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
+
 					float sinPhi2 = sinPhi1 / ior;
 					float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
 
@@ -105,7 +112,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 					Ray refractionRay_in;
 					refractionRay_in.dir = vT;
-					refractionRay_in.p = hInfo.p + refractionRay_in.dir * Bias;
+					refractionRay_in.p = hInfo.p - vN * Bias;
 					HitInfo refraHInfo_in;
 					refraHInfo_in.z = BIGFLOAT;
 					bool bRefractionInHit;
@@ -131,9 +138,10 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 							}
 						}
 						else {
+							outColor += Color(1, 0, 0);
 							// internal reflection
-/*
-							int bounceCount = 3;
+#ifdef ENABLE_INTERNAL_REFLECTION
+							int bounceCount = 1;
 							Ray internalRay = nextRay;
 							while (bounceCount > 0)
 							{
@@ -162,7 +170,9 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 									}
 								}
 								bounceCount--;
-							}*/
+							}
+#endif // ENABLE_INTERNAL_REFLECTION
+
 						}
 						outColor += refractionColor;
 					}
@@ -173,8 +183,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		}
 	}
 #endif // ENABLE_REFLEC_REFRAC
-
-	outColor += ambientColor;
+	if (isnan(outColor.r)) printf("OutColor Has NaN! /n");
 	return outColor;
 }
 
@@ -220,7 +229,7 @@ Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo,
 
 		Ray outsideRay;
 		outsideRay.dir = vT;
-		outsideRay.p = inRayHitInfo.p + outsideRay.dir*Bias;
+		outsideRay.p = inRayHitInfo.p + vN *Bias;
 		toOut = true;
 		return outsideRay;
 	}
@@ -229,7 +238,7 @@ Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo,
 		Vec3f vR = (-2 * cosPhi1 * vN - vV);
 		Ray internalRay;
 		internalRay.dir = vR;
-		internalRay.p = inRayHitInfo.p + internalRay.dir*Bias;
+		internalRay.p = inRayHitInfo.p - vN *Bias;
 		toOut = false;
 		return internalRay;
 	}

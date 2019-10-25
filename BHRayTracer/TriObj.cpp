@@ -76,9 +76,11 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 
 	Vec3f vN = (v1 - v0).Cross(v2 - v0);
 
-	float t;
+	float t = 0;
+	float t_divisor = (vN.Dot(ray.dir));
+	if (t_divisor == 0) return false;
+	t = (vN.Dot(v0) - vN.Dot(ray.p)) / t_divisor;
 
-	t = (vN.Dot(v0) - vN.Dot(ray.p)) / (vN.Dot(ray.dir));
 	// on the back side or the distance is larger than the current shortest one
 	if (t <= 0 || t > hInfo.z) return false;
 

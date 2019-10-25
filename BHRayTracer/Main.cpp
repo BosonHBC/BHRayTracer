@@ -209,11 +209,16 @@ void BeginRender() {
 	dd_x = camXAxis * w / camera.imgWidth;
 	dd_y = camYAxis * h / camera.imgHeight;
 	renderImage.ResetNumRenderedPixels();
+
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
 	{
 		for (int j = 0; j < camera.imgHeight; ++j)
 		{
+			// Initialize the data
+			{
+				renderImage.GetSampleCount()[j*camera.imgWidth + i] = 0;
+			}
 			Color outColor = Color::Black();
 #ifdef USE_MSAA
 			outColor = TraceRayMultiple(i, j);
@@ -228,15 +233,14 @@ void BeginRender() {
 			renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
 			//renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
 			renderImage.IncrementNumRenderPixel(1);
-			//printf("Percent: %f\n", renderImage.GetNumRenderedPixels() / (float)(renderImage.GetWidth() * renderImage.GetHeight()));
+			}
 		}
-	}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/prj8.png");
+	renderImage.SaveImage("Resource/Result/Debug_Refrac.png");
 	renderImage.ComputeSampleCountImage();
-	renderImage.SaveSampleCountImage("Resource/Result/prj8_sample.png");
+	renderImage.SaveSampleCountImage("Resource/Result/Debug_Refrac_sample.png");
 
-}
+	}
 void StopRender() {
 
 }
@@ -304,7 +308,7 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj7.xml";
+	const char* filename = "Resource/Data/cat_Scene.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
