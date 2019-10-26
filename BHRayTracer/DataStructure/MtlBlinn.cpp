@@ -9,7 +9,7 @@
 #define ENABLE_REFLECTION
 #define ENABLE_RFRACTION
 #ifdef ENABLE_RFRACTION
-//#define ENABLE_INTERNAL_REFLECTION
+#define ENABLE_INTERNAL_REFLECTION
 #endif
 #endif // ENABLE_REFLEC_REFRAC
 
@@ -136,7 +136,7 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 		refractionRay_in.p = hInfo.p - vN * Bias;
 		HitInfo refraHInfo_in = HitInfo();
 		bool bRefractionInHit;
-		recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, 0);
+		recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, 1);
 		if (bRefractionInHit) {
 			bool bGoingOut;
 			Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut);
@@ -159,13 +159,13 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 			else {
 				// internal reflection
 #ifdef ENABLE_INTERNAL_REFLECTION
-				int bounceCount = 1;
+				int bounceCount = 64;
 				Ray internalRay = nextRay;
 				while (bounceCount > 0)
 				{
 					HitInfo internalHitInfo;
 					bool bInternalHit;
-					recursive(&rootNode, internalRay, internalHitInfo, bInternalHit, 0);
+					recursive(&rootNode, internalRay, internalHitInfo, bInternalHit, 1);
 					if (bInternalHit) {
 						bool bGoOut = false;
 						Ray nextRay_internal = HandleRayWhenRefractionRayOut(internalRay, internalHitInfo, ior, bGoOut);
@@ -175,11 +175,11 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 							recursive(&rootNode, nextRay_internal, refraHinfo_out, bRefraction_out_Hit, 0);
 							if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
 
-								refractionColor = refraction.GetColor() * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
+								refractionColor = refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
 							}
 							else {
 								// refraction out hit doesn't hit anything
-								refractionColor = environment.SampleEnvironment(nextRay.dir);
+								refractionColor = refraction * environment.SampleEnvironment(nextRay.dir);
 							}
 							break;
 						}
@@ -189,6 +189,8 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 					}
 					bounceCount--;
 				}
+#else 
+				refractionColor += Color(1, 0, 0);
 #endif // ENABLE_INTERNAL_REFLECTION
 
 			}

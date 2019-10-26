@@ -236,9 +236,9 @@ void BeginRender() {
 			}
 		}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/prj8.png");
-	renderImage.ComputeSampleCountImage();
-	renderImage.SaveSampleCountImage("Resource/Result/prj8_sample.png");
+	renderImage.SaveImage("Resource/Result/catTest.png");
+	//renderImage.ComputeSampleCountImage();
+	//renderImage.SaveSampleCountImage("Resource/Result/catTest.png");
 
 	}
 void StopRender() {
