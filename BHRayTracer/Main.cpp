@@ -236,9 +236,9 @@ void BeginRender() {
 			}
 		}
 	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/Debug_Refrac.png");
+	renderImage.SaveImage("Resource/Result/prj8.png");
 	renderImage.ComputeSampleCountImage();
-	renderImage.SaveSampleCountImage("Resource/Result/Debug_Refrac_sample.png");
+	renderImage.SaveSampleCountImage("Resource/Result/prj8_sample.png");
 
 	}
 void StopRender() {
@@ -308,7 +308,7 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/cat_Scene.xml";
+	const char* filename = "Resource/Data/proj7.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
