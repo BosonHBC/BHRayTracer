@@ -159,7 +159,7 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 			else {
 				// internal reflection
 #ifdef ENABLE_INTERNAL_REFLECTION
-				int bounceCount = 64;
+				int bounceCount = 3;
 				Ray internalRay = nextRay;
 				while (bounceCount > 0)
 				{

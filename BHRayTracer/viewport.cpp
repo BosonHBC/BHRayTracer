@@ -3,7 +3,7 @@
 ///
 /// \file       viewport.cpp 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    8.0
+/// \version    9.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -73,6 +73,12 @@ static int mouseX = 0, mouseY = 0;
 static float viewAngle1 = 0, viewAngle2 = 0;
 static GLuint viewTexture;
 
+static int      dofDrawCount = 0;
+static Color    *dofImage = nullptr;
+static Color24 *dofBuffer = nullptr;
+
+#define MAX_DOF_DRAW    32
+
 //-------------------------------------------------------------------------------
 
 void GlutDisplay();
@@ -117,6 +123,12 @@ void ShowViewport()
 	glEnable(GL_NORMALIZE);
 
 	glLineWidth(2);
+
+	if (camera.dof > 0) {
+		dofBuffer = new Color24[camera.imgWidth * camera.imgHeight];
+		dofImage = new Color[camera.imgWidth * camera.imgHeight];
+		memset(dofImage, 0, camera.imgWidth * camera.imgHeight * sizeof(Color));
+	}
 
 	glGenTextures(1, &viewTexture);
 	glBindTexture(GL_TEXTURE_2D, viewTexture);
@@ -220,8 +232,14 @@ void DrawScene()
 
 	glPushMatrix();
 	Vec3f p = camera.pos;
-	Vec3f t = camera.pos + camera.dir;
+	Vec3f t = camera.pos + camera.dir*camera.focaldist;
 	Vec3f u = camera.up;
+	if (camera.dof > 0) {
+		Vec3f v = camera.dir ^ camera.up;
+		float r = sqrtf(float(rand()) / RAND_MAX)*camera.dof;
+		float a = float(M_PI) * 2.0f * float(rand()) / RAND_MAX;
+		p += r * cosf(a)*v + r * sinf(a)*u;
+	}
 	gluLookAt(p.x, p.y, p.z, t.x, t.y, t.z, u.x, u.y, u.z);
 
 	glRotatef(viewAngle1, 1, 0, 0);
@@ -326,7 +344,28 @@ void GlutDisplay()
 {
 	switch (viewMode) {
 	case VIEWMODE_OPENGL:
-		DrawScene();
+		if (dofImage) {
+			if (dofDrawCount < MAX_DOF_DRAW) {
+				DrawScene();
+				glReadPixels(0, 0, camera.imgWidth, camera.imgHeight, GL_RGB, GL_UNSIGNED_BYTE, dofBuffer);
+				for (int i = 0, y = 0; y < camera.imgHeight; y++) {
+					int j = (camera.imgHeight - y - 1)*camera.imgWidth;
+					for (int x = 0; x < camera.imgWidth; x++, i++, j++) {
+						dofImage[i] = (dofImage[i] * float(dofDrawCount) + dofBuffer[j].ToColor()) / float(dofDrawCount + 1);
+					}
+				}
+				dofDrawCount++;
+			}
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+			DrawImage(dofImage, GL_FLOAT, GL_RGB);
+			if (dofDrawCount < MAX_DOF_DRAW) {
+				DrawProgressBar(float(dofDrawCount) / MAX_DOF_DRAW);
+				glutPostRedisplay();
+			}
+		}
+		else {
+			DrawScene();
+		}
 		break;
 	case VIEWMODE_IMAGE:
 		DrawImage(renderImage.GetPixels(), GL_UNSIGNED_BYTE, GL_RGB);
@@ -381,15 +420,21 @@ void GlutKeyboard(unsigned char key, int x, int y)
 		case MODE_READY:
 			mode = MODE_RENDERING;
 			viewMode = VIEWMODE_IMAGE;
-			DrawScene();
-			glReadPixels(0, 0, renderImage.GetWidth(), renderImage.GetHeight(), GL_RGB, GL_UNSIGNED_BYTE, renderImage.GetPixels());
-			{
-				Color24 *c = renderImage.GetPixels();
-				for (int y0 = 0, y1 = renderImage.GetHeight() - 1; y0 < y1; y0++, y1--) {
-					int i0 = y0 * renderImage.GetWidth();
-					int i1 = y1 * renderImage.GetWidth();
-					for (int x = 0; x < renderImage.GetWidth(); x++, i0++, i1++) {
-						Color24 t = c[i0]; c[i0] = c[i1]; c[i1] = t;
+			if (dofImage) {
+				Color24 *p = renderImage.GetPixels();
+				for (int i = 0; i < camera.imgWidth*camera.imgHeight; i++) p[i] = Color24(dofImage[i]);
+			}
+			else {
+				DrawScene();
+				glReadPixels(0, 0, renderImage.GetWidth(), renderImage.GetHeight(), GL_RGB, GL_UNSIGNED_BYTE, renderImage.GetPixels());
+				{
+					Color24 *c = renderImage.GetPixels();
+					for (int y0 = 0, y1 = renderImage.GetHeight() - 1; y0 < y1; y0++, y1--) {
+						int i0 = y0 * renderImage.GetWidth();
+						int i1 = y1 * renderImage.GetWidth();
+						for (int x = 0; x < renderImage.GetWidth(); x++, i0++, i1++) {
+							Color24 t = c[i0]; c[i0] = c[i1]; c[i1] = t;
+						}
 					}
 				}
 			}
