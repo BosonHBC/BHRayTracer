@@ -43,6 +43,9 @@
     <Filter Include="Source Files\DataStructure\Lights">
       <UniqueIdentifier>{b45eda6c-9697-46a4-a4ce-926f0ccb98a5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DataStructure\Camera">
+      <UniqueIdentifier>{53d05a7e-318f-4621-8bd8-ac73226d88f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataStructure\cyAlphaDistribution.h">

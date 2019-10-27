@@ -25,69 +25,31 @@ TextureList textureList;
 Vec3f topLeft;
 Vec3f dd_x;
 Vec3f dd_y;
+Vec3f camZAxis;
+Vec3f camYAxis;
+Vec3f camXAxis;
 #define PI 3.14159265
 #define Bias 0.01f
 #define REFLECTION_BOUNCE 3
 
+
+
+int LoadScene(char const *filename);
+void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
+void ShowViewport();
+Color TraceRaySingle(HitInfo &outHit, int i, int j);
+Color TraceRayMultiple(int i, int j);
+
+//---------------
+// Use Components
+//---------------
 #define USE_MSAA
+#define ENABLE_DEPTH_OF_VIEW
+
 #ifdef USE_MSAA
 #define MSAA_AdaptiveThreshold_Sqr 0.01f * 0.01f
 #define  MSAA_RayCountPerSlot 4
 #define  MSAA_AddadptiveStopLevel 3
-#endif // USE_MSAA
-
-int LoadScene(char const *filename);
-
-void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/) {
-	if (root->GetNumChild() <= 0) return;
-	for (int i = 0; i < root->GetNumChild(); i++)
-	{
-		Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
-		if (root->GetChild(i)->GetNodeObj() != nullptr) {
-
-			// transform ray to child coordinate
-			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, hitSide))
-			{
-				outHit.node = root->GetChild(i);
-				_bHit = true;
-				root->GetChild(i)->FromNodeCoords(outHit);
-			}
-
-		}
-		recursive(root->GetChild(i), transformedRay, outHit, _bHit, hitSide);
-	}
-	for (int i = 0; i < root->GetNumChild(); i++) {
-		if (root->GetChild(i) == outHit.node) {
-			root->FromNodeCoords(outHit);
-			break;
-		}
-	}
-}
-
-void ShowViewport();
-
-// Trace only single ray
-Color TraceRaySingle(HitInfo &outHit, int i, int j)
-{
-	Vec3f pixelPos = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
-	Ray ray;
-	ray.p = camera.pos;
-	ray.dir = pixelPos - ray.p;
-	// For this ray, if it hits or not
-	bool bHit = false;
-	recursive(&rootNode, ray, outHit, bHit, 0);
-	if (bHit) {
-		// Shade the hit object 
-		return outHit.node->GetMaterial()->Shade(ray, outHit, lights, REFLECTION_BOUNCE);
-	}
-	else {
-		// Shade Background color
-		Vec3f bguvw = Vec3f((float)i / camera.imgWidth, (float)j / camera.imgHeight, 0.0f);
-		return background.Sample(bguvw);
-	}
-}
-#ifdef USE_MSAA
-
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
 	result += dd_x.GetNormalized() *(((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
@@ -110,6 +72,7 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 	{
 		Ray tRay;
 		tRay.p = camera.pos;
+
 		switch (i)
 		{
 		case 0:
@@ -130,7 +93,6 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 
 		bool bHit = false;
 		HitInfo tHitInfo = HitInfo();
-		tHitInfo.z = BIGFLOAT;
 
 		recursive(&rootNode, tRay, tHitInfo, bHit, 0);
 		if (bHit) {
@@ -180,31 +142,65 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 
 	return subPixelColor_Sum / MSAA_RayCountPerSlot;
 }
+#endif // USE_MSAA
 
-// Multi-Sampling
-Color TraceRayMultiple(int i, int j)
-{
-	Vec3f pixelCenter = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
+#ifdef ENABLE_DEPTH_OF_VIEW
+#define DoV_SampleCount 128
+Vec3f GetSampleInAperture(const Camera& cam) {
+	// Center of aperture
+	Vec3f O = cam.pos;
+	// Radius of aperture
+	float R = cam.dof;
+	// Non-uniform distribution
+	float r = ((double)rand() / (RAND_MAX)) * R;
+	// Uniform distribution
+	r = sqrt(r) * R;
+	float theta = ((double)rand() / (RAND_MAX)) * 2 * PI;
+	// Random point in a circle
+	float x = r * cos(theta);
+	float y = r * sin(theta);
 
-	Color overallColor = JitteredAddaptiveSampling(pixelCenter, 0, i, j);
-
-	return overallColor;
+	return O + camXAxis * x + camYAxis * y;
 }
-#endif
+Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
+	Color colorSum = Color::Black();
+	for (int i = 0; i < DoV_SampleCount; ++i)
+	{
+		Ray ray = Ray();
+		ray.p = GetSampleInAperture(camera);
+		ray.dir = pixelCenter - ray.p;
+
+		bool bHit = false;
+		HitInfo tHitInfo = HitInfo();
+
+		recursive(&rootNode, ray, tHitInfo, bHit, 0);
+		if (bHit) {
+			// Shade the hit object 
+			colorSum += tHitInfo.node->GetMaterial()->Shade(ray, tHitInfo, lights, REFLECTION_BOUNCE);
+
+		}
+		else {
+			// Shade Background color
+			Vec3f bguvw = Vec3f((float)i_i / camera.imgWidth, (float)i_j / camera.imgHeight, 0.0f);
+			colorSum += background.Sample(bguvw);
+		}
+	}
+	return colorSum / DoV_SampleCount;
+}
+#endif // ENABLE_DEPTH_OF_VIEW
 
 void BeginRender() {
-	Vec3f rayStart = camera.pos;
 	float aor = camera.imgWidth / (float)camera.imgHeight;
 	float tan_h_pov = tan(camera.fov / 2 * PI / 180.0);
-	float l = 1;
+	float l = camera.focaldist;
 	float h = 2 * l * tan_h_pov;
 	float w = aor * h;
 
-	Vec3f camZAxis = -camera.dir;
-	Vec3f camYAxis = camera.up;
-	Vec3f camXAxis = camYAxis.Cross(camZAxis);
+	camZAxis = -camera.dir;
+	camYAxis = camera.up;
+	camXAxis = camYAxis.Cross(camZAxis);
 
-	topLeft = rayStart - camZAxis * l + camYAxis * h / 2 - camXAxis * w / 2;
+	topLeft = camera.pos - camZAxis * l + camYAxis * h / 2 - camXAxis * w / 2;
 
 	dd_x = camXAxis * w / camera.imgWidth;
 	dd_y = camYAxis * h / camera.imgHeight;
@@ -220,11 +216,9 @@ void BeginRender() {
 				renderImage.GetSampleCount()[j*camera.imgWidth + i] = 0;
 			}
 			Color outColor = Color::Black();
-#ifdef USE_MSAA
+#ifdef USE_MSAA | ENABLE_DEPTH_OF_VIEW
 			outColor = TraceRayMultiple(i, j);
 #else
-			Ray tRay;
-			tRay.p = rayStart;
 			HitInfo outHit;
 			outColor = TraceRaySingle(outHit, i, j);
 #endif // USE_MSAA
@@ -303,7 +297,67 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 	return ShadowRayRecursive(&rootNode, ray, t_max) ? 0.f : 1.f;
 }
 
+// Trace only single ray
+Color TraceRaySingle(HitInfo &outHit, int i, int j)
+{
+	Vec3f pixelCenter = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
+	Ray ray;
+	ray.p = camera.pos;
+	ray.dir = pixelCenter - ray.p;
+	// For this ray, if it hits or not
+	bool bHit = false;
+	recursive(&rootNode, ray, outHit, bHit, 0);
+	if (bHit) {
+		// Shade the hit object 
+		return outHit.node->GetMaterial()->Shade(ray, outHit, lights, REFLECTION_BOUNCE);
+	}
+	else {
+		// Shade Background color
+		Vec3f bguvw = Vec3f((float)i / camera.imgWidth, (float)j / camera.imgHeight, 0.0f);
+		return background.Sample(bguvw);
+	}
+}
+// Multi-Sampling
+Color TraceRayMultiple(int i, int j)
+{
+	Vec3f pixelCenter = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
+	Color overallColor = Color::Black();
+#ifdef ENABLE_DEPTH_OF_VIEW
+	overallColor = DOVSampling(pixelCenter, i, j);
+#else
+#ifdef USE_MSAA
+	overallColor = JitteredAddaptiveSampling(pixelCenter, 0, i, j);
+#endif // USE_MSAA
+#endif // ENABLE_DEPTH_OF_VIEW
 
+	return overallColor;
+}
+
+void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/) {
+	if (root->GetNumChild() <= 0) return;
+	for (int i = 0; i < root->GetNumChild(); i++)
+	{
+		Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
+		if (root->GetChild(i)->GetNodeObj() != nullptr) {
+
+			// transform ray to child coordinate
+			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, hitSide))
+			{
+				outHit.node = root->GetChild(i);
+				_bHit = true;
+				root->GetChild(i)->FromNodeCoords(outHit);
+			}
+
+		}
+		recursive(root->GetChild(i), transformedRay, outHit, _bHit, hitSide);
+	}
+	for (int i = 0; i < root->GetNumChild(); i++) {
+		if (root->GetChild(i) == outHit.node) {
+			root->FromNodeCoords(outHit);
+			break;
+		}
+	}
+}
 
 int main() {
 

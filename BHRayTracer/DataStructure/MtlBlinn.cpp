@@ -65,7 +65,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		}
 	}
 #endif // ENABLE_REFLEC_REFRAC
-	if (isnan(outColor.r)) printf("OutColor Has NaN! /n");
+	if (isnan(outColor.r)) printf("OutColor Has NaN! \n");
 	return outColor;
 }
 
@@ -85,13 +85,13 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 			}
 			// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 			Vec3f vH = (vL + vV).GetNormalized();
-			Color bdrf = diffuse.Sample(hInfo.uvw, hInfo.duvw) * diffuse.GetColor() * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw)* specular.GetColor() * pow(vH.Dot(vN), glossiness);
+			Color bdrf = diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness);
 			outColor += bdrf * (*it)->Illuminate(hInfo.p, vN);
 
 		}
 		else {
 			// it is ambient
-			outColor += diffuse.Sample(hInfo.uvw, hInfo.duvw) * diffuse.GetColor() * (*it)->Illuminate(hInfo.p, vN);
+			outColor += diffuse.Sample(hInfo.uvw, hInfo.duvw)  * (*it)->Illuminate(hInfo.p, vN);
 		}
 	}
 	return outColor;
