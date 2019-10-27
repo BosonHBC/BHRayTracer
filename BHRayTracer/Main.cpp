@@ -29,22 +29,24 @@ Vec3f camZAxis;
 Vec3f camYAxis;
 Vec3f camXAxis;
 #define PI 3.14159265
-#define Bias 0.01f
+#define Bias 0.00001f
 #define REFLECTION_BOUNCE 3
-
-
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
 void ShowViewport();
+void SaveImages();
 Color TraceRaySingle(HitInfo &outHit, int i, int j);
 Color TraceRayMultiple(int i, int j);
 
 //---------------
 // Use Components
-//---------------
+
 #define USE_MSAA
 #define ENABLE_DEPTH_OF_VIEW
+
+//---------------
+
 
 #ifdef USE_MSAA
 #define MSAA_AdaptiveThreshold_Sqr 0.01f * 0.01f
@@ -227,14 +229,10 @@ void BeginRender() {
 			renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
 			//renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
 			renderImage.IncrementNumRenderPixel(1);
-			}
 		}
-	renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj9.png");
-	//renderImage.ComputeSampleCountImage();
-	//renderImage.SaveSampleCountImage("Resource/Result/catTest.png");
-
 	}
+	SaveImages();
+}
 void StopRender() {
 
 }
@@ -358,7 +356,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 		}
 	}
 }
-
+void SaveImages() {
+	renderImage.ComputeZBufferImage();
+	renderImage.SaveImage("Resource/Result/proj9_128.png");
+	//renderImage.ComputeSampleCountImage();
+	//renderImage.SaveSampleCountImage("Resource/Result/catTest.png");
+}
 int main() {
 
 	omp_set_num_threads(16);

@@ -34,11 +34,9 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	Vec3f vV = (ray.p - hInfo.p).GetNormalized();
 	// ----------
 	// Diffuse and Specular
-	// ----------
 	outColor += DiffuseNSpecular(diffuse, specular, glossiness, hInfo, vN, vV);
 	// ----------
 	// Reflection and Refraction
-	// ----------
 #ifdef ENABLE_REFLEC_REFRAC
 	{
 		if (bounceCount > 0) {
@@ -65,6 +63,8 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		}
 	}
 #endif // ENABLE_REFLEC_REFRAC
+	// ----------
+
 	if (isnan(outColor.r)) printf("OutColor Has NaN! \n");
 	return outColor;
 }
@@ -97,6 +97,7 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 	return outColor;
 }
 
+#ifdef ENABLE_REFLECTION
 Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int& o_bounceCount) {
 	Color reflectionColor = Color::Black();
 	if (!reflection.IsBlack()) {
@@ -117,7 +118,9 @@ Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& h
 	}
 	return reflectionColor;
 }
+#endif // ENABLE_REFLECTION
 
+#ifdef ENABLE_RFRACTION
 Color Refraction(const Color& refraction, const Color& absorption, const float& cosPhi1, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int& o_bounceCount)
 {
 	Color refractionColor = Color::Black();
@@ -195,36 +198,11 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 
 			}
 
-		}
-
-	}
-	return refractionColor;
-}
-
-void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInfo & outHit, bool &_bHit) {
-	if (root->GetNumChild() <= 0) return;
-	for (int i = 0; i < root->GetNumChild(); i++)
-	{
-		Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
-		if (root->GetChild(i)->GetNodeObj() == myNode->GetNodeObj()) {
-
-			// transform ray to child coordinate
-			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 0))
-			{
-				outHit.node = root->GetChild(i);
-				_bHit = true;
-				root->GetChild(i)->FromNodeCoords(outHit);
 			}
+
 		}
-		RefractionInternalRecursive(root->GetChild(i), myNode, transformedRay, outHit, _bHit);
+	return refractionColor;
 	}
-	for (int i = 0; i < root->GetNumChild(); i++) {
-		if (root->GetChild(i) == outHit.node) {
-			root->FromNodeCoords(outHit);
-			break;
-		}
-	}
-}
 
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut) {
 	Vec3f vN = inRayHitInfo.N; // to up
@@ -257,3 +235,32 @@ Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo,
 		return internalRay;
 	}
 }
+#ifdef ENABLE_INTERNAL_REFLECTION
+void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInfo & outHit, bool &_bHit) {
+	if (root->GetNumChild() <= 0) return;
+	for (int i = 0; i < root->GetNumChild(); i++)
+	{
+		Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
+		if (root->GetChild(i)->GetNodeObj() == myNode->GetNodeObj()) {
+
+			// transform ray to child coordinate
+			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 0))
+			{
+				outHit.node = root->GetChild(i);
+				_bHit = true;
+				root->GetChild(i)->FromNodeCoords(outHit);
+			}
+		}
+		RefractionInternalRecursive(root->GetChild(i), myNode, transformedRay, outHit, _bHit);
+	}
+	for (int i = 0; i < root->GetNumChild(); i++) {
+		if (root->GetChild(i) == outHit.node) {
+			root->FromNodeCoords(outHit);
+			break;
+		}
+	}
+}
+
+#endif // ENABLE_INTERNAL_REFLECTION
+#endif // ENABLE_RFRACTION
+
