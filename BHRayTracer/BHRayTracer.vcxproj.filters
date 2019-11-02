@@ -164,5 +164,8 @@
     <ClCompile Include="PointLight.cpp">
       <Filter>Source Files\DataStructure\Lights</Filter>
     </ClCompile>
+    <ClCompile Include="GenLight.cpp">
+      <Filter>Source Files\DataStructure\Lights</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

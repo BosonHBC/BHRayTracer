@@ -198,6 +198,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <ClCompile Include="Box.cpp" />
     <ClCompile Include="DataStructure\MtlBlinn.cpp" />
     <ClCompile Include="DataStructure\Sphere.cpp" />
+    <ClCompile Include="GenLight.cpp" />
     <ClCompile Include="LoadPNG\lodepng.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Plane.cpp" />
