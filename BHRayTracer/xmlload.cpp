@@ -3,7 +3,7 @@
 ///
 /// \file       xmlload.cpp 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    9.0
+/// \version    10.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -232,8 +232,10 @@ void LoadNode(Node *parent, TiXmlElement *element, int level)
 									m->SetReflection(Color(mtl.Ks));
 									if (mtl.map_Ks.data != nullptr) m->SetReflectionTexture(new TextureMap(ReadTexture(mtl.map_Ks.data)));
 									float gloss = acosf(powf(2, 1 / mtl.Ns));
+									m->SetReflectionGlossiness(gloss);
 									if (mtl.illum >= 6) {
 										m->SetRefraction(1 - Color(mtl.Tf));
+										m->SetRefractionGlossiness(gloss);
 									}
 								}
 								mm->AppendMaterial(m);
@@ -344,6 +346,11 @@ void LoadMaterial(TiXmlElement *element)
 					m->SetReflection(c);
 					printf("   reflection %f %f %f\n", c.r, c.g, c.b);
 					m->SetReflectionTexture(ReadTexture(child));
+					f = 0;
+					ReadFloat(child, f, "glossiness");
+					m->SetReflectionGlossiness(f);
+					if (f > 0) printf(" (glossiness %f)", f);
+					printf("\n");
 				}
 				else if (COMPARE(child->Value(), "refraction")) {
 					ReadColor(child, c);
@@ -352,6 +359,11 @@ void LoadMaterial(TiXmlElement *element)
 					m->SetRefractionIndex(f);
 					printf("   refraction %f %f %f (index %f)\n", c.r, c.g, c.b, f);
 					m->SetRefractionTexture(ReadTexture(child));
+					f = 0;
+					ReadFloat(child, f, "glossiness");
+					m->SetRefractionGlossiness(f);
+					if (f > 0) printf(" (glossiness %f)", f);
+					printf("\n");
 				}
 				else if (COMPARE(child->Value(), "absorption")) {
 					ReadColor(child, c);
@@ -434,6 +446,12 @@ void LoadLight(TiXmlElement *element)
 					ReadVector(child, v);
 					l->SetPosition(v);
 					printf("   position %f %f %f\n", v.x, v.y, v.z);
+				}
+				else if (COMPARE(child->Value(), "size")) {
+					float f = 0;
+					ReadFloat(child, f);
+					l->SetSize(f);
+					printf("   size %f\n", f);
 				}
 			}
 		}
