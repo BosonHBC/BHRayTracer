@@ -42,7 +42,7 @@ Color TraceRayMultiple(int i, int j);
 //---------------
 // Use Components
 
-#define USE_MSAA
+//#define USE_MSAA
 //#define ENABLE_DEPTH_OF_VIEW
 
 //---------------
