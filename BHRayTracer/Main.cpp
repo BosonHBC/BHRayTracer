@@ -42,7 +42,7 @@ Color TraceRayMultiple(int i, int j);
 //---------------
 // Use Components
 
-//#define USE_MSAA
+#define USE_MSAA
 //#define ENABLE_DEPTH_OF_VIEW
 
 //---------------
@@ -154,7 +154,7 @@ Vec3f GetSampleInAperture(const Camera& cam) {
 	// Radius of aperture
 	float R = cam.dof;
 	// Non-uniform distribution
-	float r = ((double)rand() / (RAND_MAX)) * R;
+	float r = ((double)rand() / (RAND_MAX));
 	// Uniform distribution
 	r = sqrt(r) * R;
 	float theta = ((double)rand() / (RAND_MAX)) * 2 * PI;
@@ -300,7 +300,7 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 	}
 }
 void SaveImages() {
-	renderImage.ComputeZBufferImage();
+	//renderImage.ComputeZBufferImage();
 	renderImage.SaveImage("Resource/Result/proj10.png");
 	//renderImage.ComputeSampleCountImage();
 	//renderImage.SaveSampleCountImage("Resource/Result/catTest.png");

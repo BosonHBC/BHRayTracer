@@ -156,7 +156,7 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 	hInfo.p = vX;
 	hInfo.front = true;
 	// Set uv info
-	Vec3f uvw;
+	Vec3f uvw = Vec3f();
 	Vec3f tc = GetTexCoord(faceID, bc);
 	hInfo.uvw = tc;
 

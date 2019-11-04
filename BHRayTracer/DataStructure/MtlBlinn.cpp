@@ -95,8 +95,9 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 			}
 			// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 			Vec3f vH = (vL + vV).GetNormalized();
-			Color bdrf = diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness);
-			outColor += bdrf * (*it)->Illuminate(hInfo.p, vN);
+			Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness);
+
+			outColor += brdf * (*it)->Illuminate(hInfo.p, vN);
 
 		}
 		else {
@@ -104,7 +105,7 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 			outColor += diffuse.Sample(hInfo.uvw, hInfo.duvw)  * (*it)->Illuminate(hInfo.p, vN);
 		}
 	}
-	return outColor;
+	return isnan(outColor.r)? Color::Black():outColor;
 }
 
 #ifdef ENABLE_Reflection
@@ -141,7 +142,7 @@ Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& h
 		}
 		reflectionColor = reflectionColorSum / sampleCount;
 	}
-	return reflectionColor;
+	return isnan(reflectionColor.r) ? Color::Black() : reflectionColor;
 }
 
 #endif // ENABLE_REFLECTION
@@ -151,15 +152,22 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 {
 	Color refractionColor = Color::Black();
 	if (!refraction.IsBlack()) {
-		float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
-		float sinPhi2 = sinPhi1 / ior;
-		float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
 
 		Color refractionColorSum_in = Color::Black();
 		int sampleCount = refractionGlossiness > 0 ? GlossyRefractionSampleCount : 1;
 		for (int i = 0; i < sampleCount; ++i)
 		{
-			Vec3f vN_new = GetSampleAlongNormal(vN, refractionGlossiness *vN.Length());
+			Vec3f vN_new = refractionGlossiness > 0 ? GetSampleAlongNormal(vN, refractionGlossiness) : vN;
+			float cosPhi1New = vN_new.Dot(vV);
+			// handle floating point precision issues
+			{
+				if (cosPhi1New > 1) cosPhi1New = 1;
+				if (cosPhi1New <= 0) continue;
+			}
+			float sinPhi1 = sqrt(1 - cosPhi1New * cosPhi1New);
+			float sinPhi2 = sinPhi1 / ior;
+			float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
+
 			Vec3f vTn = -cosPhi2 * vN_new;
 			Vec3f vNxV = vN_new.Cross(vV);
 			Vec3f vTp = vN_new.Cross(vNxV).GetNormalized()*sinPhi2;
@@ -238,11 +246,11 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 		}
 		refractionColor = refractionColorSum_in / sampleCount;
 	}
-	return refractionColor;
+	return isnan(refractionColor.r) ? Color::Black() : refractionColor;
 }
 
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut, const float& refractionGlossiness) {
-	Vec3f vN = refractionGlossiness > 0 ? GetSampleAlongNormal(inRayHitInfo.N, refractionGlossiness * inRayHitInfo.N.Length()) : inRayHitInfo.N; // to up
+	Vec3f vN = refractionGlossiness > 0 ? GetSampleAlongNormal(inRayHitInfo.N, refractionGlossiness) : inRayHitInfo.N; // to up
 
 	Vec3f vV = -inRay.dir; // opposite to up
 
@@ -313,7 +321,8 @@ cy::Vec3f GetRandomCrossingVector(const Vec3f& V)
 }
 cy::Vec3f GetSampleAlongNormal(const Vec3f& N, float R)
 {
-	float r = ((double)rand() / (RAND_MAX)) * R;
+
+	float r = ((double)rand() / (RAND_MAX));
 	// Uniform distribution
 	r = sqrt(r) * R;
 	float theta = ((double)rand() / (RAND_MAX)) * 2 * PI;

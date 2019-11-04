@@ -10,22 +10,22 @@ bool Box::IntersectRay(Ray const &r, float t_max, float& t_min) const
 	Vec3f vXYN = Vec3f(0, 0, 1); // Up
 	float nDotrr = vXYN.Dot(r.dir);
 	float nDotrp = vXYN.Dot(r.p);
-	float tz1 = (vXYN.Dot(v0) - nDotrp) / nDotrr; // XY plane1
-	float tz2 = (vXYN.Dot(v7) - nDotrp) / nDotrr; // XY plane2
+	float tz1 = (nDotrr != 0) ? (vXYN.Dot(v0) - nDotrp) / nDotrr : BIGFLOAT; // XY plane1
+	float tz2 = (nDotrr != 0) ? (vXYN.Dot(v7) - nDotrp) / nDotrr : -BIGFLOAT; // XY plane2
 
 	// for ZX plane
 	Vec3f vZXN = Vec3f(0, 1, 0); // Right
 	nDotrr = vZXN.Dot(r.dir);
 	nDotrp = vZXN.Dot(r.p);
-	float ty1 = (vZXN.Dot(v0) - nDotrp) / nDotrr; // ZX plane1
-	float ty2 = (vZXN.Dot(v7) - nDotrp) / nDotrr; // ZX plane2
+	float ty1 = (nDotrr != 0) ? (vZXN.Dot(v0) - nDotrp) / nDotrr : BIGFLOAT; // ZX plane1
+	float ty2 = (nDotrr != 0) ? (vZXN.Dot(v7) - nDotrp) / nDotrr : -BIGFLOAT;// ZX plane2
 
 	// for YZ pane
 	Vec3f vYZN = Vec3f(1, 0, 0);  // forward
 	nDotrr = vYZN.Dot(r.dir);
 	nDotrp = vYZN.Dot(r.p);
-	float tx1 = (vYZN.Dot(v0) - nDotrp) / nDotrr; // YZ plane1
-	float tx2 = (vYZN.Dot(v7) - nDotrp) / nDotrr; // YZ plane2
+	float tx1 = (nDotrr != 0) ? (vYZN.Dot(v0) - nDotrp) / nDotrr : BIGFLOAT;  // YZ plane1
+	float tx2 = (nDotrr != 0) ? (vYZN.Dot(v7) - nDotrp) / nDotrr : -BIGFLOAT; // YZ plane2
 
 	float tMin = Max(
 		Max(

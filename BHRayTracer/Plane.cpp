@@ -10,6 +10,7 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	// in obj space
 	float rayPz = ray.p.z;
 	float rayDz = ray.dir.z;
+	if (rayDz == 0.0f) return false;
 	float t = -rayPz / rayDz;
 	// hit the opposite face, or not the closest one
 	if (t <= 0 || t > hInfo.z) return false;
@@ -26,7 +27,7 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	hInfo.z = t;
 
 	// Set uv Info
-	Vec3f uvw;
+	Vec3f uvw = Vec3f();
 	uvw.x = (1 + hInfo.p.x) / 2.f;
 	uvw.y = (1 + hInfo.p.y) / 2.f;
 	hInfo.uvw = uvw;
