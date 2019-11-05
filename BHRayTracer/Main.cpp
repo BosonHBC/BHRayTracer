@@ -42,7 +42,7 @@ Color TraceRayMultiple(int i, int j);
 //---------------
 // Use Components
 
-#define USE_MSAA
+//#define USE_MSAA
 //#define ENABLE_DEPTH_OF_VIEW
 
 //---------------
@@ -302,8 +302,8 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
 	renderImage.SaveImage("Resource/Result/proj10.png");
-	//renderImage.ComputeSampleCountImage();
-	//renderImage.SaveSampleCountImage("Resource/Result/catTest.png");
+	renderImage.ComputeSampleCountImage();
+	renderImage.SaveSampleCountImage("Resource/Result/proj10_sample.png");
 }
 int main() {
 

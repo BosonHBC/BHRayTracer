@@ -17,8 +17,8 @@
 #endif
 #endif // ENABLE_Reflection_And_Refraction
 
-#define GlossyReflectionSampleCount 16
-#define GlossyRefractionSampleCount 16
+#define GlossyReflectionSampleCount 8
+#define GlossyRefractionSampleCount 8
 
 extern Node rootNode;
 extern LightList lights;
@@ -321,7 +321,6 @@ cy::Vec3f GetRandomCrossingVector(const Vec3f& V)
 }
 cy::Vec3f GetSampleAlongNormal(const Vec3f& N, float R)
 {
-
 	float r = ((double)rand() / (RAND_MAX));
 	// Uniform distribution
 	r = sqrt(r) * R;
