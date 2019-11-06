@@ -6,7 +6,7 @@
 #define ENABLE_Reflection_And_Refraction
 
 #ifdef ENABLE_Reflection_And_Refraction
-#define Bias 0.001f
+#define Bias 0.01f
 #define EulerN 2.7182818f
 #define PI 3.14159265
 #define ENABLE_Reflection
@@ -105,7 +105,12 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 			outColor += diffuse.Sample(hInfo.uvw, hInfo.duvw)  * (*it)->Illuminate(hInfo.p, vN);
 		}
 	}
-	return isnan(outColor.r)? Color::Black():outColor;
+
+	if (isnan(outColor.r)) {
+		printf("Diffuse/Specular color has nan! \n");
+		return Color::Black();
+	}
+	return outColor;
 }
 
 #ifdef ENABLE_Reflection
@@ -117,7 +122,7 @@ Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& h
 		int sampleCount = reflectionGlossiness > 0 ? GlossyReflectionSampleCount : 1;
 		for (int i = 0; i < sampleCount; ++i)
 		{
-			Vec3f rndN = reflectionGlossiness > 0 ? GetSampleAlongNormal(vN, reflectionGlossiness * vN.Length()) : vN;
+			Vec3f rndN = reflectionGlossiness > 0 ? GetSampleAlongNormal(vN, reflectionGlossiness) : vN;
 			float newCosPhi1 = rndN.Dot(vV);
 			// handle floating point precision issues
 			{
@@ -142,7 +147,12 @@ Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& h
 		}
 		reflectionColor = reflectionColorSum / sampleCount;
 	}
-	return isnan(reflectionColor.r) ? Color::Black() : reflectionColor;
+	if (isnan(reflectionColor.r)) {
+		printf("Reflection color has nan! \n");
+		return Color::Black();
+	}
+
+	return reflectionColor;
 }
 
 #endif // ENABLE_REFLECTION
@@ -157,7 +167,7 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 		int sampleCount = refractionGlossiness > 0 ? GlossyRefractionSampleCount : 1;
 		for (int i = 0; i < sampleCount; ++i)
 		{
-			Vec3f vN_new = refractionGlossiness > 0 ? GetSampleAlongNormal(vN, refractionGlossiness) : vN;
+			Vec3f vN_new = refractionGlossiness > 0 ? GetSampleAlongNormal(vN, refractionGlossiness).GetNormalized() : vN;
 			float cosPhi1New = vN_new.Dot(vV);
 			// handle floating point precision issues
 			{
@@ -205,23 +215,22 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 					else {
 						// internal reflection
 #ifdef ENABLE_InternalReflection
-						int bounceCount = 3;
 						Ray internalRay = nextRay;
-						while (bounceCount > 0)
+						while (o_bounceCount > 0)
 						{
 							HitInfo internalHitInfo;
 							bool bInternalHit;
 							recursive(&rootNode, internalRay, internalHitInfo, bInternalHit, 1);
 							if (bInternalHit) {
 								bool bGoOut = false;
-								Ray nextRay_internal = HandleRayWhenRefractionRayOut(internalRay, internalHitInfo, ior, bGoOut);
+								Ray nextRay_internal = HandleRayWhenRefractionRayOut(internalRay, internalHitInfo, ior, bGoOut, refractionGlossiness);
 								if (bGoOut) {
 									HitInfo refraHinfo_out;
 									bool bRefraction_out_Hit = false;
 									recursive(&rootNode, nextRay_internal, refraHinfo_out, bRefraction_out_Hit, 0);
 									if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
 
-										refractionColor = refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, 0);
+										refractionColor = refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, o_bounceCount);
 									}
 									else {
 										// refraction out hit doesn't hit anything
@@ -233,7 +242,7 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 									internalRay = nextRay_internal;
 								}
 							}
-							bounceCount--;
+							o_bounceCount--;
 						}
 #else 
 						refractionColorSum_in += Color(0, 0, 0);
@@ -246,11 +255,16 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 		}
 		refractionColor = refractionColorSum_in / sampleCount;
 	}
-	return isnan(refractionColor.r) ? Color::Black() : refractionColor;
+
+	if (isnan(refractionColor.r)) {
+		printf("Refraction color has nan! \n");
+		return Color::Black();
+	}
+	return refractionColor;
 }
 
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut, const float& refractionGlossiness) {
-	Vec3f vN = refractionGlossiness > 0 ? GetSampleAlongNormal(inRayHitInfo.N, refractionGlossiness) : inRayHitInfo.N; // to up
+	Vec3f vN = refractionGlossiness > 0 ? GetSampleAlongNormal(inRayHitInfo.N, refractionGlossiness).GetNormalized() : inRayHitInfo.N; // to up
 
 	Vec3f vV = -inRay.dir; // opposite to up
 
@@ -332,5 +346,6 @@ cy::Vec3f GetSampleAlongNormal(const Vec3f& N, float R)
 	Vec3f axis1 = GetRandomCrossingVector(N).Cross(N);
 	Vec3f axis2 = axis1.Cross(N);
 
-	return N + axis1.GetNormalized() * x + axis2.GetNormalized() * y;
+	Vec3f sampledN = N + axis1.GetNormalized() * x + axis2.GetNormalized() * y;
+	return sampledN;
 }

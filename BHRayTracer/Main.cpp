@@ -42,14 +42,14 @@ Color TraceRayMultiple(int i, int j);
 //---------------
 // Use Components
 
-//#define USE_MSAA
+#define USE_MSAA
 //#define ENABLE_DEPTH_OF_VIEW
 
 //---------------
 
 
 #ifdef USE_MSAA
-#define MSAA_AdaptiveThreshold_Sqr 0.01f * 0.01f
+#define MSAA_AdaptiveThreshold_Sqr 0.03f * 0.03f
 #define  MSAA_RayCountPerSlot 4
 #define  MSAA_AddadptiveStopLevel 3
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
