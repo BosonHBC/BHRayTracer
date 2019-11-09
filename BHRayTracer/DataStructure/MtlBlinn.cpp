@@ -6,7 +6,7 @@
 #define ENABLE_Reflection_And_Refraction
 
 #ifdef ENABLE_Reflection_And_Refraction
-#define Bias 0.01f
+#define Bias 0.001f
 #define EulerN 2.7182818f
 #define PI 3.14159265
 #define ENABLE_Reflection
@@ -60,7 +60,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	// handle floating point precision issues
 	{
 		if (cosPhi1 > 1) cosPhi1 = 1;
-		if (cosPhi1 <= 0) return outColor;
+		if (cosPhi1 <= 0) cosPhi1 = 0;
 	}
 	// ----------
 	// Diffuse and Specular
@@ -156,15 +156,17 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 		bool bReflectionHit = false;
 		recursive(&rootNode, GIRay, reflHInfo, bReflectionHit, 0);
 		if (bReflectionHit && reflHInfo.node != nullptr) {
-			Color indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_bounceCount) *cosTheta * diffuse.Sample(hInfo.uvw, hInfo.duvw);
-
-			GIColorSum += indirectColor;
+			GIColorSum += reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_bounceCount) *cosTheta * diffuse.Sample(hInfo.uvw, hInfo.duvw);
 		}
 		else {
 			// doesn't bounce to anything
 			Vec3f dir_norm = GIRay.dir;
-
-			GIColorSum += environment.SampleEnvironment(dir_norm) * cosTheta * diffuse.Sample(hInfo.uvw, hInfo.duvw);
+			if (dir_norm.x == dir_norm.y && dir_norm.x == 0) 
+				// nan situation
+				GIColorSum += Color::Black();
+			else {
+				GIColorSum += environment.SampleEnvironment(dir_norm) * cosTheta * diffuse.Sample(hInfo.uvw, hInfo.duvw);
+			}
 		}
 	}
 

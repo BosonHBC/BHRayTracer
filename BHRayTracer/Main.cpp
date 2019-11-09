@@ -44,7 +44,7 @@ Color TraceRayMultiple(int i, int j);
 
 //#define USE_MSAA
 //#define ENABLE_DEPTH_OF_VIEW
-#define USE_GamaCorrection
+//#define USE_GamaCorrection
 
 #define GIBounceCount 1
 //---------------
