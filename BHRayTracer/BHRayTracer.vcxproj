@@ -87,7 +87,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir);$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <OpenMPSupport>true</OpenMPSupport>
       <FloatingPointModel>Precise</FloatingPointModel>
@@ -128,7 +128,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir);$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <OpenMPSupport>true</OpenMPSupport>
       <FloatingPointModel>Precise</FloatingPointModel>

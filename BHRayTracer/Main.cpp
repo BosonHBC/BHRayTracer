@@ -42,9 +42,11 @@ Color TraceRayMultiple(int i, int j);
 //---------------
 // Use Components
 
-#define USE_MSAA
+//#define USE_MSAA
 //#define ENABLE_DEPTH_OF_VIEW
+#define USE_GamaCorrection
 
+#define GIBounceCount 1
 //---------------
 
 
@@ -99,7 +101,7 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 		recursive(&rootNode, tRay, tHitInfo, bHit, 0);
 		if (bHit) {
 			// Shade the hit object 
-			subPixelColor[i] = tHitInfo.node->GetMaterial()->Shade(tRay, tHitInfo, lights, REFLECTION_BOUNCE);
+			subPixelColor[i] = tHitInfo.node->GetMaterial()->Shade(tRay, tHitInfo, lights, REFLECTION_BOUNCE, GIBounceCount);
 
 		}
 		else {
@@ -191,6 +193,8 @@ Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
 }
 #endif // ENABLE_DEPTH_OF_VIEW
 
+
+
 void BeginRender() {
 	float aor = camera.imgWidth / (float)camera.imgHeight;
 	float tan_h_pov = tan(camera.fov / 2 * PI / 180.0);
@@ -224,7 +228,14 @@ void BeginRender() {
 			HitInfo outHit;
 			outColor = TraceRaySingle(outHit, i, j);
 #endif // USE_MSAA
-
+#ifdef USE_GamaCorrection
+			Color afterGamaCorrection = Color::Black();
+			const float inverseGama = 1 / 2.2f;
+			afterGamaCorrection.r = pow(outColor.r, inverseGama);
+			afterGamaCorrection.g = pow(outColor.g, inverseGama);
+			afterGamaCorrection.b = pow(outColor.b, inverseGama);
+			outColor = afterGamaCorrection;
+#endif // USE_GamaCorrection
 			// Set out color
 			renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
 			//renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
@@ -250,7 +261,7 @@ Color TraceRaySingle(HitInfo &outHit, int i, int j)
 	recursive(&rootNode, ray, outHit, bHit, 0);
 	if (bHit) {
 		// Shade the hit object 
-		return outHit.node->GetMaterial()->Shade(ray, outHit, lights, REFLECTION_BOUNCE);
+		return outHit.node->GetMaterial()->Shade(ray, outHit, lights, REFLECTION_BOUNCE, GIBounceCount);
 	}
 	else {
 		// Shade Background color

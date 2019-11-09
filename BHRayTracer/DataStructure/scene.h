@@ -290,7 +290,7 @@ public:
 	// ray: incoming ray,
 	// hInfo: hit information for the point that is being shaded, lights: the light list,
 	// bounceCount: permitted number of additional bounces for reflection and refraction.
-	virtual Color Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lights, int bounceCount) const = 0;
+	virtual Color Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lights, int bounceCount, int GIBounceCount) const = 0;
 
 	virtual void SetViewportMaterial(int subMtlID = 0) const {}   // used for OpenGL display
 };
@@ -529,10 +529,11 @@ private:
 	uint8_t *zbufferImg;
 	uint8_t *sampleCount;
 	uint8_t *sampleCountImg;
+	uint8_t *irradComp;
 	int      width, height;
 	std::atomic<int> numRenderedPixels;
 public:
-	RenderImage() : img(nullptr), zbuffer(nullptr), zbufferImg(nullptr), sampleCount(nullptr), sampleCountImg(nullptr), width(0), height(0), numRenderedPixels(0) {}
+	RenderImage() : img(nullptr), zbuffer(nullptr), zbufferImg(nullptr), sampleCount(nullptr), sampleCountImg(nullptr), irradComp(nullptr), width(0), height(0), numRenderedPixels(0) {}
 	void Init(int w, int h)
 	{
 		width = w;
@@ -547,7 +548,14 @@ public:
 		sampleCount = new uint8_t[width*height];
 		if (sampleCountImg) delete[] sampleCountImg;
 		sampleCountImg = nullptr;
+		if (irradComp) delete[] irradComp;
+		irradComp = nullptr;
 		ResetNumRenderedPixels();
+	}
+	void AllocateIrradianceComputationImage()
+	{
+		if (!irradComp) irradComp = new uint8_t[width*height];
+		for (int i = 0; i < width*height; i++) irradComp[i] = 0;
 	}
 
 	int      GetWidth() const { return width; }
@@ -557,6 +565,7 @@ public:
 	uint8_t* GetZBufferImage() { return zbufferImg; }
 	uint8_t* GetSampleCount() { return sampleCount; }
 	uint8_t* GetSampleCountImage() { return sampleCountImg; }
+	uint8_t* GetIrradianceComputationImage() { return irradComp; }
 
 	void ResetNumRenderedPixels() { numRenderedPixels = 0; }
 	int  GetNumRenderedPixels() const { return numRenderedPixels; }
@@ -615,6 +624,7 @@ public:
 	bool SaveImage(char const *filename) const { return SavePNG(filename, &img[0].r, 3); }
 	bool SaveZImage(char const *filename) const { return SavePNG(filename, zbufferImg, 1); }
 	bool SaveSampleCountImage(char const *filename) const { return SavePNG(filename, sampleCountImg, 1); }
+	bool SaveIrradianceComputationImage(char const *filename) const { return SavePNG(filename, irradComp, 1); }
 
 private:
 	bool SavePNG(char const *filename, uint8_t *data, int compCount) const
