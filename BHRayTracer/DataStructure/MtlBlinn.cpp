@@ -150,22 +150,22 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 
 		GIRay.p = hInfo.p + vN * Bias;
 
-		float cosTheta = vN.Dot(GIRay.dir);
+		// float cosTheta = vN.Dot(GIRay.dir);
 
 		HitInfo reflHInfo = HitInfo();
 		bool bReflectionHit = false;
 		recursive(&rootNode, GIRay, reflHInfo, bReflectionHit, 0);
 		if (bReflectionHit && reflHInfo.node != nullptr) {
-			GIColorSum += reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_bounceCount) *cosTheta * diffuse.Sample(hInfo.uvw, hInfo.duvw);
+			GIColorSum += reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_bounceCount) /**cosTheta*/ * diffuse.Sample(hInfo.uvw, hInfo.duvw);
 		}
 		else {
 			// doesn't bounce to anything
 			Vec3f dir_norm = GIRay.dir;
-			if (dir_norm.x == dir_norm.y && dir_norm.x == 0) 
+			if (dir_norm.x == dir_norm.y && dir_norm.x == 0)
 				// nan situation
 				GIColorSum += Color::Black();
 			else {
-				GIColorSum += environment.SampleEnvironment(dir_norm) * cosTheta * diffuse.Sample(hInfo.uvw, hInfo.duvw);
+				GIColorSum += environment.SampleEnvironment(dir_norm)/* * cosTheta*/ * diffuse.Sample(hInfo.uvw, hInfo.duvw);
 			}
 		}
 	}
