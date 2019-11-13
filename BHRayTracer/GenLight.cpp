@@ -13,6 +13,7 @@ float GenLight::Shadow(Ray ray, float t_max /*= BIGFLOAT*/)
 }
 
 bool ShadowRayRecursive(Node* root, const Ray& ray, float t_max) {
+
 	Ray transformedRay = root->ToNodeCoords(ray);
 	for (int i = 0; i < root->GetNumChild(); i++)
 	{

@@ -31,12 +31,13 @@
     <object type="obj" name="Resource\Data\teapot.obj" material="mtl1">
       <scale value="0.35"/>
       <rotate angle="30" z="1"/>
-      <translate x="0" y="12" z="0"/>
+      <translate x="0" y="15" z="0"/>
     </object>
-    <object type="obj" name="Resource\Data\teapot.obj" material="mtl2">
-      <scale x="0.8" y="0.8" z="1"/>
-      <rotate angle="210" z="1"/>
-      <translate x="4" y="-6" z="0"/>
+    <object type="obj" name="Resource\Data\teapot2.obj" material="mtl2">
+      <scale x="0.19" y="0.23" z="0.19"/>
+      <rotate angle="90" x="1"/>
+      <rotate angle="220" z="1"/>
+      <translate x="3" y="-5" z="0"/>
     </object>
  
     <!-- Materials -->
@@ -62,12 +63,17 @@
       <glossiness value="20"/>
     </material>
     <material type="blinn" name="mtl2">
-      <diffuse  r="0.2" g="0.8" b="0.2"/>
-      <specular r="0.9" g="0.9" b="1.0" value="0.8"/>
-      <glossiness value="10"/>
-      <refraction index="2.0" value="0.8"/>
+      <diffuse value="0"/>
+      <specular value="0.8"/>
+      <glossiness value="50"/>
+      <refraction index="2" value="0.8"/>
     </material>
- 
+    <material type="blinn" name="glossy3">
+      <diffuse value="0"/>
+      <specular value="0.8"/>
+      <glossiness value="10"/>
+      <reflection value="0.8"/>
+    </material>
     <!-- Lights -->
     <light type="point" name="pointLight">
       <intensity value="0.5"/>

@@ -81,11 +81,25 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 	if (t_divisor == 0) return false;
 	t = (vN.Dot(v0) - vN.Dot(ray.p)) / t_divisor;
 
-	// on the back side or the distance is larger than the current shortest one
+	// the distance is larger than the current shortest one
 	if (t <= 0 || t > hInfo.z) return false;
 
 	// vX is the hit point on the XY plane
 	Vec3f vX = ray.p + t * ray.dir;
+	{
+		float backfaceDeterminace = (vX - ray.p).Dot(vN);
+		if (backfaceDeterminace > 0)
+		{
+			// Back face
+			if (hitSide == HIT_FRONT) return false;
+		}
+		else if (backfaceDeterminace < 0) {
+			// Front face
+			if (hitSide == HIT_BACK) return false;
+		}
+		else return false;
+	}
+
 
 	Vec3f absVN = vN.Abs();
 
@@ -263,7 +277,7 @@ bool TriObj::TraceBVHShadow(const Ray &ray, float& t_min, bool& hitOnce, unsigne
 		HitInfo hInfo;
 		for (size_t i = 0; i < elementCount; ++i)
 		{
-			if (IntersectTriangle(ray, hInfo, 0, elements[i]))
+			if (IntersectTriangle(ray, hInfo, HIT_FRONT, elements[i]))
 			{
 				hitOnce = true;
 				t_min = hInfo.z;

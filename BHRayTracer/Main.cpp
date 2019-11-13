@@ -30,7 +30,8 @@ Vec3f camYAxis;
 Vec3f camXAxis;
 #define PI 3.14159265
 
-#define REFLECTION_BOUNCE 3
+
+#define REFLECTION_BOUNCE 5
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -98,7 +99,7 @@ Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) 
 		bool bHit = false;
 		HitInfo tHitInfo = HitInfo();
 
-		recursive(&rootNode, tRay, tHitInfo, bHit, 0);
+		recursive(&rootNode, tRay, tHitInfo, bHit, HIT_FRONT);
 		if (bHit) {
 			// Shade the hit object 
 			subPixelColor[i] = tHitInfo.node->GetMaterial()->Shade(tRay, tHitInfo, lights, REFLECTION_BOUNCE, GIBounceCount);
@@ -177,7 +178,7 @@ Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
 		bool bHit = false;
 		HitInfo tHitInfo = HitInfo();
 
-		recursive(&rootNode, ray, tHitInfo, bHit, 0);
+		recursive(&rootNode, ray, tHitInfo, bHit, HIT_FRONT);
 		if (bHit) {
 			// Shade the hit object 
 			colorSum += tHitInfo.node->GetMaterial()->Shade(ray, tHitInfo, lights, REFLECTION_BOUNCE);
@@ -258,7 +259,7 @@ Color TraceRaySingle(HitInfo &outHit, int i, int j)
 	ray.dir = pixelCenter - ray.p;
 	// For this ray, if it hits or not
 	bool bHit = false;
-	recursive(&rootNode, ray, outHit, bHit, 0);
+	recursive(&rootNode, ray, outHit, bHit, HIT_FRONT);
 	if (bHit) {
 		// Shade the hit object 
 		return outHit.node->GetMaterial()->Shade(ray, outHit, lights, REFLECTION_BOUNCE, GIBounceCount);
