@@ -312,14 +312,14 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj10_0.png");
+	renderImage.SaveImage("Resource/Result/proj11_2.png");
 	renderImage.ComputeSampleCountImage();
-	renderImage.SaveSampleCountImage("Resource/Result/proj10_0_sample.png");
+	renderImage.SaveSampleCountImage("Resource/Result/proj11_2_sample.png");
 }
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj10.xml";
+	const char* filename = "Resource/Data/proj11_2.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
