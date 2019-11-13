@@ -31,12 +31,12 @@
     <object type="obj" name="Resource\Data\teapot.obj" material="mtl1">
       <scale value="0.35"/>
       <rotate angle="30" z="1"/>
-      <translate x="0" y="5" z="0"/>
+      <translate x="0" y="12" z="0"/>
     </object>
     <object type="obj" name="Resource\Data\teapot.obj" material="mtl2">
-      <scale value="1"/>
-      <rotate angle="30" y="0"/>
-      <translate x="0" y="0" z="0"/>
+      <scale x="0.8" y="0.8" z="1"/>
+      <rotate angle="210" z="1"/>
+      <translate x="4" y="-6" z="0"/>
     </object>
  
     <!-- Materials -->
@@ -65,7 +65,7 @@
       <diffuse  r="0.2" g="0.8" b="0.2"/>
       <specular r="0.9" g="0.9" b="1.0" value="0.8"/>
       <glossiness value="10"/>
-      <refraction index="2.0" value="0.8" glossiness="0.05"/>
+      <refraction index="2.0" value="0.8"/>
     </material>
  
     <!-- Lights -->

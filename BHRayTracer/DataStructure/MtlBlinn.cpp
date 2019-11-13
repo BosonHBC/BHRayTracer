@@ -20,7 +20,7 @@
 #define ENABLE_GI
 
 #ifdef ENABLE_GI
-#define GISampleCount 64
+#define GISampleCount 16
 #endif // ENABLE_GI
 
 
@@ -315,7 +315,7 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 							o_bounceCount--;
 						}
 #else 
-						refractionColorSum_in += Color(0, 0, 0);
+						refractionColorSum_in += Color(1, 0, 0);
 #endif // ENABLE_INTERNAL_REFLECTION
 
 					}
