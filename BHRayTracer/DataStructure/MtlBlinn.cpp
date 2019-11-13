@@ -137,6 +137,7 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 #ifdef ENABLE_GI
 Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int& o_bounceCount, int i_bounceCount)
 {
+	if (diffuse.GetColor().IsBlack()) return Color::Black();
 	i_bounceCount--;
 	// Bound too many times
 	if (i_bounceCount < 0)return Color::Black();

@@ -42,7 +42,7 @@ Color TraceRayMultiple(int i, int j);
 //---------------
 // Use Components
 
-#define USE_MSAA
+//#define USE_MSAA
 //#define ENABLE_DEPTH_OF_VIEW
 #define USE_GamaCorrection
 
@@ -312,14 +312,14 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj11_0.png");
+	renderImage.SaveImage("Resource/Result/proj10_0.png");
 	renderImage.ComputeSampleCountImage();
-	renderImage.SaveSampleCountImage("Resource/Result/proj11_0_sample.png");
+	renderImage.SaveSampleCountImage("Resource/Result/proj10_0_sample.png");
 }
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj11_0.xml";
+	const char* filename = "Resource/Data/proj10.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
