@@ -8,6 +8,8 @@
 #ifndef Bias
 #define  Bias 0.001f
 #endif
+// cos(85 degree) = 0.08715574274
+#define PerpendicularFaceDeterminance 0.087f
 #ifndef PI
 #define PI 3.14159265
 #endif
@@ -78,7 +80,10 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 
 	float t = 0;
 	float t_divisor = (vN.Dot(ray.dir));
-	if (t_divisor == 0) return false;
+	float perpendicularDeterminance = t_divisor / ((vN).Length() * ray.dir.Length());
+
+	// if it is almost perpendicular, return false
+	if (perpendicularDeterminance > -PerpendicularFaceDeterminance && perpendicularDeterminance < PerpendicularFaceDeterminance) return false;
 	t = (vN.Dot(v0) - vN.Dot(ray.p)) / t_divisor;
 
 	// the distance is larger than the current shortest one

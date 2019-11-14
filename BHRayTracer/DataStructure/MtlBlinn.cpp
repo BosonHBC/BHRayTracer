@@ -6,24 +6,25 @@
 #define ENABLE_Reflection_And_Refraction
 
 #ifdef ENABLE_Reflection_And_Refraction
-#define Bias 0.001f
+#define Bias 0.0001f
 #define EulerN 2.7182818f
 #define PI 3.14159265
 #define ENABLE_Reflection
 #define ENABLE_Refraction
+
 
 #ifdef ENABLE_Refraction
 #define ENABLE_InternalReflection
 #endif
 #endif // ENABLE_Reflection_And_Refraction
 
-//#define ENABLE_GI
+#define ENABLE_GI
 
 #ifdef ENABLE_GI
 #define GISampleCount 16
 #endif // ENABLE_GI
 
-
+#define ParallelVecDeterminance 0.001f
 
 #define GlossyReflectionSampleCount 8
 #define GlossyRefractionSampleCount 8
@@ -31,24 +32,27 @@
 extern Node rootNode;
 extern LightList lights;
 extern TexturedColor environment;
+
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
 void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInfo & outHit, bool &_bHit);
 // get the ray from sphere inside to outside or doing internal reflection
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut, const float& refractionGlossiness);
-Color RefractionRecusive();
+Color RefractionRecusive(const Color& refraction, const float& ior, const Vec3f& vT, const HitInfo& hInfo, const Vec3f& vN_new, const float& refractionGlossiness, const Color& absorption, int o_bounceCount);
 // Diffuse and Specular component
 Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV);
 
-Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int& o_bounceCount, int i_bounceCount = 1);
+Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, int o_bounceCount, int i_bounceCount = 1);
 
 // Reflection Component
-Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int& o_bounceCount, int GIBounceCount, const float& reflectionGlossiness);
+Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& reflectionGlossiness);
 // Refraction component
-Color Refraction(const Color& refraction, const Color& absorption, const float& cosPhi1, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int& o_bounceCount, int GIBounceCount, const float& refractionGlossiness);
+Color Refraction(const Color& refraction, const Color& absorption, const float& cosPhi1, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness);
 
 Vec3f GetRandomCrossingVector(const Vec3f& V);
 Vec3f GetSampleAlongNormal(const Vec3f& N, float radius);
-Vec3f GetSampleInSemiSphere(const Vec3f& N, const Vec3f& V);
+Vec3f GetSampleInSemiSphere(const Vec3f& N);
+
+bool IsVec3Parallel(const Vec3f& i_lVec, const Vec3f& i_rVec);
 
 
 
@@ -72,7 +76,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 
 #ifdef ENABLE_GI
-	outColor += GlobalIllumination(diffuse, hInfo, vN, vV, bounceCount, GIBounceCount);
+	outColor += GlobalIllumination(diffuse, hInfo, vN, bounceCount, GIBounceCount);
 #endif // ENABLE_GI
 	// ----------
 	// Reflection and Refraction
@@ -80,7 +84,6 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	{
 		if (bounceCount > 0) {
 			bounceCount--;
-
 			float R0 = pow((1 - ior) / (1 + ior), 2);
 			// Fresnel Reflection factor
 			float fresnelReflectionFactor = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
@@ -98,7 +101,11 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 #endif // ENABLE_REFLEC_REFRAC
 	// ----------
 
-	if (isnan(outColor.r)) printf("OutColor Has NaN! \n");
+	if (isnan(outColor.r)) {
+
+		printf("OutColor Has NaN! \n");
+		outColor = Color::NANPurple();
+	}
 	return outColor;
 }
 
@@ -113,16 +120,15 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 			// Theta is  dot product of Normal and light
 			float cosTheta = vL.Dot(vN);
 
-			if (cosTheta < 0) {
+			if (cosTheta < -0.0001) {
 				// from back side
 				continue;
 			}
 			// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 			Vec3f vH = (vL + vV).GetNormalized();
+
 			Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness);
-
 			outColor += brdf * (*it)->Illuminate(hInfo.p, vN);
-
 		}
 		else {
 			// it is ambient
@@ -132,12 +138,12 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 
 	if (isnan(outColor.r)) {
 		printf("Diffuse/Specular color has nan! \n");
-		return Color::Black();
+		return Color::NANPurple();
 	}
 	return outColor;
 }
 #ifdef ENABLE_GI
-Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int& o_bounceCount, int i_bounceCount)
+Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, int o_bounceCount, int i_bounceCount)
 {
 	if (diffuse.GetColor().IsBlack()) return Color::Black();
 	i_bounceCount--;
@@ -149,24 +155,31 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 	for (int i = 0; i < GISampleCount; ++i)
 	{
 		Ray GIRay;
-		GIRay.dir = GetSampleInSemiSphere(vN, vV).GetNormalized();
+		GIRay.dir = GetSampleInSemiSphere(vN).GetNormalized();
 
 		GIRay.p = hInfo.p + vN * Bias;
-
 		// float cosTheta = vN.Dot(GIRay.dir);
 
 		HitInfo reflHInfo = HitInfo();
 		bool bReflectionHit = false;
 		recursive(&rootNode, GIRay, reflHInfo, bReflectionHit, HIT_FRONT);
 		if (bReflectionHit && reflHInfo.node != nullptr) {
-			GIColorSum += reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_bounceCount) /**cosTheta*/ * diffuse.Sample(hInfo.uvw, hInfo.duvw);
+			Color diffuseColor = diffuse.Sample(hInfo.uvw, hInfo.duvw);
+			Color indirectColor = Color::Black();
+			
+			/** Mesh intersect situation */
+			if (abs(reflHInfo.z) > Bias)
+				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_bounceCount);
+			GIColorSum += indirectColor * diffuseColor;
 		}
 		else {
 			// doesn't bounce to anything
 			Vec3f dir_norm = GIRay.dir;
-			if (dir_norm.x == dir_norm.y && dir_norm.x == 0)
+			if (dir_norm.x == dir_norm.y && dir_norm.x == 0) {
 				// nan situation
-				GIColorSum += Color::Black();
+				GIColorSum += Color::NANPurple();
+				printf("Environment nan\n");
+			}
 			else {
 				GIColorSum += environment.SampleEnvironment(dir_norm)/* * cosTheta*/ * diffuse.Sample(hInfo.uvw, hInfo.duvw);
 			}
@@ -176,7 +189,7 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 	outColor += GIColorSum / GISampleCount;
 	if (isnan(outColor.r)) {
 		printf("GI color has nan! \n");
-		return Color::Black();
+		return Color::NANPurple();
 	}
 	return outColor;
 }
@@ -185,8 +198,9 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 
 
 #ifdef ENABLE_Reflection
-Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int& o_bounceCount, int GIBounceCount, const float& reflectionGlossiness) {
+Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& reflectionGlossiness) {
 	Color reflectionColor = Color::Black();
+
 	if (!reflection.IsBlack()) {
 
 		Color reflectionColorSum = Color::Black();
@@ -220,7 +234,7 @@ Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& h
 	}
 	if (isnan(reflectionColor.r)) {
 		printf("Reflection color has nan! \n");
-		return Color::Black();
+		return Color::NANPurple();
 	}
 
 	return reflectionColor;
@@ -230,7 +244,7 @@ Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& h
 
 #ifdef ENABLE_Refraction
 
-cy::Color RefractionRecusive(const Vec3f&)
+cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Vec3f& vT, const HitInfo& hInfo, const Vec3f& vN_new, const float& refractionGlossiness, const Color& absorption, int o_bounceCount)
 {
 	Ray refractionRay_in;
 	refractionRay_in.dir = vT;
@@ -238,10 +252,11 @@ cy::Color RefractionRecusive(const Vec3f&)
 	HitInfo refraHInfo_in = HitInfo();
 	bool bRefractionInHit;
 	recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, HIT_BACK);
-	if (bRefractionInHit) {
+	if (bRefractionInHit && refraHInfo_in.node != nullptr) {
 		bool bGoingOut;
 
 		int sampleCount = refractionGlossiness > 0 ? GlossyRefractionSampleCount : 1;
+		Color refractionColorSum_out = Color::Black();
 		for (int i = 0; i < sampleCount; ++i)
 		{
 			Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut, refractionGlossiness);
@@ -262,49 +277,22 @@ cy::Color RefractionRecusive(const Vec3f&)
 				}
 			}
 			else {
-				/*
-										Ray internalRay = nextRay;
-										// internal reflection
-				#ifdef ENABLE_InternalReflection
-										while (o_bounceCount > 0) {
-											o_bounceCount--;
-											HitInfo internalHitInfo;
-											bool bInternalHit;
-											recursive(&rootNode, internalRay, internalHitInfo, bInternalHit, 1);
-											if (bInternalHit) {
-												bool bGoOut = false;
-												Ray nextRay_internal = HandleRayWhenRefractionRayOut(internalRay, internalHitInfo, ior, bGoOut, refractionGlossiness);
-												if (bGoOut) {
-													HitInfo refraHinfo_out;
-													bool bRefraction_out_Hit = false;
-													recursive(&rootNode, nextRay_internal, refraHinfo_out, bRefraction_out_Hit, 0);
-													if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
-
-														refractionColor = refraction * refraHinfo_out.node->GetMaterial()->Shade(nextRay_internal, refraHinfo_out, lights, o_bounceCount);
-													}
-													else {
-														// refraction out hit doesn't hit anything
-														refractionColor = refraction * environment.SampleEnvironment(nextRay.dir);
-													}
-													break;
-												}
-												else {
-													internalRay = nextRay_internal;
-												}
-											}
-				#else
-										refractionColorSum_in += Color(1, 0, 0);
-
-				*/
-
+				if (o_bounceCount <= 0) return Color(1, 0, 1);
+				o_bounceCount--;
+				refractionColorSum_out += RefractionRecusive(refraction, ior, nextRay.dir, refraHInfo_in, refraHInfo_in.N, refractionGlossiness, absorption, o_bounceCount);
 			}
 		}
 
+		return refractionColorSum_out / sampleCount;
+	}
+	else {
+		printf("Internal Refraction ray doesn't hit anything\n");
+		return Color::NANPurple();
 	}
 }
 
 
-Color Refraction(const Color& refraction, const Color& absorption, const float& cosPhi1, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int& o_bounceCount, int GIBounceCount, const float& refractionGlossiness)
+Color Refraction(const Color& refraction, const Color& absorption, const float& cosPhi1, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness)
 {
 	Color refractionColor = Color::Black();
 	if (!refraction.IsBlack()) {
@@ -329,16 +317,14 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 			Vec3f vTp = vN_new.Cross(vNxV).GetNormalized()*sinPhi2;
 			Vec3f vT = vTn + vTp;
 
-			Color refractionColorSum_out = Color::Black();
-
-			refractionColorSum_in += refractionColorSum_out / sampleCount;
+			refractionColorSum_in += RefractionRecusive(refraction, ior, vT, hInfo, vN_new, refractionGlossiness, absorption, o_bounceCount) / sampleCount;
 		}
 		refractionColor = refractionColorSum_in / sampleCount;
 	}
 
 	if (isnan(refractionColor.r)) {
 		printf("Refraction color has nan! \n");
-		return Color::Black();
+		return Color::NANPurple();
 	}
 	return refractionColor;
 }
@@ -430,19 +416,43 @@ cy::Vec3f GetSampleAlongNormal(const Vec3f& N, float R)
 	return sampledN;
 }
 
-cy::Vec3f GetSampleInSemiSphere(const Vec3f& N, const Vec3f& V)
+cy::Vec3f GetSampleInSemiSphere(const Vec3f& N)
 {
-	Vec3f axisY = (N.Cross(V)).GetNormalized();
+	Vec3f otherVec = Vec3f(1, 0, 0);
+	if (IsVec3Parallel(N, otherVec)) {
+		otherVec = Vec3f(0, 1, 0);
+	}
+
+	Vec3f axisY = (N.Cross(otherVec)).GetNormalized();
 	Vec3f axisX = N.Cross(axisY);
+	if (axisX.Length() > 1.0001f || axisX.Length() < 0.9999) {
+		printf("not normalize\n");
+	}
 
 	// Uniform distribution, phi -> [0 , 2*PI)
 	float phi = ((double)rand() / (RAND_MAX)) * 2 * PI;
 
 	float rnd = ((double)rand() / (RAND_MAX));
 	// Uniform distribution, theta -> [0 , PI/2)
-	float theta = 0.5f * acos(1 - 2 * rnd);
+	float theta = 0.5f * ACosSafe(1 - 2 * rnd);
 	float sinTheta = sin(theta);
-	float cosTheta = cos(theta);
 
-	return sinTheta * cos(phi) * axisX + sinTheta * sin(phi) * axisY + cosTheta * N;
+	Vec3f retVec = sinTheta * cos(phi) * axisX + sinTheta * sin(phi) * axisY + cos(theta) * N;
+	if (N.Dot(retVec) < 0) {
+		return GetSampleInSemiSphere(N);
+	}
+	return retVec;
+}
+
+bool IsVec3Parallel(const Vec3f& i_lVec, const Vec3f& i_rVec)
+{
+	float l_len = i_lVec.Length();
+	float r_len = i_rVec.Length();
+	if (l_len == 0 && r_len == 0) return true;
+
+	float cosTheta = i_lVec.Dot(i_rVec) / (l_len * r_len);
+	if (abs(cosTheta) > 1 - ParallelVecDeterminance)
+		return true;
+	else
+		return false;
 }

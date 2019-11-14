@@ -491,7 +491,7 @@ void PrintPixelData(int x, int y)
 	if (x < renderImage.GetWidth() && y < renderImage.GetHeight()) {
 		Color24 *colors = renderImage.GetPixels();
 		float *zbuffer = renderImage.GetZBuffer();
-		int i = (renderImage.GetHeight() - y - 1) *renderImage.GetWidth() + x;
+		int i = y *renderImage.GetWidth() + x;
 		printf("Pixel [ %d, %d ] Color24: %d, %d, %d   Z: %f\n", x, y, colors[i].r, colors[i].g, colors[i].b, zbuffer[i]);
 	}
 	else {

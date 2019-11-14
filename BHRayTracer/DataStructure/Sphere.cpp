@@ -2,6 +2,8 @@
 #include "cyVector.h"
 #include <math.h>
 #define PI 3.14159265
+// cos(85 degree) = 0.08715574274
+#define PerpendicularFaceDeterminance 0.087f
 
 bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
 {

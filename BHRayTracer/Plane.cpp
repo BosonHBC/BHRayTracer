@@ -4,7 +4,7 @@ extern Vec3f dd_x;
 extern Vec3f dd_y;
 
 #define RAY_DIFFERENTIAL
-
+#define PASTED_FACES_BIAS 0.0001f
 bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
 {
 	// in obj space
@@ -27,10 +27,11 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	hInfo.z = t;
 
 	// Set uv Info
-	Vec3f uvw = Vec3f();
+	Vec3f uvw = Vec3f(0, 0, 0);
 	uvw.x = (1 + hInfo.p.x) / 2.f;
 	uvw.y = (1 + hInfo.p.y) / 2.f;
 	hInfo.uvw = uvw;
+
 	// Ray Differential
 	Vec3f duvw[2];
 	duvw[0] = Vec3f(0, 0, 0);
