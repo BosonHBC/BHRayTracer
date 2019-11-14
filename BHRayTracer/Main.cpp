@@ -30,7 +30,6 @@ Vec3f camYAxis;
 Vec3f camXAxis;
 #define PI 3.14159265
 
-
 #define REFLECTION_BOUNCE 8
 
 int LoadScene(char const *filename);
@@ -320,7 +319,7 @@ void SaveImages() {
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj5.xml";
+	const char* filename = "Resource/Data/proj11_2.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

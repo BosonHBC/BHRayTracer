@@ -34,7 +34,6 @@ extern LightList lights;
 extern TexturedColor environment;
 
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
-void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInfo & outHit, bool &_bHit);
 // get the ray from sphere inside to outside or doing internal reflection
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut, const float& refractionGlossiness);
 Color RefractionRecusive(const Color& refraction, const float& ior, const Vec3f& vT, const HitInfo& hInfo, const Vec3f& vN_new, const float& refractionGlossiness, const Color& absorption, int o_bounceCount);
@@ -54,7 +53,11 @@ Vec3f GetSampleInSemiSphere(const Vec3f& N);
 
 bool IsVec3Parallel(const Vec3f& i_lVec, const Vec3f& i_rVec);
 
+ bool s_debugTrace;
 
+ void PrintDebugColor(const char* i_colorName,  const Color& i_color) {
+	 printf("%s(%f, %f, %f)\n", i_colorName, i_color.r, i_color.g, i_color.b);
+ }
 
 Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lights, int bounceCount, int GIBounceCount) const {
 	Color outColor = Color::Black();
@@ -140,6 +143,8 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 		printf("Diffuse/Specular color has nan! \n");
 		return Color::NANPurple();
 	}
+	if (s_debugTrace)
+		PrintDebugColor("DiffuseSpecular", outColor);
 	return outColor;
 }
 #ifdef ENABLE_GI
@@ -191,6 +196,8 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 		printf("GI color has nan! \n");
 		return Color::NANPurple();
 	}
+	if (s_debugTrace)
+		PrintDebugColor("GI", outColor);
 	return outColor;
 }
 
@@ -236,7 +243,8 @@ Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& h
 		printf("Reflection color has nan! \n");
 		return Color::NANPurple();
 	}
-
+	if (s_debugTrace)
+		PrintDebugColor("Reflection", reflectionColor);
 	return reflectionColor;
 }
 
@@ -277,7 +285,24 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 				}
 			}
 			else {
-				if (o_bounceCount <= 0) return Color(1, 0, 1);
+				if (o_bounceCount <= 0)
+				{
+					//printf("Internal Reflection ray doesn't hit anything\n");
+					HitInfo refraHinfo_out = HitInfo();
+					bool bRefraction_out_Hit = false;
+					recursive(&rootNode, refractionRay_in, refraHinfo_out, bRefraction_out_Hit, HIT_FRONT);
+					if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
+						float absorptionFactorR = pow(EulerN, -absorption.r*refraHinfo_out.z);
+						float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
+						float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
+						Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
+						return refraction * absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(refractionRay_in, refraHinfo_out, lights, o_bounceCount, 0);
+					}
+					else {
+						// refraction out hit doesn't hit anything
+						return refraction * environment.SampleEnvironment(refractionRay_in.dir);
+					}
+				}
 				o_bounceCount--;
 				refractionColorSum_out += RefractionRecusive(refraction, ior, nextRay.dir, refraHInfo_in, refraHInfo_in.N, refractionGlossiness, absorption, o_bounceCount);
 			}
@@ -286,8 +311,22 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 		return refractionColorSum_out / sampleCount;
 	}
 	else {
-		printf("Internal Refraction ray doesn't hit anything\n");
-		return Color::NANPurple();
+		//printf("Internal Reflection ray doesn't hit anything\n");
+		// Trace to outside
+		HitInfo refraHinfo_out = HitInfo();
+		bool bRefraction_out_Hit = false;
+		recursive(&rootNode, refractionRay_in, refraHinfo_out, bRefraction_out_Hit, HIT_FRONT);
+		if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
+			float absorptionFactorR = pow(EulerN, -absorption.r*refraHinfo_out.z);
+			float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
+			float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
+			Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
+			return refraction * absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(refractionRay_in, refraHinfo_out, lights, o_bounceCount, 0);
+		}
+		else {
+			// refraction out hit doesn't hit anything
+			return refraction * environment.SampleEnvironment(refractionRay_in.dir);
+		}
 	}
 }
 
@@ -326,6 +365,8 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 		printf("Refraction color has nan! \n");
 		return Color::NANPurple();
 	}
+	if (s_debugTrace)
+		PrintDebugColor("Refraction", refractionColor);
 	return refractionColor;
 }
 
@@ -361,33 +402,7 @@ Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo,
 		return internalRay;
 	}
 }
-#ifdef ENABLE_InternalReflection
-void RefractionInternalRecursive(Node* root, const Node* myNode, Ray ray, HitInfo & outHit, bool &_bHit) {
-	if (root->GetNumChild() <= 0) return;
-	for (int i = 0; i < root->GetNumChild(); i++)
-	{
-		Ray transformedRay = root->GetChild(i)->ToNodeCoords(ray);
-		if (root->GetChild(i)->GetNodeObj() == myNode->GetNodeObj()) {
 
-			// transform ray to child coordinate
-			if (root->GetChild(i)->GetNodeObj()->IntersectRay(transformedRay, outHit, 0))
-			{
-				outHit.node = root->GetChild(i);
-				_bHit = true;
-				root->GetChild(i)->FromNodeCoords(outHit);
-			}
-		}
-		RefractionInternalRecursive(root->GetChild(i), myNode, transformedRay, outHit, _bHit);
-	}
-	for (int i = 0; i < root->GetNumChild(); i++) {
-		if (root->GetChild(i) == outHit.node) {
-			root->FromNodeCoords(outHit);
-			break;
-		}
-	}
-}
-
-#endif // ENABLE_INTERNAL_REFLECTION
 #endif // ENABLE_RFRACTION
 cy::Vec3f GetRandomCrossingVector(const Vec3f& V)
 {

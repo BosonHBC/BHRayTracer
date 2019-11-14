@@ -43,6 +43,8 @@ extern RenderImage renderImage;
 extern LightList lights;
 extern TexturedColor background;
 
+extern bool s_debugTrace;
+Color TraceRaySingle(HitInfo &outHit, int i, int j);
 //-------------------------------------------------------------------------------
 
 enum Mode {
@@ -516,6 +518,14 @@ void GlutMouse(int button, int state, int x, int y)
 			mouseMode = MOUSEMODE_ROTATE;
 			mouseX = x;
 			mouseY = y;
+			break;
+		case GLUT_MIDDLE_BUTTON:
+			HitInfo outHit = HitInfo();
+			s_debugTrace = true;
+			printf("Pixel: %d, %d\n", x, y);
+			Color outColor = TraceRaySingle(outHit, x, y);
+			printf("Color(%f, %f, %f)\n", outColor.r, outColor.g, outColor.b);
+			s_debugTrace = false;
 			break;
 		}
 	}
