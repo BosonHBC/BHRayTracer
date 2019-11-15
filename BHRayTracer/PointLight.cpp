@@ -2,8 +2,8 @@
 #define GlossyShadow
 
 #ifdef GlossyShadow
-#define InitialSampleCount 8
-#define MaxSampleCount 64
+#define InitialSampleCount 1
+#define MaxSampleCount 1
 #endif // GlossyShadow
 Vec3f GetSampleAlongNormal(const Vec3f& N, float R);
 

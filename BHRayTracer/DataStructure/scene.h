@@ -277,6 +277,7 @@ public:
 	virtual Vec3f Direction(Vec3f const &p) const = 0;
 	virtual bool  IsAmbient() const { return false; }
 	virtual void  SetViewportLight(int lightID) const {}    // used for OpenGL display
+	virtual float GetIntensity() const = 0;
 };
 
 class LightList : public ItemList<Light> {};

@@ -1,14 +1,15 @@
 #include "materials.h"
+#include "lights.h"
 #include "scene.h"
 #include <math.h>
 #include <omp.h>
 
-#define ENABLE_Reflection_And_Refraction
-
-#ifdef ENABLE_Reflection_And_Refraction
+//#define ENABLE_Reflection_And_Refraction
 #define Bias 0.0001f
 #define EulerN 2.7182818f
 #define PI 3.14159265
+#define OneOverPI 0.31830988f
+#ifdef ENABLE_Reflection_And_Refraction
 #define ENABLE_Reflection
 #define ENABLE_Refraction
 
@@ -18,7 +19,7 @@
 #endif
 #endif // ENABLE_Reflection_And_Refraction
 
-#define ENABLE_GI
+//#define ENABLE_GI
 
 #ifdef ENABLE_GI
 #define GISampleCount 16
@@ -32,6 +33,8 @@
 extern Node rootNode;
 extern LightList lights;
 extern TexturedColor environment;
+extern float allLightIntensity;
+float Rnd01() { return ((double)rand() / (RAND_MAX)); }
 
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
 // get the ray from sphere inside to outside or doing internal reflection
@@ -48,17 +51,20 @@ Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& h
 // Refraction component
 Color Refraction(const Color& refraction, const Color& absorption, const float& cosPhi1, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness);
 
+// Path tracing functions
+Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV);
+
 Vec3f GetRandomCrossingVector(const Vec3f& V);
 Vec3f GetSampleAlongNormal(const Vec3f& N, float radius);
 Vec3f GetSampleInSemiSphere(const Vec3f& N);
 
 bool IsVec3Parallel(const Vec3f& i_lVec, const Vec3f& i_rVec);
 
- bool s_debugTrace;
+bool s_debugTrace;
 
- void PrintDebugColor(const char* i_colorName,  const Color& i_color) {
-	 printf("%s(%f, %f, %f)\n", i_colorName, i_color.r, i_color.g, i_color.b);
- }
+void PrintDebugColor(const char* i_colorName, const Color& i_color) {
+	printf("%s(%f, %f, %f)\n", i_colorName, i_color.r, i_color.g, i_color.b);
+}
 
 Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lights, int bounceCount, int GIBounceCount) const {
 	Color outColor = Color::Black();
@@ -73,7 +79,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	}
 	// ----------
 	// Diffuse and Specular
-	outColor += DiffuseNSpecular(diffuse, specular, glossiness, hInfo, vN, vV);
+	outColor += PathTracing_DiffuseNSpecular(diffuse, specular, glossiness, hInfo, vN, vV);
 
 	// ----------
 	// Global Illumination
@@ -148,6 +154,42 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 		PrintDebugColor("DiffuseSpecular", outColor);
 	return outColor;
 }
+cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV)
+{
+	Color outColor = Color::Black();
+	float rnd = Rnd01();
+	int i = 0;
+	while (rnd > lights[i]->GetIntensity() / allLightIntensity && i < lights.size() - 1)
+	{
+		i++;
+	}
+
+	Light* light = lights[i];
+	// transform light
+	Vec3f vL = (-light->Direction(hInfo.p)).GetNormalized();
+	// Theta is  dot product of Normal and light
+	float cosTheta = vL.Dot(vN);
+
+	if (cosTheta < -0.0001) {
+		// from back side
+		return Color::Black();
+	}
+	// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
+	Vec3f vH = (vL + vV).GetNormalized();
+
+	Color brdfXCosTheta = OneOverPI * (diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + (glossiness *0.5f + 1)* specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));
+	outColor += brdfXCosTheta * (light)->Illuminate(hInfo.p, vN);
+
+	if (isnan(outColor.r)) {
+		printf("Diffuse/Specular color has nan! \n");
+		return Color::NANPurple();
+	}
+	if (s_debugTrace)
+		PrintDebugColor("DiffuseSpecular", outColor);
+	return outColor;
+}
+
+
 #ifdef ENABLE_GI
 Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, int o_bounceCount, int i_bounceCount)
 {
@@ -172,7 +214,7 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 		if (bReflectionHit && reflHInfo.node != nullptr) {
 			Color diffuseColor = diffuse.Sample(hInfo.uvw, hInfo.duvw);
 			Color indirectColor = Color::Black();
-			
+
 			/** Mesh intersect situation */
 			if (abs(reflHInfo.z) > Bias)
 				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_bounceCount);
@@ -190,7 +232,7 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 				GIColorSum += environment.SampleEnvironment(dir_norm)/* * cosTheta*/ * diffuse.Sample(hInfo.uvw, hInfo.duvw);
 			}
 		}
-	}
+}
 
 	outColor += GIColorSum / GISampleCount;
 	if (isnan(outColor.r)) {

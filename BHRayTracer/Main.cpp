@@ -1,11 +1,13 @@
 
 #include "scene.h"
 #include "objects.h"
+#include "lights.h"
 #include "cyVector.h"
 #include "cyColor.h"
 #include <math.h>
 #include "lights.h"
 #include <omp.h>
+#include <algorithm>
 
 Node rootNode;
 Camera camera;
@@ -28,6 +30,7 @@ Vec3f dd_y;
 Vec3f camZAxis;
 Vec3f camYAxis;
 Vec3f camXAxis;
+float allLightIntensity;
 #define PI 3.14159265
 
 #define REFLECTION_BOUNCE 8
@@ -44,22 +47,24 @@ Color TraceRayMultiple(int i, int j);
 
 //#define USE_MSAA
 //#define ENABLE_DEPTH_OF_VIEW
+#define USE_PathTracing
 #define USE_GamaCorrection
 
 #define GIBounceCount 1
 //---------------
-
+Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
+	Vec3f result = i_center;
+	const Vec3f unit_dx = dd_x.GetNormalized();
+	const Vec3f unit_dy = dd_y.GetNormalized();
+	result += unit_dx * (((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
+	result += unit_dy * (((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
+	return result;
+}
 
 #ifdef USE_MSAA
 #define MSAA_AdaptiveThreshold_Sqr 0.03f * 0.03f
 #define  MSAA_RayCountPerSlot 4
 #define  MSAA_AddadptiveStopLevel 3
-Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
-	Vec3f result = i_center;
-	result += dd_x.GetNormalized() *(((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
-	result += dd_y.GetNormalized() *(((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
-	return result;
-}
 Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) {
 	level++;
 	renderImage.GetSampleCount()[i_j*camera.imgWidth + i_i] += MSAA_RayCountPerSlot;
@@ -193,7 +198,45 @@ Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
 }
 #endif // ENABLE_DEPTH_OF_VIEW
 
+#ifdef USE_PathTracing
+#define PT_SampleCount 8
 
+Color PathTracing(int i_i, int i_j) {
+	Color outColor = Color::Black();
+	Vec3f pixelCenter = topLeft + (i_i + 1 / 2) * dd_x - (i_j + 1 / 2) * dd_y;
+
+	/** Square Pixel Only*/
+	const float pixelLen = dd_x.Length();
+	Color colorSum = Color::Black();
+	for (int i = 0; i < PT_SampleCount; ++i)
+	{
+		/** Jitter sampling in a pixel */
+		Ray ray = Ray(camera.pos, RandomPositionInPixel(pixelCenter, pixelLen) - camera.pos);
+
+		bool bHit = false;
+		HitInfo tHitInfo = HitInfo();
+
+		recursive(&rootNode, ray, tHitInfo, bHit, HIT_FRONT);
+		if (bHit) {
+			// Shade the hit object 
+			colorSum += tHitInfo.node->GetMaterial()->Shade(ray, tHitInfo, lights, REFLECTION_BOUNCE, GIBounceCount);
+
+		}
+		else {
+			// Shade Background color
+			Vec3f bguvw = Vec3f((float)i_i / camera.imgWidth, (float)i_j / camera.imgHeight, 0.0f);
+			colorSum += background.Sample(bguvw);
+		}
+	}
+	outColor = colorSum / PT_SampleCount;
+	return outColor;
+}
+
+#endif // USE_PathTracing
+
+bool CompareGenLight(Light* l1, Light* l2) {
+	return (l1->GetIntensity() < l2->GetIntensity());
+}
 
 void BeginRender() {
 	float aor = camera.imgWidth / (float)camera.imgHeight;
@@ -212,6 +255,13 @@ void BeginRender() {
 	dd_y = camYAxis * h / camera.imgHeight;
 	renderImage.ResetNumRenderedPixels();
 
+	sort( lights.begin(), lights.end(), CompareGenLight);
+
+	for (int i = 0; i < lights.size(); ++i)
+	{
+		allLightIntensity += ((Light*)lights[i])->GetIntensity();
+	}
+
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
 	{
@@ -226,7 +276,13 @@ void BeginRender() {
 			outColor = TraceRayMultiple(i, j);
 #else
 			HitInfo outHit;
+#ifdef USE_PathTracing
+			outColor = PathTracing(i, j);
+#else
 			outColor = TraceRaySingle(outHit, i, j);
+#endif // USE_PathTracing
+
+
 #endif // USE_MSAA
 #ifdef USE_GamaCorrection
 			Color afterGamaCorrection = Color::Black();

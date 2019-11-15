@@ -33,7 +33,7 @@
       <rotate angle="30" z="1"/>
       <translate x="-4.5" y="5" z="0"/>
     </object>
-    <object type="sphere" name="sphere2" material="refraction">
+    <object type="sphere" name="sphere2" material="mtl2">
       <scale value="4.5"/>
       <rotate angle="30" y="1"/>
       <translate x="8" y="-6" z="4.5"/>
@@ -66,6 +66,7 @@
       <specular r="0.9" g="0.9" b="1.0" value="0.8"/>
       <glossiness value="10"/>
     </material>
+    
      <material type="blinn" name="refraction">
       <diffuse value="0"/>
       <specular value="0.8"/>
@@ -73,16 +74,17 @@
       <refraction index="2.0" value="0.8"/>
     </material>
     <!-- Lights -->
-    <light type="point" name="pointLight">
+    <light type="point" name="pointLight1">
       <intensity value="0.5"/>
       <position x="0" y="0" z="22"/>
       <size value="5"/>
     </light>
-    <light type="point" name="pointLight">
+    <!-- <light type="point" name="pointLight2">
       <intensity value="0.2"/>
       <position x="0" y="-10" z="8"/>
       <size value="5"/>
-    </light>
+    </light> -->
+
   </scene>
  
   <camera>

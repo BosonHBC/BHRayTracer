@@ -36,6 +36,7 @@ public:
 	virtual void SetViewportLight(int lightID) const { SetViewportParam(lightID, ColorA(intensity), ColorA(0.0f), Vec4f(0, 0, 0, 1)); }
 
 	void SetIntensity(Color intens) { intensity = intens; }
+	float GetIntensity() const { return intensity.Gray(); }
 private:
 	Color intensity;
 };
@@ -52,6 +53,8 @@ public:
 
 	void SetIntensity(Color intens) { intensity = intens; }
 	void SetDirection(Vec3f dir) { direction = dir.GetNormalized(); }
+	float GetIntensity() const { return intensity.Gray(); }
+
 private:
 	Color intensity;
 	Vec3f direction;
@@ -70,6 +73,7 @@ public:
 	void SetPosition(Vec3f pos) { position = pos; }
 	void SetSize(float s) { size = s; }
 
+	float GetIntensity() const { return intensity.Gray(); }
 private:
 	Color intensity;
 	Vec3f position;
