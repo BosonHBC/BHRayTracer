@@ -17,11 +17,6 @@
         <rotate angle="90" x="1"/>
         <translate y="20"/>
       </object>
-      <object type="plane" name="WallFront" material="wall">
-        <scale value="32"/>
-        <rotate angle="-90" x="1"/>
-        <translate y="-32"/>
-      </object>
       <object type="plane" name="WallLeft" material="wallRed">
         <scale value="32"/>
         <rotate angle="90" y="1"/>
@@ -33,28 +28,15 @@
         <translate x="15"/>
       </object>
     </object>
-    <object type="obj" name="Resource\Data\teapot.obj" material="mtl1">
-      <scale value="0.35"/>
+    <object type="obj" name="Resource/Data/teapot.obj" material="mtl1">
+      <scale value="0.75"/>
       <rotate angle="30" z="1"/>
-      <translate x="0" y="15" z="0.1"/>
+      <translate x="-4.5" y="5" z="0"/>
     </object>
-    <object type="sphere" name="Sphere1" material="mtl2">
-      <scale value="3.5"/>
-      <rotate angle="0" z="1"/>
-      <translate x="2" y="0" z="3.5"/>
-    </object>
-
-    <!-- <object type="obj" name="Resource\Data\teapot2.obj" material="mtl2">
-      <scale x="0.19" y="0.23" z="0.19"/>
-      <rotate angle="90" x="1"/>
-      <rotate angle="220" z="1"/>
-      <translate x="3" y="-5" z="0"/>
-    </object> -->
-    <object type="obj" name="Resource\Data\blend2.obj" material="mtl1">
-      <scale x="8" y="4" z="8"/>
-      <rotate angle="90" x="1"/>
-
-      <translate x="2" y="0" z="0.01"/>
+    <object type="sphere" name="sphere2" material="refraction">
+      <scale value="4.5"/>
+      <rotate angle="30" y="1"/>
+      <translate x="8" y="-6" z="4.5"/>
     </object>
  
     <!-- Materials -->
@@ -80,30 +62,34 @@
       <glossiness value="20"/>
     </material>
     <material type="blinn" name="mtl2">
-      <diffuse value="0.2"/>
-      <specular value="0.8"/>
-      <glossiness value="50"/>
-      <refraction index="2" value="0.8"/>
+      <diffuse  r="0.2" g="0.8" b="0.2"/>
+      <specular r="0.9" g="0.9" b="1.0" value="0.8"/>
+      <glossiness value="10"/>
     </material>
-    <material type="blinn" name="glossy3">
+     <material type="blinn" name="refraction">
       <diffuse value="0"/>
       <specular value="0.8"/>
-      <glossiness value="10"/>
-      <reflection value="0.8"/>
+      <glossiness value="50"/>
+      <refraction index="2.0" value="0.8"/>
     </material>
     <!-- Lights -->
     <light type="point" name="pointLight">
       <intensity value="0.5"/>
       <position x="0" y="0" z="22"/>
-      
+      <size value="5"/>
+    </light>
+    <light type="point" name="pointLight">
+      <intensity value="0.2"/>
+      <position x="0" y="-10" z="8"/>
+      <size value="5"/>
     </light>
   </scene>
  
   <camera>
-    <position x="-10" y="-30" z="20"/>
-    <target x="7" y="7" z="2"/>
+    <position x="0" y="-60" z="16"/>
+    <target x="0" y="0" z="11"/>
     <up x="0" y="0" z="1"/>
-    <fov value="45"/>
+    <fov value="30"/>
     <width value="800"/>
     <height value="600"/>
   </camera>

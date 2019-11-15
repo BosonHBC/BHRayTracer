@@ -37,6 +37,7 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 // get the ray from sphere inside to outside or doing internal reflection
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut, const float& refractionGlossiness);
 Color RefractionRecusive(const Color& refraction, const float& ior, const Vec3f& vT, const HitInfo& hInfo, const Vec3f& vN_new, const float& refractionGlossiness, const Color& absorption, int o_bounceCount);
+cy::Color RefractionOut(const Ray& outRay, const Color& absorption, const Color& refraction, int o_bounceCount);
 // Diffuse and Specular component
 Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV);
 
@@ -269,65 +270,50 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 		{
 			Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut, refractionGlossiness);
 			if (bGoingOut) {
-				HitInfo refraHinfo_out = HitInfo();
-				bool bRefraction_out_Hit = false;
-				recursive(&rootNode, nextRay, refraHinfo_out, bRefraction_out_Hit, HIT_FRONT);
-				if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
-					float absorptionFactorR = pow(EulerN, -absorption.r*refraHinfo_out.z);
-					float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
-					float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
-					Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
-					refractionColorSum_out += refraction * absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(nextRay, refraHinfo_out, lights, o_bounceCount, 0);
-				}
-				else {
-					// refraction out hit doesn't hit anything
-					refractionColorSum_out += refraction * environment.SampleEnvironment(nextRay.dir);
-				}
+				refractionColorSum_out += RefractionOut(nextRay, absorption, refraction, o_bounceCount);
 			}
 			else {
 				if (o_bounceCount <= 0)
 				{
-					//printf("Internal Reflection ray doesn't hit anything\n");
-					HitInfo refraHinfo_out = HitInfo();
-					bool bRefraction_out_Hit = false;
-					recursive(&rootNode, refractionRay_in, refraHinfo_out, bRefraction_out_Hit, HIT_FRONT);
-					if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
-						float absorptionFactorR = pow(EulerN, -absorption.r*refraHinfo_out.z);
-						float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
-						float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
-						Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
-						return refraction * absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(refractionRay_in, refraHinfo_out, lights, o_bounceCount, 0);
-					}
-					else {
-						// refraction out hit doesn't hit anything
-						return refraction * environment.SampleEnvironment(refractionRay_in.dir);
-					}
+					//refractionColorSum_out += Color(0,1,0);
+					Ray bouncingCountZeroRay = Ray(refraHInfo_in.p + refraHInfo_in.N*Bias, refractionRay_in.dir);
+					refractionColorSum_out += RefractionOut(bouncingCountZeroRay, absorption, refraction, o_bounceCount);
 				}
-				o_bounceCount--;
-				refractionColorSum_out += RefractionRecusive(refraction, ior, nextRay.dir, refraHInfo_in, refraHInfo_in.N, refractionGlossiness, absorption, o_bounceCount);
+				else {
+					o_bounceCount--;
+					refractionColorSum_out += RefractionRecusive(refraction, ior, nextRay.dir, refraHInfo_in, refraHInfo_in.N, refractionGlossiness, absorption, o_bounceCount);
+				}
 			}
 		}
 
 		return refractionColorSum_out / sampleCount;
 	}
 	else {
-		//printf("Internal Reflection ray doesn't hit anything\n");
+		printf("Internal Refraction ray doesn't hit anything\n");
 		// Trace to outside
-		HitInfo refraHinfo_out = HitInfo();
-		bool bRefraction_out_Hit = false;
-		recursive(&rootNode, refractionRay_in, refraHinfo_out, bRefraction_out_Hit, HIT_FRONT);
-		if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
-			float absorptionFactorR = pow(EulerN, -absorption.r*refraHinfo_out.z);
-			float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
-			float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
-			Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
-			return refraction * absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(refractionRay_in, refraHinfo_out, lights, o_bounceCount, 0);
-		}
-		else {
-			// refraction out hit doesn't hit anything
-			return refraction * environment.SampleEnvironment(refractionRay_in.dir);
-		}
+		return Color::NANPurple();
 	}
+}
+
+
+cy::Color RefractionOut(const Ray& outRay, const Color& absorption, const Color& refraction, int o_bounceCount)
+{
+	Color outColor = Color::Black();
+	HitInfo refraHinfo_out = HitInfo();
+	bool bRefraction_out_Hit = false;
+	recursive(&rootNode, outRay, refraHinfo_out, bRefraction_out_Hit, HIT_FRONT);
+	if (bRefraction_out_Hit && refraHinfo_out.node != nullptr) {
+		float absorptionFactorR = pow(EulerN, -absorption.r*refraHinfo_out.z);
+		float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
+		float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
+		Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
+		outColor = refraction * absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(outRay, refraHinfo_out, lights, o_bounceCount, 0);
+	}
+	else {
+		// refraction out hit doesn't hit anything
+		outColor = refraction * environment.SampleEnvironment(outRay.dir);
+	}
+	return outColor;
 }
 
 
