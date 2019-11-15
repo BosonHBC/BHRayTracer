@@ -19,7 +19,7 @@
 #endif
 #endif // ENABLE_Reflection_And_Refraction
 
-//#define ENABLE_GI
+#define ENABLE_GI
 
 #ifdef ENABLE_GI
 #define GISampleCount 16
@@ -53,11 +53,12 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 
 // Path tracing functions
 Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV);
+Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, int o_bounceCount, int i_bounceCount = 1);
 
 Vec3f GetRandomCrossingVector(const Vec3f& V);
 Vec3f GetSampleAlongNormal(const Vec3f& N, float radius);
 Vec3f GetSampleInSemiSphere(const Vec3f& N);
-
+Vec3f GetSampleAlongLightDirection(const Vec3f& N, float alhpa);
 bool IsVec3Parallel(const Vec3f& i_lVec, const Vec3f& i_rVec);
 
 bool s_debugTrace;
@@ -86,7 +87,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 
 #ifdef ENABLE_GI
-	outColor += GlobalIllumination(diffuse, hInfo, vN, bounceCount, GIBounceCount);
+	outColor += PathTracing_GlobalIllumination(diffuse, hInfo, vN, bounceCount, GIBounceCount);
 #endif // ENABLE_GI
 	// ----------
 	// Reflection and Refraction
@@ -154,6 +155,26 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 		PrintDebugColor("DiffuseSpecular", outColor);
 	return outColor;
 }
+
+cy::Vec3f GetSampleAlongLightDirection(const Vec3f& N, float glossiness)
+{
+	float weightTheta = ACosSafe(pow(Rnd01(), 1.f / (glossiness + 1.f)));
+	// The radius of the circle
+	float R = tan(weightTheta);
+
+	float phi = ((double)rand() / (RAND_MAX)) * 2 * PI;
+	// Random point in a circle
+	float x = R * cos(phi);
+	float y = R * sin(phi);
+
+	Vec3f axis1 = GetRandomCrossingVector(N).Cross(N);
+	Vec3f axis2 = axis1.Cross(N);
+
+	Vec3f sampledN = N + axis1.GetNormalized() * x + axis2.GetNormalized() * y;
+	return sampledN;
+}
+
+
 cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV)
 {
 	Color outColor = Color::Black();
@@ -165,8 +186,15 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 	}
 
 	Light* light = lights[i];
+	Vec3f orignalLightDir = -light->Direction(hInfo.p);
+	//Vec3f vL = orignalLightDir;
 	// transform light
-	Vec3f vL = (-light->Direction(hInfo.p)).GetNormalized();
+	Vec3f vL = (GetSampleAlongLightDirection(orignalLightDir, glossiness)).GetNormalized();
+	if (PointLight* pLight = dynamic_cast<PointLight*>(light)) {
+		// this is point light
+	//	vL = GetSampleAlongNormal(orignalLightDir, pLight->GetSize()).GetNormalized();
+	}
+	
 	// Theta is  dot product of Normal and light
 	float cosTheta = vL.Dot(vN);
 
@@ -243,6 +271,49 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 		PrintDebugColor("GI", outColor);
 	return outColor;
 }
+
+cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, int o_bounceCount, int i_bounceCount /*= 1*/)
+{
+	i_bounceCount--;
+	// Bound too many times
+	if (i_bounceCount < 0)return Color::Black();
+	Color outColor = Color::Black();
+	// Indirect GI
+	{
+		Ray GIRay;
+		GIRay.dir = GetSampleInSemiSphere(vN).GetNormalized();
+
+		GIRay.p = hInfo.p + vN * Bias;
+		// float cosTheta = vN.Dot(GIRay.dir);
+
+		HitInfo reflHInfo = HitInfo();
+		bool bReflectionHit = false;
+		recursive(&rootNode, GIRay, reflHInfo, bReflectionHit, HIT_FRONT);
+		if (bReflectionHit && reflHInfo.node != nullptr) {
+			Color diffuseColor = diffuse.Sample(hInfo.uvw, hInfo.duvw);
+			Color indirectColor = Color::Black();
+
+			/** Mesh intersect situation */
+			if (abs(reflHInfo.z) > Bias)
+				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_bounceCount);
+			outColor += indirectColor * diffuseColor;
+		}
+		else {
+			// doesn't bounce to anything
+			Vec3f dir_norm = GIRay.dir;
+			if (dir_norm.x == dir_norm.y && dir_norm.x == 0) {
+				// nan situation
+				outColor += Color::NANPurple();
+				printf("Environment nan\n");
+			}
+			else {
+				outColor += environment.SampleEnvironment(dir_norm)/* * cosTheta*/ * diffuse.Sample(hInfo.uvw, hInfo.duvw);
+			}
+		}
+	}
+	return outColor;
+}
+
 
 #endif // ENABLE_GI
 

@@ -74,6 +74,7 @@ public:
 	void SetSize(float s) { size = s; }
 
 	float GetIntensity() const { return intensity.Gray(); }
+	float GetSize() const { return size; }
 private:
 	Color intensity;
 	Vec3f position;
