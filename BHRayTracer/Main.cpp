@@ -50,7 +50,7 @@ Color TraceRayMultiple(int i, int j);
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 5
+#define GIBounceCount 10
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -199,7 +199,7 @@ Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
 #endif // ENABLE_DEPTH_OF_VIEW
 
 #ifdef USE_PathTracing
-#define PT_SampleCount 128
+#define PT_SampleCount 1024
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -373,7 +373,7 @@ void SaveImages() {
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj11_0.xml";
+	const char* filename = "Resource/Data/proj12.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

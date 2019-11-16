@@ -33,25 +33,38 @@
         <translate x="15"/>
       </object>
     </object>
-    <object type="obj" name="Resource/Data/teapot.obj" material="teapot">
+    <!--<object type="obj" name="Resource/Data/teapot.obj" material="teapot">
       <scale value="0.75"/>
       <rotate angle="30" z="1"/>
       <translate x="-2.5" y="12" z="0.01"/>
-    </object>
-    <object type="sphere" name="sphere2" material="diffuse">
-      <scale value="4.5"/>
-      <rotate angle="30" y="1"/>
-      <translate x="8" y="-6" z="4.5"/>
-    </object>
-    <!--<object type="sphere" name="sphere2" material="middle">
-      <scale value="4.5"/>
-      <rotate angle="30" y="1"/>
-      <translate x="-2" y="0" z="4.5"/>
     </object>-->
-    <object type="sphere" name="sphere2" material="specular">
-      <scale value="4.5"/>
-      <rotate angle="30" y="1"/>
-      <translate x="-8" y="-12" z="4.5"/>
+    <object type="sphere" name="sphere1" material="diffuse">
+      <scale value="3.5"/>
+      <translate x="-10" y="8" z="3.5"/>
+    </object>
+    <object type="sphere" name="sphere2" material="middle">
+      <scale value="3.5"/>
+      <translate x="0" y="8" z="3.5"/>
+    </object>
+    <object type="sphere" name="sphere3" material="specular">
+      <scale value="3.5"/>
+      <translate x="10" y="8" z="3.5"/>
+    </object>
+    <object type="sphere" name="sphere4" material="Full">
+      <scale value="2.5"/>
+      <translate x="-5" y="-4" z="2.5"/>
+    </object>
+    <object type="sphere" name="sphere5" material="FullGlo">
+      <scale value="2.5"/>
+      <translate x="5" y="-4" z="2.5"/>
+    </object>
+    <object type="sphere" name="sphere6" material="None">
+      <scale value="2"/>
+      <translate x="0" y="-12" z="2"/>
+    </object>
+    <object type="sphere" name="sphere6" material="refraction">
+      <scale value="3"/>
+      <translate x="-11" y="-13" z="3"/>
     </object>
     <!-- Materials -->
     <material type="blinn" name="wall">
@@ -89,12 +102,27 @@
     <material type="blinn" name="middle">
       <diffuse  value="0.5"/>
       <specular  value="0.5"/>
-      <glossiness value="50"/>
+      <glossiness value="5"/>
     </material>
     <material type="blinn" name="specular">
       <diffuse value="0.0"/>
-      <specular value="0.8"/>
+      <specular value="0.9"/>
       <glossiness value="100"/>
+    </material>
+    <material type="blinn" name="None">
+      <diffuse value="0.0"/>
+      <specular value="0.0"/>
+      <glossiness value="0"/>
+    </material>
+    <material type="blinn" name="FullGlo">
+      <diffuse value="1.0"/>
+      <specular value="1.0"/>
+      <glossiness value="200"/>
+    </material>
+    <material type="blinn" name="Full">
+      <diffuse value="1.0"/>
+      <specular value="1.0"/>
+      <glossiness value="0"/>
     </material>
     <material type="blinn" name="teapot">
       <diffuse  r="0.8" g="0.2" b="0.2"/>

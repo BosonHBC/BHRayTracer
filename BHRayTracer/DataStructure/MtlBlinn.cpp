@@ -11,7 +11,7 @@
 #define OneOverPI 0.31830988f
 #ifdef ENABLE_Reflection_And_Refraction
 //#define ENABLE_Reflection
-//#define ENABLE_Refraction
+#define ENABLE_Refraction
 
 
 #ifdef ENABLE_Refraction
@@ -232,7 +232,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 	// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 	Vec3f vH = (vL + vV).GetNormalized();
 
-	Color brdfXCosTheta = /*OneOverPI*/1 * (diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + /*(glossiness *0.5f + 1)* */specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));
+	Color brdfXCosTheta =OneOverPI * (diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta +(glossiness *0.5f + 1)*specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));
 	outColor += brdfXCosTheta * (light)->Illuminate(hInfo.p, vN);
 
 	if (isnan(outColor.r)) {
