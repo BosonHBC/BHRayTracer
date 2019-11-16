@@ -71,6 +71,7 @@
     <light type="point" name="pointLight">
       <intensity value="0.5"/>
       <position x="0" y="0" z="22"/>
+      <size value="5"/>
     </light>
   </scene>
  

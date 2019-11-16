@@ -4,14 +4,14 @@
 #include <math.h>
 #include <omp.h>
 
-//#define ENABLE_Reflection_And_Refraction
+#define ENABLE_Reflection_And_Refraction
 #define Bias 0.0001f
 #define EulerN 2.7182818f
 #define PI 3.14159265
 #define OneOverPI 0.31830988f
 #ifdef ENABLE_Reflection_And_Refraction
-#define ENABLE_Reflection
-#define ENABLE_Refraction
+//#define ENABLE_Reflection
+//#define ENABLE_Refraction
 
 
 #ifdef ENABLE_Refraction
@@ -53,7 +53,7 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 
 // Path tracing functions
 Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV);
-Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, int o_bounceCount, int i_bounceCount = 1);
+cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int i_GIbounceCount);
 
 Vec3f GetRandomCrossingVector(const Vec3f& V);
 Vec3f GetSampleAlongNormal(const Vec3f& N, float radius);
@@ -88,7 +88,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 
 #ifdef ENABLE_GI
-	outColor += PathTracing_GlobalIllumination(diffuse, hInfo, vN, bounceCount, GIBounceCount);
+	outColor += PathTracing_GlobalIllumination(diffuse, specular, glossiness, hInfo, vN, vV, bounceCount, GIBounceCount);
 #endif // ENABLE_GI
 	// ----------
 	// Reflection and Refraction
@@ -188,7 +188,7 @@ cy::Vec3f GetSampleInLight(Light* light, const HitInfo& hInfo)
 		float x = R * cos(theta);
 		float y = R * sin(theta);
 		// direction from hit point to light center
-		Vec3f N = (-pLight->Direction(hInfo.p));
+		Vec3f N = pLight->GetPosition() - hInfo.p;
 
 		Vec3f axis1 = GetRandomCrossingVector(N).Cross(N);
 		Vec3f axis2 = axis1.Cross(N);
@@ -218,21 +218,21 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 	//Vec3f vL = orignalLightDir;
 	// transform light
 	float theta1 = 0;
-	Vec3f vL = (GetSampleAlongLightDirection(-light->Direction(hInfo.p), glossiness, theta1)).GetNormalized();
+	//Vec3f vL = (GetSampleAlongLightDirection(-light->Direction(hInfo.p), glossiness, theta1)).GetNormalized();
+	//Vec3f vL = -light->Direction(hInfo.p);
+	Vec3f vL = GetSampleInLight(light, hInfo);
 
-	//Vec3f vL = GetSampleInLight(light, hInfo);
-	
 	// Theta is  dot product of Normal and light
 	float cosTheta = vL.Dot(vN);
 
-	if (cosTheta < -0.0001) {
+	if (cosTheta <= 0) {
 		// from back side
 		return Color::Black();
 	}
 	// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 	Vec3f vH = (vL + vV).GetNormalized();
 
-	Color brdfXCosTheta = OneOverPI * (diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + (glossiness *0.5f + 1)* specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));
+	Color brdfXCosTheta = /*OneOverPI*/1 * (diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + /*(glossiness *0.5f + 1)* */specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));
 	outColor += brdfXCosTheta * (light)->Illuminate(hInfo.p, vN);
 
 	if (isnan(outColor.r)) {
@@ -288,7 +288,7 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 				GIColorSum += environment.SampleEnvironment(dir_norm)/* * cosTheta*/ * diffuse.Sample(hInfo.uvw, hInfo.duvw);
 			}
 		}
-}
+	}
 
 	outColor += GIColorSum / GISampleCount;
 	if (isnan(outColor.r)) {
@@ -300,46 +300,64 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 	return outColor;
 }
 
-cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, const Vec3f& vN, int o_bounceCount, int i_bounceCount /*= 1*/)
+cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int i_GIbounceCount /*= 1*/)
 {
-	i_bounceCount--;
+	i_GIbounceCount--;
 	// Bound too many times
-	if (i_bounceCount < 0)return Color::Black();
+	if (i_GIbounceCount < 0)return Color::Black();
 	Color outColor = Color::Black();
+
 	// diffuse GI
-	{
-		float theta1 = 0;
-		Ray GIRay;
-		GIRay.dir = GetSampleInSemiSphere(vN, theta1).GetNormalized();
+	float diffuseTheta = 0;
+	Vec3f diffuseRayDir = GetSampleInSemiSphere(vN, diffuseTheta).GetNormalized();
+	float p_diffuseTheta = sin(2 * diffuseTheta);
 
-		GIRay.p = hInfo.p + vN * Bias;
-		// float cosTheta = vN.Dot(GIRay.dir);
 
-		HitInfo reflHInfo = HitInfo();
-		bool bReflectionHit = false;
-		recursive(&rootNode, GIRay, reflHInfo, bReflectionHit, HIT_FRONT);
-		if (bReflectionHit && reflHInfo.node != nullptr) {
-			Color diffuseColor = diffuse.Sample(hInfo.uvw, hInfo.duvw);
-			Color indirectColor = Color::Black();
+	// specular GI
+	float specularTheta = 0;
+	float cosvVvN = vN.Dot(vV);
+	Vec3f vR = 2 * cosvVvN * vN - vV;
+	Vec3f specualrRayDir = GetSampleAlongLightDirection(vR, glossiness, specularTheta);
+	float p_specularTheta = pow(cos(specularTheta), glossiness);
 
-			/** Mesh intersect situation */
-			if (abs(reflHInfo.z) > Bias)
-				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_bounceCount);
-			outColor += indirectColor * diffuseColor;
+	// Probability 
+	float P_Diffuse = diffuse.GetColor().Gray() * p_diffuseTheta;
+	float P_sum = P_Diffuse + specular.GetColor().Gray() * p_specularTheta;
+
+	float  P_Diffuse_Norm = P_Diffuse / P_sum;
+
+	float rnd = Rnd01();
+	bool useSpecular =rnd >= P_Diffuse_Norm;
+	Ray GIRay;
+	GIRay.dir = useSpecular ? specualrRayDir : diffuseRayDir;
+
+	GIRay.p = hInfo.p + vN * Bias;
+	// float cosTheta = vN.Dot(GIRay.dir);
+
+	HitInfo reflHInfo = HitInfo();
+	bool bReflectionHit = false;
+	recursive(&rootNode, GIRay, reflHInfo, bReflectionHit, HIT_FRONT);
+	if (bReflectionHit && reflHInfo.node != nullptr) {
+		Color indirectColor = Color::Black();
+
+		/** Mesh intersect situation */
+		if (abs(reflHInfo.z) > Bias)
+			indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_GIbounceCount);
+		outColor += indirectColor * (useSpecular ? specular : diffuse).Sample(hInfo.uvw, hInfo.duvw);
+	}
+	else {
+		// doesn't bounce to anything
+		Vec3f dir_norm = GIRay.dir;
+		if (dir_norm.x == dir_norm.y && dir_norm.x == 0) {
+			// nan situation
+			outColor += Color::NANPurple();
+			printf("Environment nan\n");
 		}
 		else {
-			// doesn't bounce to anything
-			Vec3f dir_norm = GIRay.dir;
-			if (dir_norm.x == dir_norm.y && dir_norm.x == 0) {
-				// nan situation
-				outColor += Color::NANPurple();
-				printf("Environment nan\n");
-			}
-			else {
-				outColor += environment.SampleEnvironment(dir_norm)/* * cosTheta*/ * diffuse.Sample(hInfo.uvw, hInfo.duvw);
-			}
+			outColor += environment.SampleEnvironment(dir_norm) * (useSpecular ? specular : diffuse).Sample(hInfo.uvw, hInfo.duvw);
 		}
 	}
+
 	return outColor;
 }
 
