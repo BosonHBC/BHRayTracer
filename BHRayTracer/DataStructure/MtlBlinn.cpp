@@ -57,8 +57,9 @@ Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const HitInfo
 
 Vec3f GetRandomCrossingVector(const Vec3f& V);
 Vec3f GetSampleAlongNormal(const Vec3f& N, float radius);
-Vec3f GetSampleInSemiSphere(const Vec3f& N);
-Vec3f GetSampleAlongLightDirection(const Vec3f& N, float alhpa);
+Vec3f GetSampleInSemiSphere(const Vec3f& N, float& o_theta);
+Vec3f GetSampleAlongLightDirection(const Vec3f& N, float alhpa, float& o_theta);
+cy::Vec3f GetSampleInLight(Light* light, const HitInfo& hInfo);
 bool IsVec3Parallel(const Vec3f& i_lVec, const Vec3f& i_rVec);
 
 bool s_debugTrace;
@@ -156,12 +157,12 @@ Color DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specul
 	return outColor;
 }
 
-cy::Vec3f GetSampleAlongLightDirection(const Vec3f& N, float glossiness)
+cy::Vec3f GetSampleAlongLightDirection(const Vec3f& N, float glossiness, float& o_theta)
 {
 	float weightTheta = ACosSafe(pow(Rnd01(), 1.f / (glossiness + 1.f)));
+	o_theta = weightTheta;
 	// The radius of the circle
 	float R = tan(weightTheta);
-
 	float phi = ((double)rand() / (RAND_MAX)) * 2 * PI;
 	// Random point in a circle
 	float x = R * cos(phi);
@@ -172,6 +173,34 @@ cy::Vec3f GetSampleAlongLightDirection(const Vec3f& N, float glossiness)
 
 	Vec3f sampledN = N + axis1.GetNormalized() * x + axis2.GetNormalized() * y;
 	return sampledN;
+}
+
+
+cy::Vec3f GetSampleInLight(Light* light, const HitInfo& hInfo)
+{
+	if (PointLight* pLight = dynamic_cast<PointLight*>(light)) {
+		// it is point light, get a random point in the sphere sample
+
+		// Uniform distribution of the radius 
+		float R = sqrt(Rnd01()) * pLight->GetSize();
+		float theta = ((double)rand() / (RAND_MAX)) * 2 * PI;
+		// Random point in a circle
+		float x = R * cos(theta);
+		float y = R * sin(theta);
+		// direction from hit point to light center
+		Vec3f N = (-pLight->Direction(hInfo.p));
+
+		Vec3f axis1 = GetRandomCrossingVector(N).Cross(N);
+		Vec3f axis2 = axis1.Cross(N);
+
+		Vec3f sampledN = N + axis1.GetNormalized() * x + axis2.GetNormalized() * y;
+		return sampledN.GetNormalized();
+	}
+	else
+	{
+		// Direction Light or other lights
+		return -light->Direction(hInfo.p).GetNormalized();
+	}
 }
 
 
@@ -186,14 +215,12 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 	}
 
 	Light* light = lights[i];
-	Vec3f orignalLightDir = -light->Direction(hInfo.p);
 	//Vec3f vL = orignalLightDir;
 	// transform light
-	Vec3f vL = (GetSampleAlongLightDirection(orignalLightDir, glossiness)).GetNormalized();
-	if (PointLight* pLight = dynamic_cast<PointLight*>(light)) {
-		// this is point light
-	//	vL = GetSampleAlongNormal(orignalLightDir, pLight->GetSize()).GetNormalized();
-	}
+	float theta1 = 0;
+	Vec3f vL = (GetSampleAlongLightDirection(-light->Direction(hInfo.p), glossiness, theta1)).GetNormalized();
+
+	//Vec3f vL = GetSampleInLight(light, hInfo);
 	
 	// Theta is  dot product of Normal and light
 	float cosTheta = vL.Dot(vN);
@@ -230,8 +257,9 @@ Color GlobalIllumination(const TexturedColor& diffuse, const HitInfo& hInfo, con
 	Color GIColorSum = Color::Black();
 	for (int i = 0; i < GISampleCount; ++i)
 	{
+		float theta1 = 0;
 		Ray GIRay;
-		GIRay.dir = GetSampleInSemiSphere(vN).GetNormalized();
+		GIRay.dir = GetSampleInSemiSphere(vN, theta1).GetNormalized();
 
 		GIRay.p = hInfo.p + vN * Bias;
 		// float cosTheta = vN.Dot(GIRay.dir);
@@ -278,10 +306,11 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Hit
 	// Bound too many times
 	if (i_bounceCount < 0)return Color::Black();
 	Color outColor = Color::Black();
-	// Indirect GI
+	// diffuse GI
 	{
+		float theta1 = 0;
 		Ray GIRay;
-		GIRay.dir = GetSampleInSemiSphere(vN).GetNormalized();
+		GIRay.dir = GetSampleInSemiSphere(vN, theta1).GetNormalized();
 
 		GIRay.p = hInfo.p + vN * Bias;
 		// float cosTheta = vN.Dot(GIRay.dir);
@@ -530,7 +559,7 @@ cy::Vec3f GetSampleAlongNormal(const Vec3f& N, float R)
 	return sampledN;
 }
 
-cy::Vec3f GetSampleInSemiSphere(const Vec3f& N)
+cy::Vec3f GetSampleInSemiSphere(const Vec3f& N, float& o_theta)
 {
 	Vec3f otherVec = Vec3f(1, 0, 0);
 	if (IsVec3Parallel(N, otherVec)) {
@@ -549,11 +578,12 @@ cy::Vec3f GetSampleInSemiSphere(const Vec3f& N)
 	float rnd = ((double)rand() / (RAND_MAX));
 	// Uniform distribution, theta -> [0 , PI/2)
 	float theta = 0.5f * ACosSafe(1 - 2 * rnd);
+	o_theta = theta;
 	float sinTheta = sin(theta);
 
 	Vec3f retVec = sinTheta * cos(phi) * axisX + sinTheta * sin(phi) * axisY + cos(theta) * N;
 	if (N.Dot(retVec) < 0) {
-		return GetSampleInSemiSphere(N);
+		return GetSampleInSemiSphere(N, o_theta);
 	}
 	return retVec;
 }
