@@ -50,7 +50,7 @@ Color TraceRayMultiple(int i, int j);
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 10
+#define GIBounceCount 15
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;

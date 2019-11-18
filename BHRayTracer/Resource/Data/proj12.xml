@@ -74,11 +74,13 @@
     </material>
     <material type="blinn" name="wallRed">
       <diffuse  r="1.0" g="0.2" b="0.2"/>
-      <specular value="0"/>
+      <specular value="0.9"/>
+      <glossiness value="100"/>
     </material>
     <material type="blinn" name="wallBlue">
       <diffuse  r="0.2" g="0.2" b="1.0"/>
-      <specular value="0"/>
+      <specular value="0.9"/>
+      <glossiness value="100"/>
     </material>
     <material type="blinn" name="light">
       <emission  value="20"/>
@@ -143,16 +145,16 @@
       <position x="0" y="0" z="22"/>
       <size value="5"/>
     </light>
-    <light type="point" name="pointLight2">
+    <!-- <light type="point" name="pointLight2">
       <intensity value="0.2"/>
       <position x="0" y="-10" z="8"/>
       <size value="5"/>
-    </light>
+    </light> -->
 
   </scene>
  
   <camera>
-    <position x="0" y="-60" z="16"/>
+    <position x="0" y="-70" z="16"/>
     <target x="0" y="0" z="11"/>
     <up x="0" y="0" z="1"/>
     <fov value="30"/>
