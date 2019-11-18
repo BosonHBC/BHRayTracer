@@ -50,7 +50,7 @@ Color TraceRayMultiple(int i, int j);
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 5
+#define GIBounceCount 10
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -199,7 +199,7 @@ Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
 #endif // ENABLE_DEPTH_OF_VIEW
 
 #ifdef USE_PathTracing
-#define PT_SampleCount 256
+#define PT_SampleCount 512
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();

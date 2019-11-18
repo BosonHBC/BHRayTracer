@@ -58,17 +58,14 @@
       <scale value="2.5"/>
       <translate x="5" y="-4" z="2.5"/>
     </object>
-    <object type="sphere" name="sphere6" material="None">
-      <scale value="2"/>
-      <translate x="0" y="-12" z="2"/>
+    <object type="obj" name="Resource/Data/teapot.obj" material="teapot">
+      <scale value="0.3"/>
+      <rotate angle="-30" z="1"/>
+      <translate x="0" y="-12" z="0.14"/>
     </object>
     <object type="sphere" name="sphere6" material="refraction">
-      <scale value="3"/>
-      <translate x="-11" y="-13" z="3"/>
-    </object>
-    <object type="sphere" name="sphere6" material="refraction">
-      <scale value="5"/>
-      <translate x="0" y="-13" z="15"/>
+      <scale value="4"/>
+      <translate x="-9.5" y="-13" z="4"/>
     </object>
     <!-- Materials -->
     <material type="blinn" name="wall">
@@ -146,11 +143,11 @@
       <position x="0" y="0" z="22"/>
       <size value="5"/>
     </light>
-    <!--<light type="point" name="pointLight2">
+    <light type="point" name="pointLight2">
       <intensity value="0.2"/>
       <position x="0" y="-10" z="8"/>
       <size value="5"/>
-    </light>-->
+    </light>
 
   </scene>
  
