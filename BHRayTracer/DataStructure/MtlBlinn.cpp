@@ -27,8 +27,8 @@
 
 #define ParallelVecDeterminance 0.001f
 
-#define GlossyReflectionSampleCount 8
-#define GlossyRefractionSampleCount 8
+#define GlossyReflectionSampleCount 1
+#define GlossyRefractionSampleCount 1
 
 extern Node rootNode;
 extern LightList lights;
@@ -54,6 +54,7 @@ Color Refraction(const Color& refraction, const Color& absorption, const float& 
 // Path tracing functions
 Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV);
 cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int i_GIbounceCount);
+Color PathTracing_Refraction(const Color& refraction, const Color& absorption, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness);
 
 Vec3f GetRandomCrossingVector(const Vec3f& V);
 Vec3f GetSampleAlongNormal(const Vec3f& N, float radius);
@@ -106,7 +107,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 #ifdef ENABLE_Refraction
 			// Refraction color
-			outColor += Refraction((1 - fresnelReflectionFactor)*refraction.GetColor(), absorption, cosPhi1, ior, hInfo, vN, vV, bounceCount, GIBounceCount, refractionGlossiness);
+			outColor += PathTracing_Refraction(refraction.GetColor(), absorption, ior, hInfo, vN, vV, bounceCount, GIBounceCount, refractionGlossiness);
 #endif // ENABLE_RFRACTION
 		}
 	}
@@ -114,7 +115,6 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	// ----------
 
 	if (isnan(outColor.r)) {
-
 		printf("OutColor Has NaN! \n");
 		outColor = Color::NANPurple();
 	}
@@ -232,7 +232,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 	// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
 	Vec3f vH = (vL + vV).GetNormalized();
 
-	Color brdfXCosTheta =OneOverPI * (diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta +(glossiness *0.5f + 1)*specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));
+	Color brdfXCosTheta = OneOverPI * (diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + (glossiness *0.5f + 1)*specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));
 	outColor += brdfXCosTheta * (light)->Illuminate(hInfo.p, vN);
 
 	if (isnan(outColor.r)) {
@@ -327,7 +327,7 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 	float  P_Diffuse_Norm = P_Diffuse / P_sum;
 
 	float rnd = Rnd01();
-	bool useSpecular =rnd >= P_Diffuse_Norm;
+	bool useSpecular = rnd >= P_Diffuse_Norm;
 	Ray GIRay;
 	GIRay.dir = useSpecular ? specualrRayDir : diffuseRayDir;
 
@@ -343,7 +343,9 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 		/** Mesh intersect situation */
 		if (abs(reflHInfo.z) > Bias)
 			indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_GIbounceCount);
-		outColor += indirectColor * (useSpecular ? specular : diffuse).Sample(hInfo.uvw, hInfo.duvw);
+
+		Vec3f vH = (GIRay.dir + vV).GetNormalized();
+		outColor += indirectColor * (useSpecular ? specular.Sample(hInfo.uvw, hInfo.duvw) : diffuse.Sample(hInfo.uvw, hInfo.duvw));
 	}
 	else {
 		// doesn't bounce to anything
@@ -412,6 +414,38 @@ Color Reflection(const Color& reflection, const float& cosPhi1, const HitInfo& h
 #endif // ENABLE_REFLECTION
 
 #ifdef ENABLE_Refraction
+cy::Color PathTracing_Refraction(const Color& refraction, const Color& absorption, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness)
+{
+	Color refractionColor = Color::Black();
+
+
+	Vec3f vN_new = refractionGlossiness > 0 ? GetSampleAlongNormal(vN, refractionGlossiness).GetNormalized() : vN;
+	float cosPhi1New = vN_new.Dot(vV);
+	// handle floating point precision issues
+	{
+		if (cosPhi1New > 1) cosPhi1New = 1;
+		if (cosPhi1New <= 0) return refractionColor;
+	}
+	float R0 = pow((1 - ior) / (1 + ior), 2);
+	// Fresnel Reflection factor
+	float fresnelReflectionFactor = R0 + (1 - R0)* pow((1 - cosPhi1New), 5);
+	if (!refraction.IsBlack()) {
+
+		float sinPhi1 = sqrt(1 - cosPhi1New * cosPhi1New);
+		float sinPhi2 = sinPhi1 / ior;
+		float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
+
+		Vec3f vTn = -cosPhi2 * vN_new;
+		Vec3f vNxV = vN_new.Cross(vV);
+		Vec3f vTp = vN_new.Cross(vNxV).GetNormalized()*sinPhi2;
+		Vec3f vT = vTn + vTp;
+
+		refractionColor = RefractionRecusive((1 - fresnelReflectionFactor) * refraction, ior, vT, hInfo, vN_new, refractionGlossiness, absorption, o_bounceCount);
+	}
+
+	return refractionColor;
+}
+
 
 cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Vec3f& vT, const HitInfo& hInfo, const Vec3f& vN_new, const float& refractionGlossiness, const Color& absorption, int o_bounceCount)
 {

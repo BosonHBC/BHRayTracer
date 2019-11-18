@@ -66,6 +66,10 @@
       <scale value="3"/>
       <translate x="-11" y="-13" z="3"/>
     </object>
+    <object type="sphere" name="sphere6" material="refraction">
+      <scale value="5"/>
+      <translate x="0" y="-13" z="15"/>
+    </object>
     <!-- Materials -->
     <material type="blinn" name="wall">
       <diffuse  r="1" g="1" b="1"/>
@@ -134,7 +138,7 @@
       <diffuse value="0"/>
       <specular value="0.8"/>
       <glossiness value="50"/>
-      <refraction index="2.0" value="0.8"/>
+      <refraction index="2.0" value="0.8" glossiness="0.05"/>
     </material>
     <!-- Lights -->
     <light type="point" name="pointLight1">
