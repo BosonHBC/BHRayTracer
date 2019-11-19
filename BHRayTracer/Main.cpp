@@ -50,7 +50,7 @@ Color TraceRayMultiple(int i, int j);
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 15
+#define GIBounceCount 5
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -368,12 +368,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj12.png");
+	renderImage.SaveImage("Resource/Result/proj12_0.png");
 }
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj12.xml";
+	const char* filename = "Resource/Data/proj12_0.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
