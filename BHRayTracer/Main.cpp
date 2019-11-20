@@ -199,7 +199,7 @@ Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
 #endif // ENABLE_DEPTH_OF_VIEW
 
 #ifdef USE_PathTracing
-#define PT_SampleCount 512
+#define PT_SampleCount 1024
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -368,12 +368,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj12_0.png");
+	renderImage.SaveImage("Resource/Result/proj12.png");
 }
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj12_0.xml";
+	const char* filename = "Resource/Data/proj12.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

@@ -74,13 +74,11 @@
     </material>
     <material type="blinn" name="wallRed">
       <diffuse  r="1.0" g="0.2" b="0.2"/>
-      <specular value="0.9"/>
-      <glossiness value="100"/>
+      <specular value="0"/>
     </material>
     <material type="blinn" name="wallBlue">
       <diffuse  r="0.2" g="0.2" b="1.0"/>
-      <specular value="0.9"/>
-      <glossiness value="100"/>
+      <specular value="0"/>
     </material>
     <material type="blinn" name="light">
       <emission  value="20"/>
