@@ -343,7 +343,7 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 	float cosvVvN = vN.Dot(vV);
 	Vec3f vR = 2 * cosvVvN * vN - vV;
 	Vec3f specualrRayDir = GetSampleAlongLightDirection(vR, glossiness, specularTheta);
-	float p_specularTheta = pow(cos(specularTheta), glossiness);
+	float p_specularTheta = 2 * OneOverPI *(glossiness + 2)*pow(cos(specularTheta), glossiness);
 
 	// Probability 
 	float P_Diffuse = diffuse.GetColor().Gray() * p_diffuseTheta;
