@@ -12,10 +12,15 @@
         <rotate angle="180" x="1"/>
         <translate z="12"/>
       </object>
-      <object type="plane" name="WallBack" material="wall">
+      <object type="plane" name="WallBack" material="wallSpec">
         <scale value="32"/>
         <rotate angle="90" x="1"/>
         <translate y="20"/>
+      </object>
+      <object type="plane" name="WallFront" material="wallSpec">
+        <scale value="32"/>
+        <rotate angle="-90" x="1"/>
+        <translate y="-71"/>
       </object>
       <!--<object type="plane" name="WallFront" material="wall">
         <scale value="32"/>
@@ -33,11 +38,6 @@
         <translate x="15"/>
       </object>
     </object>
-    <!--<object type="obj" name="Resource/Data/teapot.obj" material="teapot">
-      <scale value="0.75"/>
-      <rotate angle="30" z="1"/>
-      <translate x="-2.5" y="12" z="0.01"/>
-    </object>-->
     <object type="sphere" name="sphere1" material="diffuse">
       <scale value="3.5"/>
       <translate x="-10" y="8" z="3.5"/>
@@ -45,12 +45,12 @@
     <object type="sphere" name="sphere2" material="middle">
       <scale value="3.5"/>
       <translate x="0" y="8" z="3.5"/>
-    </object>
+    </object> 
     <object type="sphere" name="sphere3" material="specular">
       <scale value="3.5"/>
       <translate x="10" y="8" z="3.5"/>
     </object>
-    <object type="sphere" name="sphere4" material="Full">
+     <object type="sphere" name="sphere4" material="Full">
       <scale value="2.5"/>
       <translate x="-5" y="-4" z="2.5"/>
     </object>
@@ -68,17 +68,24 @@
       <translate x="-9.5" y="-13" z="4"/>
     </object>
     <!-- Materials -->
+    <material type="blinn" name="wallSpec">
+      <diffuse  r="0" g="0" b="0"/>
+      <specular r="1" g="1" b="1" value="0.9"/>
+      <glossiness value="2500"/>
+    </material>
     <material type="blinn" name="wall">
       <diffuse  r="1" g="1" b="1"/>
       <specular value="0"/>
     </material>
     <material type="blinn" name="wallRed">
-      <diffuse  r="1.0" g="0.2" b="0.2"/>
-      <specular value="0"/>
+      <diffuse  r="0" g="0" b="0"/>
+     <specular r="1" g="0.2" b="0.2"/>
+      <glossiness value="2500"/>
     </material>
     <material type="blinn" name="wallBlue">
-      <diffuse  r="0.2" g="0.2" b="1.0"/>
-      <specular value="0"/>
+      <diffuse  r="0" g="0" b="0"/>
+      <specular r="0.2" g="0.2" b="1"/>
+      <glossiness value="2500"/>
     </material>
     <material type="blinn" name="light">
       <emission  value="20"/>
@@ -109,11 +116,6 @@
       <diffuse value="0.0"/>
       <specular value="0.9"/>
       <glossiness value="100"/>
-    </material>
-    <material type="blinn" name="None">
-      <diffuse value="0.0"/>
-      <specular value="0.0"/>
-      <glossiness value="0"/>
     </material>
     <material type="blinn" name="FullGlo">
       <diffuse value="1.0"/>

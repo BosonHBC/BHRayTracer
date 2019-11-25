@@ -33,7 +33,7 @@ Vec3f camXAxis;
 float allLightIntensity;
 #define PI 3.14159265
 
-#define REFLECTION_BOUNCE 8
+#define REFLECTION_BOUNCE 5
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -199,7 +199,7 @@ Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
 #endif // ENABLE_DEPTH_OF_VIEW
 
 #ifdef USE_PathTracing
-#define PT_SampleCount 1024
+#define PT_SampleCount 128
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
