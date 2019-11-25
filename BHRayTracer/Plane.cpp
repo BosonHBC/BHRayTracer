@@ -19,6 +19,15 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	if (x.x < -1 || x.x > 1 || x.y < -1 || x.y > 1) {
 		return false;
 	}
+	// Back face check
+	{
+		float dotCheck = (-ray.dir).Dot(Vec3f(0, 0, 1));
+		if (dotCheck < 0 && hitSide == HIT_FRONT) // back face
+			return false;
+		else if (dotCheck > 0 && hitSide == HIT_BACK) // front face
+			return false;
+	}
+
 
 	// Set hit info
 	hInfo.p = x;

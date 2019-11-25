@@ -90,8 +90,9 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	if (outColor.r >= 1 && outColor.g >= 1 && outColor.b >= 1) return outColor;
 #endif // ENABLE_GI
 
-
-	outColor += PathTracing_Refraction(refraction.GetColor(), absorption, ior, hInfo, vN, vV, bounceCount, GIBounceCount, refractionGlossiness);
+	float refraction_glossiness = 0;
+	if (glossiness > 20) refraction_glossiness = 1 / glossiness;
+	outColor += PathTracing_Refraction(refraction.GetColor(), absorption, ior, hInfo, vN, vV, bounceCount, GIBounceCount, refraction_glossiness);
 
 
 	if (isnan(outColor.r)) {
@@ -213,28 +214,38 @@ cy::Color PathTracing_Refraction(const Color& refraction, const Color& absorptio
 	if (o_bounceCount <= 0) return refractionColor;
 	o_bounceCount--;
 
-	Vec3f vN_new = refractionGlossiness > 0 ? GetSampleAlongNormal(vN, refractionGlossiness).GetNormalized() : vN;
-	float cosPhi1New = vN_new.Dot(vV);
-	// handle floating point precision issues
-	{
-		if (cosPhi1New > 1) cosPhi1New = 1;
-		if (cosPhi1New <= 0) return refractionColor;
-	}
+	float cosPhi1 = vN.Dot(vV);
+
 	float R0 = pow((1 - ior) / (1 + ior), 2);
 	// Fresnel Reflection factor
-	float fresnelReflectionFactor = R0 + (1 - R0)* pow((1 - cosPhi1New), 5);
+	float fresnelReflectionFactor = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
 	if (!refraction.IsBlack()) {
 
-		float sinPhi1 = sqrt(1 - cosPhi1New * cosPhi1New);
+		float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
 		float sinPhi2 = sinPhi1 / ior;
 		float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
 
-		Vec3f vTn = -cosPhi2 * vN_new;
-		Vec3f vNxV = vN_new.Cross(vV);
-		Vec3f vTp = vN_new.Cross(vNxV).GetNormalized()*sinPhi2;
+		Vec3f vTn = -cosPhi2 * vN;
+		Vec3f vNxV = vN.Cross(vV);
+		Vec3f vTp = vN.Cross(vNxV).GetNormalized()*sinPhi2;
+		// perfect refraction direction
 		Vec3f vT = vTn + vTp;
+		Vec3f vT_sampled = vT;
+		if (refractionGlossiness > 0)
+		{
+			// Sample a new refraction direction
+			float dotSign =  0;
+			// if the new vT is going out(sign of dot(vT, vN) > 0), generate a new one
+			while (dotSign  >= 0)
+			{
+				float theta = 0;
+				vT_sampled = GetSampleAlongLightDirection(vT, refractionGlossiness, theta);
+				dotSign = vT_sampled.Dot(vN);
+			}
+		}
 
-		refractionColor = RefractionRecusive((1 - fresnelReflectionFactor) * refraction, ior, vT, hInfo, vN_new, refractionGlossiness, absorption, o_bounceCount, GIBounceCount);
+
+		refractionColor = RefractionRecusive((1 - fresnelReflectionFactor) * refraction, ior, vT_sampled, hInfo, vN, refractionGlossiness, absorption, o_bounceCount, GIBounceCount);
 	}
 
 	ClampColorToWhite(refractionColor);
@@ -243,17 +254,16 @@ cy::Color PathTracing_Refraction(const Color& refraction, const Color& absorptio
 	}
 
 
-cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Vec3f& vT, const HitInfo& hInfo, const Vec3f& vN_new, const float& refractionGlossiness, const Color& absorption, int o_bounceCount, int i_GIbounceCount)
+cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Vec3f& vT, const HitInfo& hInfo, const Vec3f& vN, const float& refractionGlossiness, const Color& absorption, int o_bounceCount, int i_GIbounceCount)
 {
 	Ray refractionRay_in;
 	refractionRay_in.dir = vT;
-	refractionRay_in.p = hInfo.p - vN_new * Bias;
+	refractionRay_in.p = hInfo.p - vN * Bias;
 	HitInfo refraHInfo_in = HitInfo();
 	bool bRefractionInHit;
 	recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, HIT_BACK);
 	if (bRefractionInHit && refraHInfo_in.node != nullptr) {
 		bool bGoingOut;
-
 		Color refractionColor = Color::Black();
 
 		Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut, refractionGlossiness);
@@ -261,9 +271,10 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 			refractionColor = RefractionOut(nextRay, absorption, refraction, o_bounceCount, i_GIbounceCount);
 		}
 		else {
+			// Total internal reflection
 			if (o_bounceCount <= 0)
 			{
-				refractionColor = Color(0, 0, 0);
+				refractionColor = Color(0, 1, 0);
 				/*Ray bouncingCountZeroRay = Ray(refraHInfo_in.p + refraHInfo_in.N*Bias, refractionRay_in.dir);
 				refractionColorSum_out = RefractionOut(bouncingCountZeroRay, absorption, refraction, o_bounceCount, i_GIbounceCount);*/
 			}
@@ -301,48 +312,8 @@ cy::Color RefractionOut(const Ray& outRay, const Color& absorption, const Color&
 	return outColor;
 }
 
-
-Color Refraction(const Color& refraction, const Color& absorption, const float& cosPhi1, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness)
-{
-	Color refractionColor = Color::Black();
-	if (!refraction.IsBlack()) {
-
-		Color refractionColorSum_in = Color::Black();
-		int sampleCount = refractionGlossiness > 0 ? GlossyRefractionSampleCount : 1;
-		for (int i = 0; i < sampleCount; ++i)
-		{
-			Vec3f vN_new = refractionGlossiness > 0 ? GetSampleAlongNormal(vN, refractionGlossiness).GetNormalized() : vN;
-			float cosPhi1New = vN_new.Dot(vV);
-			// handle floating point precision issues
-			{
-				if (cosPhi1New > 1) cosPhi1New = 1;
-				if (cosPhi1New <= 0) continue;
-			}
-			float sinPhi1 = sqrt(1 - cosPhi1New * cosPhi1New);
-			float sinPhi2 = sinPhi1 / ior;
-			float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
-
-			Vec3f vTn = -cosPhi2 * vN_new;
-			Vec3f vNxV = vN_new.Cross(vV);
-			Vec3f vTp = vN_new.Cross(vNxV).GetNormalized()*sinPhi2;
-			Vec3f vT = vTn + vTp;
-
-			refractionColorSum_in += RefractionRecusive(refraction, ior, vT, hInfo, vN_new, refractionGlossiness, absorption, o_bounceCount, GIBounceCount) / sampleCount;
-		}
-		refractionColor = refractionColorSum_in / sampleCount;
-	}
-
-	if (isnan(refractionColor.r)) {
-		printf("Refraction color has nan! \n");
-		return Color::NANPurple();
-	}
-	if (s_debugTrace)
-		PrintDebugColor("Refraction", refractionColor);
-	return refractionColor;
-}
-
 Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo, const float& ior, bool& toOut, const float& refractionGlossiness) {
-	Vec3f vN = refractionGlossiness > 0 ? GetSampleAlongNormal(inRayHitInfo.N, refractionGlossiness).GetNormalized() : inRayHitInfo.N; // to up
+	Vec3f vN = inRayHitInfo.N; // to up
 
 	Vec3f vV = -inRay.dir; // opposite to up
 
@@ -355,10 +326,25 @@ Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo,
 		Vec3f vTn = vN * cosPhi2;
 		Vec3f vNxV = vN.Cross(vV);
 		Vec3f vTp = vN.Cross(vNxV).GetNormalized() * sinPhi2;
+		// perfect out refraction ray
 		Vec3f vT = vTn + vTp;
 
+		Vec3f vT_sampled = vT;
+		if (refractionGlossiness > 0)
+		{
+			// Sample a new refraction direction
+			float dotSign = 0;
+			// if the new vT is going out(sign of dot(vT, vN) > 0), generate a new one
+			while (dotSign >= 0)
+			{
+				float theta = 0;
+				vT_sampled = GetSampleAlongLightDirection(vT, refractionGlossiness, theta);
+				dotSign = vT_sampled.Dot(vN);
+			}
+		}
+
 		Ray outsideRay;
-		outsideRay.dir = vT;
+		outsideRay.dir = vT_sampled;
 		outsideRay.p = inRayHitInfo.p + vN * Bias;
 		toOut = true;
 		return outsideRay;
