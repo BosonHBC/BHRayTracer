@@ -37,6 +37,7 @@ float allLightIntensity;
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
+
 void ShowViewport();
 void SaveImages();
 Color TraceRaySingle(HitInfo &outHit, int i, int j);
@@ -50,7 +51,7 @@ Color TraceRayMultiple(int i, int j);
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 5
+#define GIBounceCount 1
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -199,7 +200,7 @@ Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
 #endif // ENABLE_DEPTH_OF_VIEW
 
 #ifdef USE_PathTracing
-#define PT_SampleCount 128
+#define PT_SampleCount 16
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -340,7 +341,6 @@ Color TraceRayMultiple(int i, int j)
 
 	return overallColor;
 }
-
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/) {
 	if (root->GetNumChild() <= 0) return;
 	for (int i = 0; i < root->GetNumChild(); i++)
@@ -368,12 +368,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj12.png");
+	renderImage.SaveImage("Resource/Result/proj12_backfaceTest.png");
 }
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj12.xml";
+	const char* filename = "Resource/Data/proj12_backfaceTest.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

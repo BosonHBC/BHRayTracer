@@ -9,7 +9,7 @@
 #define  Bias 0.001f
 #endif
 // cos(85 degree) = 0.08715574274
-#define PerpendicularFaceDeterminance 0.087f
+#define PerpendicularFaceDeterminance 0.001745f
 #ifndef PI
 #define PI 3.14159265
 #endif
