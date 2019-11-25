@@ -135,8 +135,8 @@
 
     <material type="blinn" name="refraction">
       <diffuse value="0"/>
-      <specular value="0.8"/>
-      <glossiness value="50"/>
+      <specular value="0"/>
+      <glossiness value="0"/>
       <refraction index="2.0" value="0.8" glossiness="0.05"/>
     </material>
     <!-- Lights -->

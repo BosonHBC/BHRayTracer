@@ -33,7 +33,7 @@ Vec3f camXAxis;
 float allLightIntensity;
 #define PI 3.14159265
 
-#define REFLECTION_BOUNCE 5
+#define REFLECTION_BOUNCE 15
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -368,7 +368,7 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj12_backfaceTest.png");
+	renderImage.SaveImage("Resource/Result/proj12.png");
 }
 int main() {
 

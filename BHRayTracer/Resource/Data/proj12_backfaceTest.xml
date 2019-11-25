@@ -28,17 +28,16 @@
         <translate x="15"/>
       </object>
     </object>
-    <object type="obj" name="Resource\Data\backfaceTest.obj" material="mtl1">
-      <scale value="5"/>
-      <rotate angle="94.5" x="1"/>
-      <rotate angle="150" z="1"/>
-      <translate x="0" y="5" z="6"/>
+    <object type="obj" name="Resource\Data\teapot.obj" material="refraction">
+      <scale value="0.75"/>
+      <rotate angle="30" z="1"/>
+      <translate x="-4.5" y="5" z="0"/>
     </object>
-    <object type="sphere" name="sphere2" material="mtl2">
+    <!-- <object type="sphere" name="sphere2" material="mtl2">
       <scale value="4.5"/>
       <rotate angle="30" y="1"/>
       <translate x="8" y="-6" z="4.5"/>
-    </object>
+    </object> -->
  
     <!-- Materials -->
     <material type="blinn" name="wall">
@@ -67,7 +66,12 @@
       <specular r="0.9" g="0.9" b="1.0" value="0.8"/>
       <glossiness value="10"/>
     </material>
- 
+     <material type="blinn" name="refraction">
+      <diffuse value="0"/>
+      <specular value="0"/>
+      <glossiness value="0"/>
+      <refraction index="2.0" value="0.8" glossiness="0.00"/>
+    </material>
     <!-- Lights -->
     <light type="point" name="pointLight">
       <intensity value="0.5"/>
