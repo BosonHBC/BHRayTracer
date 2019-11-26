@@ -368,12 +368,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj12.png");
+	renderImage.SaveImage("Resource/Result/proj12_metals.png");
 }
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj12_backfaceTest.xml";
+	const char* filename = "Resource/Data/proj12_metals.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

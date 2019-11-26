@@ -1,13 +1,10 @@
 <xml>
   <scene>
     <!-- Objects -->
-    <object type="obj" name="Resource\Data\teapot.obj" material="refraction">
-      <scale value="1"/>
-      <rotate angle="0" z="1"/>
-      <translate x="0" y="00" z="0"/>
-    </object> 
     <object type="obj" name="Resource\Data\background.obj" material="wall">
-
+      <scale value="2"/>
+      <rotate angle="0" y="1"/>
+      <translate x="0" y="-0.5" z="0"/>
     </object>
         <!-- <object type="obj" name="Resource\Data\backfaceTest.obj" material="mtl1">
       <scale value="5"/>
@@ -15,10 +12,25 @@
       <rotate angle="170" z="1"/>
       <translate x="0" y="5" z="7"/>
     </object> -->
-    <object type="sphere" name="Resource\Data\metalBar.obj" material="wall">
-      <scale value="3.5"/>
-      <rotate angle="30" y="1"/>
-      <translate x="8" y="-12" z="3.5"/>
+    <object type="obj" name="Resource\Data\metalBar.obj" material="mtl1">
+      <scale value="1"/>
+      <rotate angle="0" y="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object> 
+        <object type="obj" name="Resource\Data\metalBar.obj" material="mtl2">
+      <scale value="1"/>
+      <rotate angle="0" y="1"/>
+      <translate x="0.3" y="0.3" z="0"/>
+    </object> 
+        <object type="obj" name="Resource\Data\metalBar.obj" material="mtl3">
+      <scale value="1"/>
+      <rotate angle="0" y="1"/>
+      <translate x="0.6" y="0.6" z="0"/>
+    </object> 
+        <object type="obj" name="Resource\Data\metalBar.obj" material="mtl4">
+      <scale value="1"/>
+      <rotate angle="0" y="1"/>
+      <translate x="0.9" y="0.9" z="0"/>
     </object> 
  
     <!-- Materials -->
@@ -30,16 +42,28 @@
       <emission  value="20"/>
       <specular value="0"/>
     </material>
+    
     <material type="blinn" name="mtl1">
-      <diffuse  r="0.8" g="0.2" b="0.2"/>
-      <specular r="1.0" g="1.0" b="1.0" value="0.7"/>
-      <glossiness value="20"/>
+      <diffuse  r="0" g="0" b="0"/>
+      <specular r="1.0" g="1.0" b="1.0"/>
+      <glossiness value="2000"/>
     </material>
     <material type="blinn" name="mtl2">
-      <diffuse  r="0.2" g="0.8" b="0.2"/>
-      <specular r="0.9" g="0.9" b="1.0" value="0.8"/>
-      <glossiness value="10"/>
+      <diffuse  r="0.2" g="0.2" b="0.2"/>
+      <specular r="0.8" g="0.8" b="0.8"/>
+      <glossiness value="2000"/>
     </material>
+    <material type="blinn" name="mtl3">
+      <diffuse  r="0.6" g="0.6" b="0.6"/>
+      <specular r="0.4" g="0.4" b="0.4"/>
+      <glossiness value="100"/>
+    </material>
+    <material type="blinn" name="mtl4">
+      <diffuse  r="1" g="1" b="1"/>
+      <specular r="0.2" g="0.2" b="0.2"/>
+      <glossiness value="20"/>
+    </material>
+
      <material type="blinn" name="refraction">
       <diffuse value="0"/>
       <specular value="0.0"/>
@@ -48,17 +72,33 @@
     </material>
     <!-- Lights -->
     <light type="point" name="pointLight">
-      <intensity value="0.5"/>
-      <position x="0" y="0" z="22"/>
-      <size value="5"/>
+      <intensity value="1.5"/>
+      <position x="-0.2" y="2" z="-1"/>
+      <size value="1"/>
     </light>
+    <light type="point" name="pointLight">
+      <intensity value="1.5"/>
+      <position x="-0.2" y="2" z="-0.33"/>
+      <size value="2"/>
+    </light>
+        <light type="point" name="pointLight">
+      <intensity value="1.5"/>
+      <position x="-0.2" y="2" z="0.33"/>
+      <size value="3"/>
+    </light>
+        <light type="point" name="pointLight">
+      <intensity value="1.5"/>
+      <position x="-0.2" y="2" z="1"/>
+      <size value="4"/>
+    </light>
+
   </scene>
  
   <camera>
-    <position x="0" y="-60" z="16"/>
-    <target x="0" y="0" z="11"/>
-    <up x="0" y="0" z="1"/>
-    <fov value="30"/>
+    <position x="-4.5" y="2.5" z="00"/>
+    <target x="0" y="0.5" z="0"/>
+    <up x="0" y="1" z="0"/>
+    <fov value="45"/>
     <width value="800"/>
     <height value="600"/>
   </camera>
