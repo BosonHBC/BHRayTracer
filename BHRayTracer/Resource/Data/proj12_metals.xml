@@ -1,48 +1,13 @@
 <xml>
   <scene>
     <!-- Objects -->
-    <object name="box">
-      <translate x="0" y="0" z="12"/>
-      <object type="plane" name="WallBottom" material="wall">
-        <scale value="32"/>
-        <translate z="-12"/>
-      </object>
-      <object type="plane" name="WallTop" material="wall">
-        <scale value="32"/>
-        <rotate angle="180" x="1"/>
-        <translate z="12"/>
-      </object>
-      <object type="plane" name="WallBack" material="wall">
-        <scale value="32"/>
-        <rotate angle="90" x="1"/>
-        <translate y="20"/>
-      </object>
-      <object type="plane" name="WallLeft" material="wallRed">
-        <scale value="32"/>
-        <rotate angle="90" y="1"/>
-        <translate x="-15"/>
-      </object>
-      <object type="plane" name="WallRight" material="wallBlue">
-        <scale value="32"/>
-        <rotate angle="-90" y="1"/>
-        <translate x="15"/>
-      </object>
-      <object type="plane" name="WallFront" material="wall">
-        <scale value="32"/>
-        <rotate angle="-90" x="1"/>
-        <translate y="-32"/>
-      </object>
-    </object>
     <object type="obj" name="Resource\Data\teapot.obj" material="refraction">
-      <scale value="0.38"/>
-      <rotate angle="-30" z="1"/>
-      <translate x="-10" y="10" z="0.05"/>
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="00" z="0"/>
     </object> 
-    <object type="obj" name="Resource\Data\blend2.obj" material="refraction">
-      <scale x="8" y="4" z="8"/>
-      <rotate angle="90" x="1"/>
+    <object type="obj" name="Resource\Data\background.obj" material="wall">
 
-      <translate x="2" y="0" z="0.01"/>
     </object>
         <!-- <object type="obj" name="Resource\Data\backfaceTest.obj" material="mtl1">
       <scale value="5"/>
@@ -50,7 +15,7 @@
       <rotate angle="170" z="1"/>
       <translate x="0" y="5" z="7"/>
     </object> -->
-    <object type="sphere" name="sphere2" material="refraction">
+    <object type="sphere" name="Resource\Data\metalBar.obj" material="wall">
       <scale value="3.5"/>
       <rotate angle="30" y="1"/>
       <translate x="8" y="-12" z="3.5"/>
@@ -59,14 +24,6 @@
     <!-- Materials -->
     <material type="blinn" name="wall">
       <diffuse  r="1" g="1" b="1"/>
-      <specular value="0"/>
-    </material>
-    <material type="blinn" name="wallRed">
-      <diffuse  r="1.0" g="0.2" b="0.2"/>
-      <specular value="0"/>
-    </material>
-    <material type="blinn" name="wallBlue">
-      <diffuse  r="0.2" g="0.2" b="1.0"/>
       <specular value="0"/>
     </material>
     <material type="blinn" name="light">

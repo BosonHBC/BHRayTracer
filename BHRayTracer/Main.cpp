@@ -33,7 +33,7 @@ Vec3f camXAxis;
 float allLightIntensity;
 #define PI 3.14159265
 
-#define REFLECTION_BOUNCE 15
+#define INTERNAL_REFLECTION_BOUNCE 15
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -220,7 +220,7 @@ Color PathTracing(int i_i, int i_j) {
 		recursive(&rootNode, ray, tHitInfo, bHit, HIT_FRONT);
 		if (bHit) {
 			// Shade the hit object 
-			colorSum += tHitInfo.node->GetMaterial()->Shade(ray, tHitInfo, lights, REFLECTION_BOUNCE, GIBounceCount);
+			colorSum += tHitInfo.node->GetMaterial()->Shade(ray, tHitInfo, lights, INTERNAL_REFLECTION_BOUNCE, GIBounceCount);
 
 		}
 		else {
@@ -318,7 +318,7 @@ Color TraceRaySingle(HitInfo &outHit, int i, int j)
 	recursive(&rootNode, ray, outHit, bHit, HIT_FRONT);
 	if (bHit) {
 		// Shade the hit object 
-		return outHit.node->GetMaterial()->Shade(ray, outHit, lights, REFLECTION_BOUNCE, GIBounceCount);
+		return outHit.node->GetMaterial()->Shade(ray, outHit, lights, INTERNAL_REFLECTION_BOUNCE, GIBounceCount);
 	}
 	else {
 		// Shade Background color

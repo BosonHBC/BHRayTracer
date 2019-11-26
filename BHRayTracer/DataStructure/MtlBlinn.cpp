@@ -5,7 +5,7 @@
 #include <omp.h>
 
 #define ENABLE_Reflection_And_Refraction
-#define Bias 0.0001f
+#define Bias 0.001f
 #define EulerN 2.7182818f
 #define PI 3.14159265
 #define OneOverPI 0.31830988f
@@ -45,7 +45,7 @@ cy::Color RefractionOut(const Ray& outRay, const Color& absorption, const Color&
 // Path tracing functions
 cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV);
 cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int i_GIbounceCount);
-Color PathTracing_Refraction(const Color& refraction, const Color& absorption, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness);
+Color PathTracing_Refraction(const Color& refraction, const Color& absorption, const float& ior, const HitInfo& hInfo, const float cosPhi1, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness);
 
 Vec3f GetRandomCrossingVector(const Vec3f& V);
 Vec3f GetSampleAlongNormal(const Vec3f& N, float radius);
@@ -77,22 +77,35 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 		if (cosPhi1 > 1) cosPhi1 = 1;
 		if (cosPhi1 <= 0) cosPhi1 = 0;
 	}
+	// ----------------
+	// Refraction
+	float R0 = pow((1 - ior) / (1 + ior), 2);
+	// Fresnel Reflection factor
+	float fresnelReflectionFactor = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
+	Color fresnelSpecularColor = specular.GetColor() + fresnelReflectionFactor * refraction.GetColor();
+	ClampColorToWhite(fresnelSpecularColor);
+	// Set up fresnelReflection for specular
+	TexturedColor newSpecular;
+	newSpecular.SetColor(fresnelSpecularColor);
+	newSpecular.SetTexture(const_cast<TextureMap*>(specular.GetTexture()));
+	float refraction_glossiness = 0;
+	if (glossiness > 50) refraction_glossiness = glossiness;
+	outColor += PathTracing_Refraction((1 - fresnelReflectionFactor) *refraction.GetColor(), absorption, ior, hInfo, cosPhi1, vN, vV, bounceCount, GIBounceCount, refraction_glossiness);
+	if (outColor.r >= 1 && outColor.g >= 1 && outColor.b >= 1) return outColor;
+	
 	// ----------
 	// Diffuse and Specular
-	outColor += PathTracing_DiffuseNSpecular(diffuse, specular, glossiness, hInfo, vN, vV);
+	outColor += PathTracing_DiffuseNSpecular(diffuse, newSpecular, glossiness, hInfo, vN, vV);
 	if (outColor.r >= 1 && outColor.g >= 1 && outColor.b >= 1) return outColor;
 	// ----------
 	// Global Illumination
 
 
 #ifdef ENABLE_GI
-	outColor += PathTracing_GlobalIllumination(diffuse, specular, glossiness, hInfo, vN, vV, bounceCount, GIBounceCount);
+	outColor += PathTracing_GlobalIllumination(diffuse, newSpecular, glossiness, hInfo, vN, vV, bounceCount, GIBounceCount);
 	if (outColor.r >= 1 && outColor.g >= 1 && outColor.b >= 1) return outColor;
 #endif // ENABLE_GI
 
-	float refraction_glossiness = 0;
-	if (glossiness > 20) refraction_glossiness = 1 / glossiness;
-	outColor += PathTracing_Refraction(refraction.GetColor(), absorption, ior, hInfo, vN, vV, bounceCount, GIBounceCount, refraction_glossiness);
 
 
 	if (isnan(outColor.r)) {
@@ -208,17 +221,12 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 #endif // ENABLE_GI
 
 #ifdef ENABLE_Refraction
-cy::Color PathTracing_Refraction(const Color& refraction, const Color& absorption, const float& ior, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness)
+cy::Color PathTracing_Refraction(const Color& refraction, const Color& absorption, const float& ior, const HitInfo& hInfo, const float cosPhi1,const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness)
 {
 	Color refractionColor = Color::Black();
 	if (o_bounceCount <= 0) return refractionColor;
 	o_bounceCount--;
 
-	float cosPhi1 = vN.Dot(vV);
-
-	float R0 = pow((1 - ior) / (1 + ior), 2);
-	// Fresnel Reflection factor
-	float fresnelReflectionFactor = R0 + (1 - R0)* pow((1 - cosPhi1), 5);
 	if (!refraction.IsBlack()) {
 
 		float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
@@ -230,7 +238,7 @@ cy::Color PathTracing_Refraction(const Color& refraction, const Color& absorptio
 		Vec3f vTp = vN.Cross(vNxV).GetNormalized()*sinPhi2;
 		// perfect refraction direction
 		Vec3f vT = vTn + vTp;
-		Vec3f vT_sampled = vT;
+		Vec3f vT_sampled = vT.GetNormalized();
 		if (refractionGlossiness > 0)
 		{
 			// Sample a new refraction direction
@@ -244,8 +252,7 @@ cy::Color PathTracing_Refraction(const Color& refraction, const Color& absorptio
 			}
 		}
 
-
-		refractionColor = RefractionRecusive((1 - fresnelReflectionFactor) * refraction, ior, vT_sampled, hInfo, vN, refractionGlossiness, absorption, o_bounceCount, GIBounceCount);
+		refractionColor = RefractionRecusive(refraction, ior, vT_sampled.GetNormalized(), hInfo, vN, refractionGlossiness, absorption, o_bounceCount, GIBounceCount);
 	}
 
 	ClampColorToWhite(refractionColor);
@@ -274,15 +281,17 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 			// Total internal reflection
 			if (o_bounceCount <= 0)
 			{
-				refractionColor = Color(0, 1, 0);
-				/*Ray bouncingCountZeroRay = Ray(refraHInfo_in.p + refraHInfo_in.N*Bias, refractionRay_in.dir);
-				refractionColorSum_out = RefractionOut(bouncingCountZeroRay, absorption, refraction, o_bounceCount, i_GIbounceCount);*/
+				refractionColor = Color::Black();
+				//Ray bouncingCountZeroRay = Ray(refraHInfo_in.p + refraHInfo_in.N*Bias, refractionRay_in.dir);
+				//refractionColor = RefractionOut(bouncingCountZeroRay, absorption, refraction, o_bounceCount, i_GIbounceCount);
 			}
 			else {
 				o_bounceCount--;
 				refractionColor = RefractionRecusive(refraction, ior, nextRay.dir, refraHInfo_in, refraHInfo_in.N, refractionGlossiness, absorption, o_bounceCount, i_GIbounceCount);
 			}
 		}
+
+		ClampColorToWhite(refractionColor);
 		return refractionColor;
 	}
 	else {
@@ -290,7 +299,6 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 		return Color::NANPurple();
 	}
 }
-
 
 cy::Color RefractionOut(const Ray& outRay, const Color& absorption, const Color& refraction, int o_bounceCount, int i_GIbounceCount)
 {
@@ -309,6 +317,7 @@ cy::Color RefractionOut(const Ray& outRay, const Color& absorption, const Color&
 		// refraction out hit doesn't hit anything
 		outColor = refraction * environment.SampleEnvironment(outRay.dir);
 	}
+	ClampColorToWhite(outColor);
 	return outColor;
 }
 
@@ -329,13 +338,13 @@ Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo,
 		// perfect out refraction ray
 		Vec3f vT = vTn + vTp;
 
-		Vec3f vT_sampled = vT;
+		Vec3f vT_sampled = vT.GetNormalized();
 		if (refractionGlossiness > 0)
 		{
 			// Sample a new refraction direction
 			float dotSign = 0;
-			// if the new vT is going out(sign of dot(vT, vN) > 0), generate a new one
-			while (dotSign >= 0)
+			// if the new vT is going out(sign of dot(vT, vN) < 0), generate a new one
+			while (dotSign <= 0)
 			{
 				float theta = 0;
 				vT_sampled = GetSampleAlongLightDirection(vT, refractionGlossiness, theta);
@@ -344,7 +353,7 @@ Ray HandleRayWhenRefractionRayOut(const Ray& inRay, const HitInfo& inRayHitInfo,
 		}
 
 		Ray outsideRay;
-		outsideRay.dir = vT_sampled;
+		outsideRay.dir = vT_sampled.GetNormalized();
 		outsideRay.p = inRayHitInfo.p + vN * Bias;
 		toOut = true;
 		return outsideRay;
@@ -471,9 +480,6 @@ cy::Vec3f GetSampleInSemiSphere(const Vec3f& N, float& o_theta)
 {
 	Vec3f axisY = (N.Cross(GetRandomCrossingVector(N))).GetNormalized();
 	Vec3f axisX = N.Cross(axisY);
-	if (axisX.Length() > 1.0001f || axisX.Length() < 0.9999) {
-		printf("not normalize\n");
-	}
 
 	// Uniform distribution, phi -> [0 , 2*PI)
 	float phi = ((double)rand() / (RAND_MAX)) * 2 * PI;
