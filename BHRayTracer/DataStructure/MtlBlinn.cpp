@@ -115,7 +115,10 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	return outColor;
 }
 
-
+bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
+{
+	return true;
+}
 cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV)
 {
 	Color outColor = Color::Black();
@@ -413,6 +416,8 @@ cy::Vec3f GetSampleAlongLightDirection(const Vec3f& N, float glossiness, float& 
 	Vec3f sampledN = N + axis1.GetNormalized() * x + axis2.GetNormalized() * y;
 	return sampledN;
 }
+
+
 
 
 cy::Vec3f GetSampleInLight(const TexturedColor& diffuse, const TexturedColor& specular, Light* light, const HitInfo& hInfo, const float& glossiness)

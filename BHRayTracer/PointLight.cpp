@@ -6,6 +6,8 @@
 #define MaxSampleCount 1
 #endif // GlossyShadow
 Vec3f GetSampleAlongNormal(const Vec3f& N, float R);
+float Rnd01();
+#define PI 3.14159265
 
 cy::Color PointLight::Illuminate(Vec3f const &p, Vec3f const &N) const
 {
@@ -31,4 +33,20 @@ cy::Color PointLight::Illuminate(Vec3f const &p, Vec3f const &N) const
 	}
 	else
 	return Shadow(Ray(p, position - p), 1) * intensity;
+}
+
+Ray PointLight::RandomPhoton() const
+{
+	Vec3f axisZ = Vec3f(0, 0, 1);
+	Vec3f axisX = Vec3f(1, 0, 0);
+	Vec3f axisY = Vec3f(0, 1, 0);
+
+	float phi = Rnd01() * 2 * PI;
+	float theta = ACosSafe(1 - 2 * Rnd01());
+	Ray ray = Ray();
+
+	ray.dir = sin(theta) * (axisX * cos(phi) + axisY * sin(phi)) + axisZ * cos(theta);
+	ray.p = position;
+
+	return Ray();
 }

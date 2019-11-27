@@ -3,7 +3,7 @@
 ///
 /// \file       lights.h 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    10.0
+/// \version    13.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -54,7 +54,6 @@ public:
 	void SetIntensity(Color intens) { intensity = intens; }
 	void SetDirection(Vec3f dir) { direction = dir.GetNormalized(); }
 	float GetIntensity() const { return intensity.Gray(); }
-
 private:
 	Color intensity;
 	Vec3f direction;
@@ -68,14 +67,18 @@ public:
 	PointLight() : intensity(0, 0, 0), position(0, 0, 0), size(0) {}
 	virtual Color Illuminate(Vec3f const &p, Vec3f const &N) const;
 	virtual Vec3f Direction(Vec3f const &p) const { return (p - position).GetNormalized(); }
-	virtual void SetViewportLight(int lightID) const { SetViewportParam(lightID, ColorA(0.0f), ColorA(intensity), Vec4f(position, 1.0f)); }
+	virtual void SetViewportLight(int lightID) const;
 	void SetIntensity(Color intens) { intensity = intens; }
-	void SetPosition(Vec3f pos) { position = pos; }
-	void SetSize(float s) { size = s; }
-
 	float GetIntensity() const { return intensity.Gray(); }
+	void SetPosition(Vec3f pos) { position = pos; }
 	Vec3f GetPosition() const { return position; }
-	float GetSize() const { return size; }
+	void SetSize(float s) { size = s; }
+	int GetSize() const { return size; }
+	// Photon Extensions
+	virtual bool  IsPhotonSource() const { return true; }
+	virtual Color GetPhotonIntensity() const { return intensity; }
+	virtual Ray   RandomPhoton() const;
+
 private:
 	Color intensity;
 	Vec3f position;

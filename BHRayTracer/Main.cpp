@@ -8,6 +8,7 @@
 #include "lights.h"
 #include <omp.h>
 #include <algorithm>
+#include "cyPhotonMap.h"
 
 Node rootNode;
 Camera camera;
@@ -30,7 +31,7 @@ Vec3f dd_y;
 Vec3f camZAxis;
 Vec3f camYAxis;
 Vec3f camXAxis;
-float allLightIntensity;
+
 #define PI 3.14159265
 
 #define INTERNAL_REFLECTION_BOUNCE 15
@@ -40,14 +41,27 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 
 void ShowViewport();
 void SaveImages();
-Color TraceRaySingle(HitInfo &outHit, int i, int j);
-Color TraceRayMultiple(int i, int j);
 
+//-------------------
+/** Build PhotonMap */
+#define MAX_PhotonCount 10000
+#define PhotonBounceCount 3
+PhotonMap photonMap;
+bool BuildPhotonMap(PhotonMap& o_photonMap, const LightList& i_lights, Node* i_root);
+//-------------------
+/** Calculate all light intensity*/
+float allLightIntensity;
+void CalculateLightsIntensity() {
+	sort(lights.begin(), lights.end(), CompareGenLight);
+
+	for (int i = 0; i < lights.size(); ++i)
+	{
+		allLightIntensity += ((Light*)lights[i])->GetIntensity();
+	}
+}
 //---------------
 // Use Components
 
-//#define USE_MSAA
-//#define ENABLE_DEPTH_OF_VIEW
 #define USE_PathTracing
 #define USE_GamaCorrection
 
@@ -61,146 +75,8 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	result += unit_dy * (((double)rand() / (RAND_MAX)) * 2 - 1)* i_pixelLength / 2;
 	return result;
 }
-
-#ifdef USE_MSAA
-#define MSAA_AdaptiveThreshold_Sqr 0.03f * 0.03f
-#define  MSAA_RayCountPerSlot 4
-#define  MSAA_AddadptiveStopLevel 3
-Color JitteredAddaptiveSampling(Vec3f pixelCenter, int level, int i_i, int i_j) {
-	level++;
-	renderImage.GetSampleCount()[i_j*camera.imgWidth + i_i] += MSAA_RayCountPerSlot;
-	Color overallColor = Color::Black();
-	// square of variance
-	float varianceSqr[3] = { 1 ,1, 1 };
-	// average of r,g,b channel
-	float average[3];
-
-	Color subPixelColor[] = { Color::Black() ,Color::Black() ,Color::Black() ,Color::Black() };
-	Color subPixelColor_Sum = Color::Black();
-	// Trace 4 rays for 4 sub-pixels
-	for (int i = 0; i < 4; ++i)
-	{
-		Ray tRay;
-		tRay.p = camera.pos;
-
-		switch (i)
-		{
-		case 0:
-			tRay.dir = RandomPositionInPixel(pixelCenter - dd_x / (float)(level * MSAA_RayCountPerSlot) - dd_y / (float)(level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (float)(level * MSAA_RayCountPerSlot)) - tRay.p;
-			break;
-		case 1:
-			tRay.dir = RandomPositionInPixel(pixelCenter + dd_x / (float)(level * MSAA_RayCountPerSlot) - dd_y / (float)(level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (float)(level * MSAA_RayCountPerSlot)) - tRay.p;
-			break;
-		case 2:
-			tRay.dir = RandomPositionInPixel(pixelCenter + dd_x / (float)(level * MSAA_RayCountPerSlot) + dd_y / (float)(level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (float)(level * MSAA_RayCountPerSlot)) - tRay.p;
-			break;
-		case 3:
-			tRay.dir = RandomPositionInPixel(pixelCenter - dd_x / (float)(level * MSAA_RayCountPerSlot) + dd_y / (float)(level * MSAA_RayCountPerSlot), dd_x.Length() * 2 / (float)(level * MSAA_RayCountPerSlot)) - tRay.p;
-			break;
-		default:
-			break;
-		}
-
-		bool bHit = false;
-		HitInfo tHitInfo = HitInfo();
-
-		recursive(&rootNode, tRay, tHitInfo, bHit, HIT_FRONT);
-		if (bHit) {
-			// Shade the hit object 
-			subPixelColor[i] = tHitInfo.node->GetMaterial()->Shade(tRay, tHitInfo, lights, REFLECTION_BOUNCE, GIBounceCount);
-
-		}
-		else {
-			// Shade Background color
-			Vec3f bguvw = Vec3f((float)i_i / camera.imgWidth, (float)i_j / camera.imgHeight, 0.0f);
-			subPixelColor[i] = background.Sample(bguvw);
-		}
-		subPixelColor_Sum += subPixelColor[i];
-	}
-	// Get the average color of 4 sub-pixels
-	average[0] = subPixelColor_Sum.r / (MSAA_RayCountPerSlot);
-	average[1] = subPixelColor_Sum.g / (MSAA_RayCountPerSlot);
-	average[2] = subPixelColor_Sum.b / (MSAA_RayCountPerSlot);
-
-	float variance_Sum[3] = { 0,0,0 };
-	for (int i = 0; i < 4; i++)
-	{
-		variance_Sum[0] += (subPixelColor[i].r - average[0]) * (subPixelColor[i].r - average[0]);
-		variance_Sum[1] += (subPixelColor[i].g - average[1]) * (subPixelColor[i].g - average[1]);
-		variance_Sum[2] += (subPixelColor[i].b - average[2]) * (subPixelColor[i].b - average[2]);
-	}
-	varianceSqr[0] = variance_Sum[0] / MSAA_RayCountPerSlot;
-	varianceSqr[1] = variance_Sum[1] / MSAA_RayCountPerSlot;
-	varianceSqr[2] = variance_Sum[2] / MSAA_RayCountPerSlot;
-
-	float widthPerSubPixel = level * MSAA_RayCountPerSlot;
-	// top left
-	if (
-		(varianceSqr[0] > MSAA_AdaptiveThreshold_Sqr ||
-			varianceSqr[1] > MSAA_AdaptiveThreshold_Sqr ||
-			varianceSqr[2] > MSAA_AdaptiveThreshold_Sqr)
-		&& level < MSAA_AddadptiveStopLevel
-		) {
-		// return the mean color of all sub pixel
-		return (
-			JitteredAddaptiveSampling(pixelCenter - dd_x / widthPerSubPixel - dd_y / widthPerSubPixel, level, i_i, i_j) +
-			JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel - dd_y / widthPerSubPixel, level, i_i, i_j) +
-			JitteredAddaptiveSampling(pixelCenter - dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j) +
-			JitteredAddaptiveSampling(pixelCenter + dd_x / widthPerSubPixel + dd_y / widthPerSubPixel, level, i_i, i_j)
-			) / MSAA_RayCountPerSlot;
-	}
-
-	return subPixelColor_Sum / MSAA_RayCountPerSlot;
-}
-#endif // USE_MSAA
-
-#ifdef ENABLE_DEPTH_OF_VIEW
-#define DoV_SampleCount 128
-Vec3f GetSampleInAperture(const Camera& cam) {
-	// Center of aperture
-	Vec3f O = cam.pos;
-	// Radius of aperture
-	float R = cam.dof;
-	// Non-uniform distribution
-	float r = ((double)rand() / (RAND_MAX));
-	// Uniform distribution
-	r = sqrt(r) * R;
-	float theta = ((double)rand() / (RAND_MAX)) * 2 * PI;
-	// Random point in a circle
-	float x = r * cos(theta);
-	float y = r * sin(theta);
-
-	return O + camXAxis * x + camYAxis * y;
-}
-Color DOVSampling(Vec3f pixelCenter, int i_i, int i_j) {
-	Color colorSum = Color::Black();
-	for (int i = 0; i < DoV_SampleCount; ++i)
-	{
-		Ray ray = Ray();
-		ray.p = GetSampleInAperture(camera);
-		ray.dir = pixelCenter - ray.p;
-
-		bool bHit = false;
-		HitInfo tHitInfo = HitInfo();
-
-		recursive(&rootNode, ray, tHitInfo, bHit, HIT_FRONT);
-		if (bHit) {
-			// Shade the hit object 
-			colorSum += tHitInfo.node->GetMaterial()->Shade(ray, tHitInfo, lights, REFLECTION_BOUNCE);
-
-		}
-		else {
-			// Shade Background color
-			Vec3f bguvw = Vec3f((float)i_i / camera.imgWidth, (float)i_j / camera.imgHeight, 0.0f);
-			colorSum += background.Sample(bguvw);
-		}
-	}
-	return colorSum / DoV_SampleCount;
-}
-#endif // ENABLE_DEPTH_OF_VIEW
-
 #ifdef USE_PathTracing
-#define PT_SampleCount 512
+#define PT_SampleCount 16
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -256,12 +132,9 @@ void BeginRender() {
 	dd_y = camYAxis * h / camera.imgHeight;
 	renderImage.ResetNumRenderedPixels();
 
-	sort( lights.begin(), lights.end(), CompareGenLight);
+	CalculateLightsIntensity();
 
-	for (int i = 0; i < lights.size(); ++i)
-	{
-		allLightIntensity += ((Light*)lights[i])->GetIntensity();
-	}
+	BuildPhotonMap();
 
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
@@ -273,18 +146,9 @@ void BeginRender() {
 				renderImage.GetSampleCount()[j*camera.imgWidth + i] = 0;
 			}
 			Color outColor = Color::Black();
-#ifdef USE_MSAA | ENABLE_DEPTH_OF_VIEW
-			outColor = TraceRayMultiple(i, j);
-#else
-			HitInfo outHit;
-#ifdef USE_PathTracing
+
 			outColor = PathTracing(i, j);
-#else
-			outColor = TraceRaySingle(outHit, i, j);
-#endif // USE_PathTracing
 
-
-#endif // USE_MSAA
 #ifdef USE_GamaCorrection
 			Color afterGamaCorrection = Color::Black();
 			const float inverseGama = 1 / 2.2f;
@@ -306,41 +170,24 @@ void StopRender() {
 }
 
 
-// Trace only single ray
-Color TraceRaySingle(HitInfo &outHit, int i, int j)
+bool BuildPhotonMap(PhotonMap& o_photonMap, const LightList& i_lights, Node* i_root)
 {
-	Vec3f pixelCenter = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
-	Ray ray;
-	ray.p = camera.pos;
-	ray.dir = pixelCenter - ray.p;
-	// For this ray, if it hits or not
-	bool bHit = false;
-	recursive(&rootNode, ray, outHit, bHit, HIT_FRONT);
-	if (bHit) {
-		// Shade the hit object 
-		return outHit.node->GetMaterial()->Shade(ray, outHit, lights, INTERNAL_REFLECTION_BOUNCE, GIBounceCount);
-	}
-	else {
-		// Shade Background color
-		Vec3f bguvw = Vec3f((float)i / camera.imgWidth, (float)j / camera.imgHeight, 0.0f);
-		return background.Sample(bguvw);
-	}
-}
-// Multi-Sampling
-Color TraceRayMultiple(int i, int j)
-{
-	Vec3f pixelCenter = topLeft + (i + 1 / 2) * dd_x - (j + 1 / 2) * dd_y;
-	Color overallColor = Color::Black();
-#ifdef ENABLE_DEPTH_OF_VIEW
-	overallColor = DOVSampling(pixelCenter, i, j);
-#else
-#ifdef USE_MSAA
-	overallColor = JitteredAddaptiveSampling(pixelCenter, 0, i, j);
-#endif // USE_MSAA
-#endif // ENABLE_DEPTH_OF_VIEW
+	for (auto it = i_lights.begin(); it != i_lights.end(); ++ it)
+	{
+		// if it is a point light
+		if (PointLight* ptr = reinterpret_cast<PointLight*>(*it)) {
 
-	return overallColor;
+			for (int i = 0; i < MAX_PhotonCount; ++i)
+			{
+				Ray ray = ptr->RandomPhoton();
+
+			}
+
+		}
+	}
 }
+
+
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/) {
 	if (root->GetNumChild() <= 0) return;
 	for (int i = 0; i < root->GetNumChild(); i++)
@@ -368,12 +215,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj12_metals.png");
+	renderImage.SaveImage("Resource/Result/proj13.png");
 }
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj12_metals.xml";
+	const char* filename = "Resource/Data/proj13.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

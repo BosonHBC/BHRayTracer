@@ -46,6 +46,9 @@
     <Filter Include="Source Files\DataStructure\Camera">
       <UniqueIdentifier>{53d05a7e-318f-4621-8bd8-ac73226d88f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DataStructure\PhotonMap">
+      <UniqueIdentifier>{6686ad0d-d134-4622-ac75-9e2f79ace913}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataStructure\cyAlphaDistribution.h">
@@ -128,6 +131,9 @@
     </ClInclude>
     <ClInclude Include="DataStructure\lights.h">
       <Filter>Source Files\DataStructure\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="cyPhotonMap.h">
+      <Filter>Source Files\DataStructure\PhotonMap</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

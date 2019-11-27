@@ -194,6 +194,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <ClInclude Include="DataStructure\objects.h" />
     <ClInclude Include="DataStructure\scene.h" />
     <ClInclude Include="LoadPNG\lodepng.h" />
+    <ClInclude Include="cyPhotonMap.h" />
     <ClInclude Include="texture.h" />
   </ItemGroup>
   <ItemGroup>

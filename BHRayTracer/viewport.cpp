@@ -3,7 +3,7 @@
 ///
 /// \file       viewport.cpp 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    11.0
+/// \version    13.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -43,8 +43,6 @@ extern RenderImage renderImage;
 extern LightList lights;
 extern TexturedColor background;
 
-extern bool s_debugTrace;
-Color TraceRaySingle(HitInfo &outHit, int i, int j);
 //-------------------------------------------------------------------------------
 
 enum Mode {
@@ -493,7 +491,7 @@ void PrintPixelData(int x, int y)
 	if (x < renderImage.GetWidth() && y < renderImage.GetHeight()) {
 		Color24 *colors = renderImage.GetPixels();
 		float *zbuffer = renderImage.GetZBuffer();
-		int i = y *renderImage.GetWidth() + x;
+		int i = (renderImage.GetHeight() - y - 1) *renderImage.GetWidth() + x;
 		printf("Pixel [ %d, %d ] Color24: %d, %d, %d   Z: %f\n", x, y, colors[i].r, colors[i].g, colors[i].b, zbuffer[i]);
 	}
 	else {
@@ -518,14 +516,6 @@ void GlutMouse(int button, int state, int x, int y)
 			mouseMode = MOUSEMODE_ROTATE;
 			mouseX = x;
 			mouseY = y;
-			break;
-		case GLUT_MIDDLE_BUTTON:
-			HitInfo outHit = HitInfo();
-			s_debugTrace = true;
-			printf("Pixel: %d, %d\n", x, y);
-			Color outColor = TraceRaySingle(outHit, x, y);
-			printf("Color(%f, %f, %f)\n", outColor.r, outColor.g, outColor.b);
-			s_debugTrace = false;
 			break;
 		}
 	}
@@ -648,6 +638,13 @@ void GenLight::SetViewportParam(int lightID, ColorA ambient, ColorA intensity, V
 	glLightfv(GL_LIGHT0 + lightID, GL_DIFFUSE, &intensity.r);
 	glLightfv(GL_LIGHT0 + lightID, GL_SPECULAR, &intensity.r);
 	glLightfv(GL_LIGHT0 + lightID, GL_POSITION, &pos.x);
+}
+void PointLight::SetViewportLight(int lightID) const
+{
+	SetViewportParam(lightID, ColorA(0, 0, 0), ColorA(intensity), Vec4f(position, 1.0f));
+	glLightf(GL_LIGHT0 + lightID, GL_CONSTANT_ATTENUATION, 0);
+	glLightf(GL_LIGHT0 + lightID, GL_LINEAR_ATTENUATION, 0);
+	glLightf(GL_LIGHT0 + lightID, GL_QUADRATIC_ATTENUATION, 1);
 }
 bool TextureFile::SetViewportTexture() const
 {
