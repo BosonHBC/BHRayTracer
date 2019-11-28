@@ -44,13 +44,29 @@ void SaveImages();
 
 //-------------------
 /** Build PhotonMap */
-#define MAX_PhotonCount 10000
+#define MAX_PhotonCount 1000000
 #define PhotonBounceCount 3
+#define Photon_AbsorbChance 0.3f
+/*
+enum EPhotonBounceType {
+	PBT_Absorb = 0,
+	PBT_Diffuse = 1,
+	PBT_Specular = 2,
+	PBT_Refraction = 3
+};*/
+
 PhotonMap photonMap;
-bool BuildPhotonMap(PhotonMap& o_photonMap, const LightList& i_lights, Node* i_root);
+bool BuildPhotonMap(const LightList& i_lights, Node* i_root);
+/** Trace the photon ray, return true when hit photon surface, knowing the hit info and bounce type by passing parameters*/
+void TracePhotonRay(const Ray& ray, Color i_bounceIntensity, const bool i_firstHit);
+float Rnd01();
 //-------------------
 /** Calculate all light intensity*/
 float allLightIntensity;
+bool CompareGenLight(Light* l1, Light* l2) {
+	return (l1->GetIntensity() < l2->GetIntensity());
+}
+
 void CalculateLightsIntensity() {
 	sort(lights.begin(), lights.end(), CompareGenLight);
 
@@ -111,9 +127,7 @@ Color PathTracing(int i_i, int i_j) {
 
 #endif // USE_PathTracing
 
-bool CompareGenLight(Light* l1, Light* l2) {
-	return (l1->GetIntensity() < l2->GetIntensity());
-}
+
 
 void BeginRender() {
 	float aor = camera.imgWidth / (float)camera.imgHeight;
@@ -132,9 +146,11 @@ void BeginRender() {
 	dd_y = camYAxis * h / camera.imgHeight;
 	renderImage.ResetNumRenderedPixels();
 
+	BuildPhotonMap(lights, &rootNode);
+
 	CalculateLightsIntensity();
 
-	BuildPhotonMap();
+	
 
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
@@ -168,25 +184,83 @@ void BeginRender() {
 void StopRender() {
 
 }
+// Comparing the point light by size * intensity
+bool ComparePointLight(PointLight* l1, PointLight* l2) {
+	return (l1->GetIntensity() * l1->GetSize() < l2->GetIntensity() * l2->GetSize());
+}
 
-
-bool BuildPhotonMap(PhotonMap& o_photonMap, const LightList& i_lights, Node* i_root)
+bool BuildPhotonMap(const LightList& i_lights, Node* i_root)
 {
-	for (auto it = i_lights.begin(); it != i_lights.end(); ++ it)
+	photonMap.Resize(MAX_PhotonCount);
+	std::vector<PointLight*> pointLightList;
+	for (auto it = i_lights.begin(); it != i_lights.end(); ++it)
 	{
 		// if it is a point light
 		if (PointLight* ptr = reinterpret_cast<PointLight*>(*it)) {
-
-			for (int i = 0; i < MAX_PhotonCount; ++i)
-			{
-				Ray ray = ptr->RandomPhoton();
-
-			}
-
+			pointLightList.push_back(ptr);
 		}
 	}
-}
+	if (pointLightList.size() == 0) return false;
 
+	sort(pointLightList.begin(), pointLightList.end(), ComparePointLight);
+	float sumOfPointLight = 0;
+	for (int i = 0; i < pointLightList.size(); ++i)
+	{
+		sumOfPointLight += pointLightList[i]->GetIntensity() * pointLightList[i]->GetSize();
+	}
+
+	while (photonMap.NumPhotons() < MAX_PhotonCount)
+	{
+		float rnd = Rnd01();
+		int i = 0;
+		while (rnd > pointLightList[i]->GetProbability(sumOfPointLight) && i < pointLightList.size() - 1)
+		{
+			i++;
+		}
+		PointLight* thisLight = pointLightList[i];
+
+		Ray ray = thisLight->RandomPhoton();
+		Color bounceIntensity = thisLight->GetPhotonIntensity();
+
+		// This is the first hit of this photon
+		TracePhotonRay(ray, bounceIntensity, true);
+	}
+	// scale the intensity according to the overall photon count
+	photonMap.ScalePhotonPowers(1.f / photonMap.NumPhotons());
+
+	// write photon map
+	FILE *fp = fopen("Resource/photonmap.dat", "wb");
+	fwrite(photonMap.GetPhotons(), sizeof(cyPhotonMap::Photon), photonMap.NumPhotons(), fp);
+	fclose(fp);
+}
+void TracePhotonRay(const Ray& ray,  Color i_bounceIntensity, const  bool i_firstHit)
+{
+	bool bHit = false;
+	HitInfo hinfo = HitInfo();
+	recursive(&rootNode, ray, hinfo, bHit, HIT_FRONT);
+	if (bHit) {
+
+		const Material* mtl = hinfo.node->GetMaterial();
+		//Add this photon to photon map if it is not the first hit and if it is not a photon surface
+		if (!i_firstHit && mtl->IsPhotonSurface())
+			photonMap.AddPhoton(hinfo.p, ray.dir, i_bounceIntensity);
+
+		// Photon has 30% chance get absorbed, this value is defined by user
+		if (Rnd01() < 1 - Photon_AbsorbChance) {
+			// This photon is needed to be bounced
+			Ray newRay = ray;
+			Color newIntensity = i_bounceIntensity;
+			// This function handles light intensity distance fall off / generate new direction
+			mtl->RandomPhotonBounce(newRay, newIntensity, hinfo);
+			// This is not the direct photon, 
+			TracePhotonRay(newRay, newIntensity, false);
+		}
+		// absorbed
+	}
+	else {
+		// This ray did not hit anything
+	}
+}
 
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/) {
 	if (root->GetNumChild() <= 0) return;

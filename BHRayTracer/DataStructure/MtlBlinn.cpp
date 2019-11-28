@@ -45,7 +45,10 @@ cy::Color RefractionOut(const Ray& outRay, const Color& absorption, const Color&
 // Path tracing functions
 cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV);
 cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int i_GIbounceCount);
+
 Color PathTracing_Refraction(const Color& refraction, const Color& absorption, const float& ior, const HitInfo& hInfo, const float cosPhi1, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness);
+
+Vec3f GIUseSpecularDirOrDiffuseDir(bool& o_bUseSpecular, const Vec3f& vN, const Vec3f& vV, const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness);
 
 Vec3f GetRandomCrossingVector(const Vec3f& V);
 Vec3f GetSampleAlongNormal(const Vec3f& N, float radius);
@@ -117,6 +120,59 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
 {
+	// distance fall off
+	float dist_sqr = hInfo.z * hInfo.z;
+	if (dist_sqr < 1) dist_sqr = 1;
+	c = c / dist_sqr;
+
+	Vec3f vN = hInfo.N.GetNormalized();
+	Vec3f vV = -r.dir.GetNormalized();
+	
+	// if it is a transmissive material
+	if (refraction.GetColor().Gray() > 0) {
+		// let this ray walk through this material
+
+		float cosPhi1 = vN.Dot(vV);
+		float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
+		float sinPhi2 = sinPhi1 / ior;
+		float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
+
+		Vec3f vTn = -cosPhi2 * vN;
+		Vec3f vNxV = vN.Cross(vV);
+		Vec3f vTp = vN.Cross(vNxV).GetNormalized()*sinPhi2;
+		// perfect refraction direction
+		Vec3f vT = vTn + vTp;
+
+		Ray refractionRay_in;
+		refractionRay_in.dir = vT;
+		refractionRay_in.p = hInfo.p - vN * Bias;
+		HitInfo refraHInfo_in = HitInfo();
+		bool bRefractionInHit;
+		recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, HIT_BACK);
+		
+		if (bRefractionInHit && refraHInfo_in.node != nullptr) {
+			bool bGoingOut;
+			Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut, refractionGlossiness);
+			if (bGoingOut) {
+				r = nextRay;
+			}
+			else {
+				// This photon is not going to bounce
+				return false;
+			}
+		}
+		else {
+			// This photon is not going to bounce
+			return false;
+		}
+	}
+	else {
+		// use kd & ks to determine use diffuse or specular
+		bool useSpecular;
+		Vec3f dir = GIUseSpecularDirOrDiffuseDir(useSpecular, vN, vV, diffuse, specular, glossiness);
+		r.dir = dir;
+		r.p = hInfo.p + hInfo.N * Bias;
+	}
 	return true;
 }
 cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV)
@@ -156,15 +212,8 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 }
 
 
-#ifdef ENABLE_GI
-
-cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int i_GIbounceCount /*= 1*/)
+cy::Vec3f GIUseSpecularDirOrDiffuseDir(bool& o_bUseSpecular, const Vec3f& vN, const Vec3f& vV, const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness)
 {
-	i_GIbounceCount--;
-	// Bound too many times
-	if (i_GIbounceCount < 0)return Color::Black();
-	Color outColor = Color::Black();
-
 	// diffuse GI
 	float diffuseTheta = 0;
 	Vec3f diffuseRayDir = GetSampleInSemiSphere(vN, diffuseTheta).GetNormalized();
@@ -184,10 +233,24 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 	float  P_Diffuse_Norm = P_Diffuse / P_sum;
 
 	float rnd = Rnd01();
-	bool useSpecular = rnd >= P_Diffuse_Norm;
-	Ray GIRay;
-	GIRay.dir = useSpecular ? specualrRayDir : diffuseRayDir;
+	o_bUseSpecular = rnd >= P_Diffuse_Norm;
 
+	return o_bUseSpecular ? specualrRayDir : diffuseRayDir;
+}
+
+
+#ifdef ENABLE_GI
+
+cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int i_GIbounceCount /*= 1*/)
+{
+	i_GIbounceCount--;
+	// Bound too many times
+	if (i_GIbounceCount < 0)return Color::Black();
+	Color outColor = Color::Black();
+
+	bool useSpecular;
+	Ray GIRay;
+	GIRay.dir = GIUseSpecularDirOrDiffuseDir(useSpecular, vN, vV, diffuse, specular, glossiness);
 	GIRay.p = hInfo.p + vN * Bias;
 	// float cosTheta = vN.Dot(GIRay.dir);
 

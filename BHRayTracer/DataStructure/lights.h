@@ -78,6 +78,7 @@ public:
 	virtual bool  IsPhotonSource() const { return true; }
 	virtual Color GetPhotonIntensity() const { return intensity; }
 	virtual Ray   RandomPhoton() const;
+	float GetProbability(const float i_sumIntensity) { return intensity.Gray() *size / i_sumIntensity; }
 
 private:
 	Color intensity;

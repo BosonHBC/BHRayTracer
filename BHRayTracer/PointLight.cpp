@@ -48,5 +48,5 @@ Ray PointLight::RandomPhoton() const
 	ray.dir = sin(theta) * (axisX * cos(phi) + axisY * sin(phi)) + axisZ * cos(theta);
 	ray.p = position;
 
-	return Ray();
+	return ray;
 }
