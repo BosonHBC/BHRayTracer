@@ -93,7 +93,7 @@
       <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;tinyxml.lib;opengl32.lib</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
@@ -136,7 +136,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;tinyxml.lib;opengl32.lib</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
@@ -180,6 +180,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <ClInclude Include="DataStructure\cyIVector.h" />
     <ClInclude Include="DataStructure\cyLightingGrid.h" />
     <ClInclude Include="DataStructure\cyMatrix.h" />
+    <ClInclude Include="DataStructure\cyPhotonMap.h" />
     <ClInclude Include="DataStructure\cyPoint.h" />
     <ClInclude Include="DataStructure\cyPointCloud.h" />
     <ClInclude Include="DataStructure\cyQuat.h" />
@@ -194,7 +195,6 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <ClInclude Include="DataStructure\objects.h" />
     <ClInclude Include="DataStructure\scene.h" />
     <ClInclude Include="LoadPNG\lodepng.h" />
-    <ClInclude Include="cyPhotonMap.h" />
     <ClInclude Include="texture.h" />
   </ItemGroup>
   <ItemGroup>

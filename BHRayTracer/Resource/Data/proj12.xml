@@ -80,12 +80,12 @@
     <material type="blinn" name="wallRed">
       <diffuse  r="0" g="0" b="0"/>
      <specular r="1" g="0.2" b="0.2"/>
-      <glossiness value="2500"/>
+      <glossiness value="25000"/>
     </material>
     <material type="blinn" name="wallBlue">
       <diffuse  r="0" g="0" b="0"/>
       <specular r="0.2" g="0.2" b="1"/>
-      <glossiness value="2500"/>
+      <glossiness value="25000"/>
     </material>
     <material type="blinn" name="light">
       <emission  value="20"/>

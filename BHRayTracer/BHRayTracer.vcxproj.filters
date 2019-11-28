@@ -132,7 +132,7 @@
     <ClInclude Include="DataStructure\lights.h">
       <Filter>Source Files\DataStructure\Lights</Filter>
     </ClInclude>
-    <ClInclude Include="cyPhotonMap.h">
+    <ClInclude Include="DataStructure\cyPhotonMap.h">
       <Filter>Source Files\DataStructure\PhotonMap</Filter>
     </ClInclude>
   </ItemGroup>
