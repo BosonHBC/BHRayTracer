@@ -55,6 +55,8 @@ private:
 	Color absorption;
 	float ior;  // index of refraction
 	float reflectionGlossiness, refractionGlossiness;
+	const float GetKD()const { return Max(Max(diffuse.GetColor().r, diffuse.GetColor().g), diffuse.GetColor().b); }
+	const float GetKS() const { return Max(Max(specular.GetColor().r, specular.GetColor().g), specular.GetColor().b); }
 };
 
 

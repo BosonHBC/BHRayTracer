@@ -3,6 +3,8 @@
 #include "scene.h"
 #include <math.h>
 #include <omp.h>
+#include "cyPhotonMap.h"
+
 
 #define ENABLE_Reflection_And_Refraction
 #define Bias 0.001f
@@ -34,6 +36,7 @@ extern Node rootNode;
 extern LightList lights;
 extern TexturedColor environment;
 extern float allLightIntensity;
+
 float Rnd01() { return ((double)rand() / (RAND_MAX)); }
 
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -48,8 +51,10 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 
 Color PathTracing_Refraction(const Color& refraction, const Color& absorption, const float& ior, const HitInfo& hInfo, const float cosPhi1, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int GIBounceCount, const float& refractionGlossiness);
 
-Vec3f GIUseSpecularDirOrDiffuseDir(bool& o_bUseSpecular, const Vec3f& vN, const Vec3f& vV, const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness);
+Vec3f GIUseSpecularDirOrDiffuseDir(bool& o_bUseSpecular, const Vec3f& vN, const Vec3f& vV, const float kd, const float ks, const float& glossiness);
 
+const float GetKD(const TexturedColor& diffuse) { return Max(Max(diffuse.GetColor().r, diffuse.GetColor().g), diffuse.GetColor().b); }
+const float GetKS(const TexturedColor& specular)  { return Max(Max(specular.GetColor().r, specular.GetColor().g), specular.GetColor().b); }
 Vec3f GetRandomCrossingVector(const Vec3f& V);
 Vec3f GetSampleAlongNormal(const Vec3f& N, float radius);
 Vec3f GetSampleInSemiSphere(const Vec3f& N, float& o_theta);
@@ -169,7 +174,7 @@ bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
 	else {
 		// use kd & ks to determine use diffuse or specular
 		bool useSpecular;
-		Vec3f dir = GIUseSpecularDirOrDiffuseDir(useSpecular, vN, vV, diffuse, specular, glossiness);
+		Vec3f dir = GIUseSpecularDirOrDiffuseDir(useSpecular, vN, vV, GetKD(), GetKS(), glossiness);
 		r.dir = dir;
 		r.p = hInfo.p + hInfo.N * Bias;
 	}
@@ -212,7 +217,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 }
 
 
-cy::Vec3f GIUseSpecularDirOrDiffuseDir(bool& o_bUseSpecular, const Vec3f& vN, const Vec3f& vV, const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness)
+cy::Vec3f GIUseSpecularDirOrDiffuseDir(bool& o_bUseSpecular, const Vec3f& vN, const Vec3f& vV, const float kd, const float ks, const float& glossiness)
 {
 	// diffuse GI
 	float diffuseTheta = 0;
@@ -227,8 +232,8 @@ cy::Vec3f GIUseSpecularDirOrDiffuseDir(bool& o_bUseSpecular, const Vec3f& vN, co
 	float p_specularTheta = /*2 * OneOverPI *(glossiness + 2)**/pow(cos(specularTheta), glossiness);
 
 	// Probability 
-	float P_Diffuse = diffuse.GetColor().Gray() * p_diffuseTheta;
-	float P_sum = P_Diffuse + specular.GetColor().Gray() * p_specularTheta;
+	float P_Diffuse = kd * p_diffuseTheta;
+	float P_sum = P_Diffuse + ks* p_specularTheta;
 
 	float  P_Diffuse_Norm = P_Diffuse / P_sum;
 
@@ -250,7 +255,7 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 
 	bool useSpecular;
 	Ray GIRay;
-	GIRay.dir = GIUseSpecularDirOrDiffuseDir(useSpecular, vN, vV, diffuse, specular, glossiness);
+	GIRay.dir = GIUseSpecularDirOrDiffuseDir(useSpecular, vN, vV, GetKD(diffuse), GetKS(specular), glossiness);
 	GIRay.p = hInfo.p + vN * Bias;
 	// float cosTheta = vN.Dot(GIRay.dir);
 
@@ -487,8 +492,8 @@ cy::Vec3f GetSampleInLight(const TexturedColor& diffuse, const TexturedColor& sp
 {
 	if (PointLight* pLight = dynamic_cast<PointLight*>(light)) {
 		// it is point light, get a random point in the sphere sample
-		float kd = diffuse.GetColor().Gray();
-		float ks = specular.GetColor().Gray();
+		float kd = GetKD(diffuse);
+		float ks = GetKS(specular);
 		float p_diffuse = 0;
 		Vec3f diffuse_vL;
 		float p_specular = 0;

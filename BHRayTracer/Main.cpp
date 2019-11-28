@@ -92,7 +92,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 16
+#define PT_SampleCount 128
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -227,7 +227,7 @@ bool BuildPhotonMap(const LightList& i_lights, Node* i_root)
 	}
 	// scale the intensity according to the overall photon count
 	photonMap.ScalePhotonPowers(1.f / photonMap.NumPhotons());
-
+	photonMap.PrepareForIrradianceEstimation();
 	// write photon map
 	FILE *fp = fopen("Resource/photonmap.dat", "wb");
 	fwrite(photonMap.GetPhotons(), sizeof(cyPhotonMap::Photon), photonMap.NumPhotons(), fp);

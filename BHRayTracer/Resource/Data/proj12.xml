@@ -110,34 +110,34 @@
     <material type="blinn" name="middle">
       <diffuse  value="0.5"/>
       <specular  value="0.5"/>
-      <glossiness value="5"/>
+      <glossiness value="500"/>
     </material>
     <material type="blinn" name="specular">
-      <diffuse value="0.0"/>
-      <specular value="0.9"/>
-      <glossiness value="100"/>
+      <diffuse value="0.01"/>
+      <specular value="0.8"/>
+      <glossiness value="10000"/>
     </material>
     <material type="blinn" name="FullGlo">
-      <diffuse value="1.0"/>
-      <specular value="1.0"/>
-      <glossiness value="200"/>
+      <diffuse value="0.2"/>
+      <specular value="0.8"/>
+      <glossiness value="80"/>
     </material>
     <material type="blinn" name="Full">
-      <diffuse value="1.0"/>
-      <specular value="1.0"/>
+      <diffuse value="0.7"/>
+      <specular value="0.2"/>
       <glossiness value="0"/>
     </material>
     <material type="blinn" name="teapot">
       <diffuse  r="0.8" g="0.2" b="0.2"/>
-      <specular r="1.0" g="1.0" b="1.0" value="0.7"/>
+      <specular r="0.7" g="0.7" b="0.7" />
       <glossiness value="20"/>
     </material>
 
     <material type="blinn" name="refraction">
-      <diffuse value="0"/>
-      <specular value="0"/>
-      <glossiness value="0"/>
-      <refraction index="2.0" value="0.8" glossiness="0.05"/>
+      <diffuse value="0.0"/>
+      <specular value="0.1"/>
+      <glossiness value="20000"/>
+      <refraction index="2.0" value="0.8"/>
     </material>
     <!-- Lights -->
     <light type="point" name="pointLight1">
