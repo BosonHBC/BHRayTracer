@@ -45,7 +45,7 @@ void SaveImages();
 //-------------------
 /** Build PhotonMap */
 #define MAX_PhotonCount 1000000
-#define PhotonBounceCount 3
+#define MAX_Area 0.5f
 #define Photon_AbsorbChance 0.3f
 /*
 enum EPhotonBounceType {
@@ -81,7 +81,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 10
+#define GIBounceCount 3
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -92,7 +92,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 1024
+#define PT_SampleCount 16
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -243,7 +243,7 @@ void TracePhotonRay(const Ray& ray,  Color i_bounceIntensity, const  bool i_firs
 		const Material* mtl = hinfo.node->GetMaterial();
 		//Add this photon to photon map if it is not the first hit and if it is not a photon surface
 		if (!i_firstHit && mtl->IsPhotonSurface())
-			photonMap.AddPhoton(hinfo.p, ray.dir, i_bounceIntensity);
+			photonMap.AddPhoton(hinfo.p, -ray.dir, i_bounceIntensity);
 
 		// Photon has 30% chance get absorbed, this value is defined by user
 		if (Rnd01() < 1 - Photon_AbsorbChance) {
