@@ -70,17 +70,16 @@
     <!-- Materials -->
     <material type="blinn" name="wallSpec">
       <diffuse  r="0" g="0" b="0"/>
-      <specular r="1" g="1" b="1" value="0.9"/>
-      <glossiness value="2500"/>
+      <specular r="1" g="1" b="1"/>
+      <glossiness value="25000"/>
     </material>
     <material type="blinn" name="wall">
       <diffuse  r="1" g="1" b="1"/>
       <specular value="0"/>
     </material>
     <material type="blinn" name="wallRed">
-      <diffuse  r="0" g="0" b="0"/>
-     <specular r="1" g="0.2" b="0.2"/>
-      <glossiness value="25000"/>
+      <diffuse  r="1" g="0.2" b="0.2"/>
+      <specular value="0"/>
     </material>
     <material type="blinn" name="wallBlue">
       <diffuse  r="0" g="0" b="0"/>

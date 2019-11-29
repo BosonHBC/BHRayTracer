@@ -44,18 +44,11 @@ void SaveImages();
 
 //-------------------
 /** Build PhotonMap */
-#define MAX_PhotonCount 1000000
+#define MAX_PhotonCount 20000
 #define MAX_Area 0.5f
 #define Photon_AbsorbChance 0.3f
-/*
-enum EPhotonBounceType {
-	PBT_Absorb = 0,
-	PBT_Diffuse = 1,
-	PBT_Specular = 2,
-	PBT_Refraction = 3
-};*/
 
-PhotonMap photonMap;
+PhotonMap* photonMap;
 bool BuildPhotonMap(const LightList& i_lights, Node* i_root);
 /** Trace the photon ray, return true when hit photon surface, knowing the hit info and bounce type by passing parameters*/
 void TracePhotonRay(const Ray& ray, Color i_bounceIntensity, const bool i_firstHit);
@@ -81,7 +74,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 3
+#define GIBounceCount 4
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -191,7 +184,8 @@ bool ComparePointLight(PointLight* l1, PointLight* l2) {
 
 bool BuildPhotonMap(const LightList& i_lights, Node* i_root)
 {
-	photonMap.Resize(MAX_PhotonCount);
+	photonMap = new PhotonMap();
+	photonMap->Resize(MAX_PhotonCount);
 	std::vector<PointLight*> pointLightList;
 	for (auto it = i_lights.begin(); it != i_lights.end(); ++it)
 	{
@@ -209,7 +203,7 @@ bool BuildPhotonMap(const LightList& i_lights, Node* i_root)
 		sumOfPointLight += pointLightList[i]->GetIntensity() * pointLightList[i]->GetSize();
 	}
 
-	while (photonMap.NumPhotons() < MAX_PhotonCount)
+	while (photonMap->NumPhotons() < MAX_PhotonCount)
 	{
 		float rnd = Rnd01();
 		int i = 0;
@@ -226,11 +220,11 @@ bool BuildPhotonMap(const LightList& i_lights, Node* i_root)
 		TracePhotonRay(ray, bounceIntensity, true);
 	}
 	// scale the intensity according to the overall photon count
-	photonMap.ScalePhotonPowers(1.f / photonMap.NumPhotons());
-	photonMap.PrepareForIrradianceEstimation();
+	photonMap->ScalePhotonPowers(1.f / photonMap->NumPhotons());
+	photonMap->PrepareForIrradianceEstimation();
 	// write photon map
 	FILE *fp = fopen("Resource/photonmap.dat", "wb");
-	fwrite(photonMap.GetPhotons(), sizeof(cyPhotonMap::Photon), photonMap.NumPhotons(), fp);
+	fwrite(photonMap->GetPhotons(), sizeof(cyPhotonMap::Photon), photonMap->NumPhotons(), fp);
 	fclose(fp);
 }
 void TracePhotonRay(const Ray& ray,  Color i_bounceIntensity, const  bool i_firstHit)
@@ -243,7 +237,7 @@ void TracePhotonRay(const Ray& ray,  Color i_bounceIntensity, const  bool i_firs
 		const Material* mtl = hinfo.node->GetMaterial();
 		//Add this photon to photon map if it is not the first hit and if it is not a photon surface
 		if (!i_firstHit && mtl->IsPhotonSurface())
-			photonMap.AddPhoton(hinfo.p, -ray.dir, i_bounceIntensity);
+			photonMap->AddPhoton(hinfo.p, -ray.dir, i_bounceIntensity);
 
 		// Photon has 30% chance get absorbed, this value is defined by user
 		if (Rnd01() < 1 - Photon_AbsorbChance) {
@@ -289,12 +283,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj12.png");
+	renderImage.SaveImage("Resource/Result/proj13.png");
 }
 int main() {
 
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj12.xml";
+	const char* filename = "Resource/Data/proj13.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
