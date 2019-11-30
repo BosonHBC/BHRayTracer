@@ -73,7 +73,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 4
+#define GIBounceCount 5
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -84,7 +84,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 16
+#define PT_SampleCount 128
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -235,7 +235,7 @@ void TracePhotonRay(const Ray& ray,  Color i_bounceIntensity, const  bool i_firs
 
 		const Material* mtl = hinfo.node->GetMaterial();
 		//Add this photon to photon map if it is not the first hit and if it is not a photon surface
-		if (/*!i_firstHit &&*/ mtl->IsPhotonSurface())
+		if (!i_firstHit && mtl->IsPhotonSurface())
 			photonMap->AddPhoton(hinfo.p, ray.dir.GetNormalized(), i_bounceIntensity);
 
 		// Photon has 30% chance get absorbed, this value is defined by user

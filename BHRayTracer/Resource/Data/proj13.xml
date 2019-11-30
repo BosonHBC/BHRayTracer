@@ -62,13 +62,13 @@
     </material>
     <material type="blinn" name="mtl2">
       <diffuse  value="0"/>
-      <specular vakye="1.0"/>
-      <glossiness value="8000"/>
+      <specular value="1"/>
+      <glossiness value="20000"/>
     </material>
     <material type="blinn" name="refraction">
       <diffuse  value="0"/>
-      <specular vakye="0.0"/>
-      <glossiness value="8000"/>
+      <specular value="0"/>
+      <glossiness value="20000"/>
       <refraction value="1.0" index="1.52"/>
     </material>
 
