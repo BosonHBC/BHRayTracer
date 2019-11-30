@@ -37,7 +37,7 @@
       <scale value="4"/>
       <translate x="8" y="-6" z="4"/>
     </object>
-    <object type="sphere" name="sphere2" material="mtl3">
+    <object type="sphere" name="sphere2" material="refraction">
       <scale value="4"/>
       <translate x="-8" y="-6" z="4"/>
     </object>
@@ -63,13 +63,12 @@
     <material type="blinn" name="mtl2">
       <diffuse  value="0"/>
       <specular vakye="1.0"/>
-      <glossiness value="80"/>
-      <reflection value="1.0"/>
+      <glossiness value="8000"/>
     </material>
-    <material type="blinn" name="mtl3">
+    <material type="blinn" name="refraction">
       <diffuse  value="0"/>
-      <specular vakye="1.0"/>
-      <glossiness value="80"/>
+      <specular vakye="0.0"/>
+      <glossiness value="8000"/>
       <refraction value="1.0" index="1.52"/>
     </material>
 

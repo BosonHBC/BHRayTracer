@@ -96,6 +96,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;tinyxml.lib;opengl32.lib</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <StackReserveSize>
+      </StackReserveSize>
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y
@@ -139,6 +141,8 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;tinyxml.lib;opengl32.lib</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <StackReserveSize>
+      </StackReserveSize>
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y

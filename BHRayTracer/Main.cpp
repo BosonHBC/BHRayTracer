@@ -44,8 +44,7 @@ void SaveImages();
 
 //-------------------
 /** Build PhotonMap */
-#define MAX_PhotonCount 20000
-#define MAX_Area 0.5f
+#define MAX_PhotonCount 500000
 #define Photon_AbsorbChance 0.3f
 
 PhotonMap* photonMap;
@@ -236,8 +235,8 @@ void TracePhotonRay(const Ray& ray,  Color i_bounceIntensity, const  bool i_firs
 
 		const Material* mtl = hinfo.node->GetMaterial();
 		//Add this photon to photon map if it is not the first hit and if it is not a photon surface
-		if (!i_firstHit && mtl->IsPhotonSurface())
-			photonMap->AddPhoton(hinfo.p, -ray.dir, i_bounceIntensity);
+		if (/*!i_firstHit &&*/ mtl->IsPhotonSurface())
+			photonMap->AddPhoton(hinfo.p, ray.dir.GetNormalized(), i_bounceIntensity);
 
 		// Photon has 30% chance get absorbed, this value is defined by user
 		if (Rnd01() < 1 - Photon_AbsorbChance) {

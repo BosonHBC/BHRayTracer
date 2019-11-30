@@ -374,6 +374,8 @@ namespace cy {
 				irrad *= one_over_area;
 			}
 			direction.Normalize();
+			float l = direction.Length();
+			float t = l;
 		}
 	}
 
