@@ -318,10 +318,12 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 			}
 
 			ClampColorToWhite(indirectColor);
+/*
 			Vec3f vL = -GIRay.dir.GetNormalized();
 			Vec3f vH = (vL + vV).GetNormalized();
 			float cosTheta = vL.Dot(vN);
-			outColor += indirectColor * (diffuse.Sample(hInfo.uvw, hInfo.duvw) * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness) );
+			outColor += indirectColor * (diffuse.Sample(hInfo.uvw, hInfo.duvw) * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));*/
+			outColor += indirectColor * (useSpecular ? specular.GetColor() : diffuse.GetColor());
 		}
 		else {
 			// doesn't bounce to anything
