@@ -44,7 +44,7 @@ void SaveImages();
 
 //-------------------
 /** Build PhotonMap */
-#define MAX_PhotonCount 500000
+#define MAX_PhotonCount 1000000
 #define Photon_AbsorbChance 0.3f
 
 PhotonMap* photonMap;
@@ -73,7 +73,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 4
+#define GIBounceCount 8
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -84,7 +84,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 16
+#define PT_SampleCount 1024
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();

@@ -25,8 +25,8 @@
 //#define UsePhotonMapping_ForDirectLight
 /** Photon Map*/
 #define MAX_PhotonCountInArea 1000
-#define MAX_Area 1
-#define GIBounceCount 4
+#define MAX_Area 2
+#define GIBounceCount 8
 // -----------------------------------
 #endif // UsePhotonMapping
 
