@@ -73,7 +73,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 5
+#define GIBounceCount 4
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -84,7 +84,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 128
+#define PT_SampleCount 16
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();

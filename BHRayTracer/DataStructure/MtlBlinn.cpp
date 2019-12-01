@@ -38,7 +38,14 @@ extern TexturedColor environment;
 extern PhotonMap* photonMap;
 extern float allLightIntensity;
 
-float Rnd01() { return ((double)rand() / (RAND_MAX)); }
+float Rnd01() { 
+	float rnd = ((double)rand() / (RAND_MAX));
+	while (rnd == 0.0f || rnd == 1.0f )
+	{
+		rnd = ((double)rand() / (RAND_MAX));
+	}
+	return rnd;
+}
 
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
 // get the ray from sphere inside to outside or doing internal reflection
@@ -183,7 +190,43 @@ bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
 	else {
 		// use kd & ks to determine use diffuse or specular
 		bool useSpecular;
-		Vec3f dir = GIUseSpecularDirOrDiffuseDir(useSpecular, vN, vV, GetKD(), GetKS(), glossiness);
+		float p_Diff = 0;
+		float p_Spec = 0;
+		Vec3f dir;
+		{
+			// diffuse GI
+			float diffuseTheta = 0;
+			Vec3f diffuseRayDir = GetSampleInSemiSphere(vN, diffuseTheta).GetNormalized();
+			float p_diffuseTheta = /*2* PI * */sin(2 * diffuseTheta);
+
+			// specular GI
+			float specularTheta = 0;
+			float cosvVvN = vN.Dot(vV);
+			Vec3f vR = 2 * cosvVvN * vN - vV;
+			Vec3f specualrRayDir = GetSampleAlongLightDirection(vR, glossiness, specularTheta);
+			float p_specularTheta = /*2 * OneOverPI *(glossiness + 2)**/pow(cos(specularTheta), glossiness);
+
+			// Probability 
+			float P_Diffuse = GetKD() * p_diffuseTheta;
+			float P_sum = P_Diffuse + GetKS() * p_specularTheta;
+
+			p_Diff = P_Diffuse / P_sum;
+			p_Spec = 1 - p_Diff;
+		
+			float rnd = Rnd01();
+			useSpecular = rnd >=p_Diff;
+
+			dir = useSpecular ? specualrRayDir : diffuseRayDir;
+		}
+		float kdf = GetKD() / p_Diff;
+		float ksf = GetKS() / p_Spec;
+
+		Color newC = c * (useSpecular ? ksf : kdf);
+		if (isnan(newC.r)) {
+			printf("useSpecular: %s, c: (%f, %f, %f) ,kd: %f, pd: %f, ks: %f, ps: %f\n", useSpecular ? "true" : "false", c.r, c.g, c.b, GetKD(), p_Diff, GetKS(), p_Spec);
+		}
+		c = newC;
+
 		r.dir = dir;
 		r.p = hInfo.p + hInfo.N * Bias;
 	}
@@ -255,7 +298,7 @@ cy::Vec3f GIUseSpecularDirOrDiffuseDir(bool& o_bUseSpecular, const Vec3f& vN, co
 	// diffuse GI
 	float diffuseTheta = 0;
 	Vec3f diffuseRayDir = GetSampleInSemiSphere(vN, diffuseTheta).GetNormalized();
-	float p_diffuseTheta = sin(2 * diffuseTheta);
+	float p_diffuseTheta = /*2* PI * */sin(2 * diffuseTheta);
 
 	// specular GI
 	float specularTheta = 0;
@@ -505,17 +548,17 @@ cy::Vec3f GetRandomCrossingVector(const Vec3f& V)
 	// if the rndVec is not crossing with V, generate a new rand one
 	while (V.Cross(rndVec).IsZero())
 	{
-		rndVec = Vec3f(((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)));
+		rndVec = Vec3f(Rnd01(), Rnd01(), Rnd01());
 	}
 	return rndVec;
 }
 
 cy::Vec3f GetSampleAlongNormal(const Vec3f& N, float R)
 {
-	float r = ((double)rand() / (RAND_MAX));
+	float r = Rnd01();
 	// Uniform distribution
 	r = sqrt(r) * R;
-	float theta = ((double)rand() / (RAND_MAX)) * 2 * PI;
+	float theta = Rnd01() * 2 * PI;
 	// Random point in a circle
 	float x = r * cos(theta);
 	float y = r * sin(theta);
@@ -533,7 +576,7 @@ cy::Vec3f GetSampleAlongLightDirection(const Vec3f& N, float glossiness, float& 
 	o_theta = weightTheta;
 	// The radius of the circle
 	float R = tan(weightTheta);
-	float phi = ((double)rand() / (RAND_MAX)) * 2 * PI;
+	float phi = Rnd01() * 2 * PI;
 	// Random point in a circle
 	float x = R * cos(phi);
 	float y = R * sin(phi);
@@ -563,7 +606,7 @@ cy::Vec3f GetSampleInLight(const TexturedColor& diffuse, const TexturedColor& sp
 			float diffuseTheta = 0;
 			diffuse_vL = GetSampleAlongLightDirection(vL.GetNormalized(), glossiness, diffuseTheta);
 
-			p_diffuse = 2 * OneOverPI *(glossiness + 2) * pow(cos(diffuseTheta), glossiness);
+			p_diffuse = /*2 * OneOverPI *(glossiness + 2) **/ pow(cos(diffuseTheta), glossiness);
 		}
 
 		if (ks == 0 && kd != 0) return diffuse_vL.GetNormalized();
@@ -572,7 +615,7 @@ cy::Vec3f GetSampleInLight(const TexturedColor& diffuse, const TexturedColor& sp
 		{
 			float r = Rnd01();
 			float R = sqrt(r) * pLight->GetSize();
-			float specularTheta = ((double)rand() / (RAND_MAX)) * 2 * PI;
+			float specularTheta = Rnd01() * 2 * PI;
 			// Random point in a circle
 			float x = R * cos(specularTheta);
 			float y = R * sin(specularTheta);
@@ -611,16 +654,16 @@ cy::Vec3f GetSampleInSemiSphere(const Vec3f& N, float& o_theta)
 	Vec3f axisX = N.Cross(axisY);
 
 	// Uniform distribution, phi -> [0 , 2*PI)
-	float phi = ((double)rand() / (RAND_MAX)) * 2 * PI;
+	float phi = Rnd01() * 2 * PI;
 
-	float rnd = ((double)rand() / (RAND_MAX));
+	float rnd = Rnd01();
 	// Uniform distribution, theta -> [0 , PI/2)
 	float theta = 0.5f * ACosSafe(1 - 2 * rnd);
 	o_theta = theta;
 	float sinTheta = sin(theta);
 
 	Vec3f retVec = sinTheta * cos(phi) * axisX + sinTheta * sin(phi) * axisY + cos(theta) * N;
-	if (N.Dot(retVec) < 0) {
+	if (N.Dot(retVec) <= 0) {
 		return GetSampleInSemiSphere(N, o_theta);
 	}
 	return retVec;
