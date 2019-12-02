@@ -48,7 +48,8 @@ public:
 	// Photon Extensions
 	virtual bool IsPhotonSurface(int subMtlID = 0) const { return diffuse.GetColor().Gray() > 0; } // if this method returns true, the photon will be stored
 	virtual bool RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const;  // if this method returns true, a new photon with the given direction and color will be traced
-
+	virtual bool RandomPhotonBounceForCaustic(Ray &r, Color &c, const HitInfo &hInfo) const;  // if this method returns true, a new photon with the given direction and color will be traced
+	virtual bool IsRefractionSurface(int subMtlID = 0)  const override { return refraction.GetColor().Gray() > 0; }
 private:
 	TexturedColor diffuse, specular, reflection, refraction, emission;
 	float glossiness;

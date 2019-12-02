@@ -10,7 +10,7 @@ cy::Color PointLight::Illuminate(Vec3f const &p, Vec3f const &N) const
 	float r = centerDir.Length();
 	float rr = r * r;
 	if (size > 0) {
-		return Shadow(Ray(p, GetSampleAlongNormal(centerDir, size)), 1) *intensity / rr;
+		return Shadow(Ray(p, GetSampleAlongNormal(centerDir, size)), 1) * intensity / rr;
 	}
 	else
 		return Shadow(Ray(p, centerDir), 1) * intensity / rr;

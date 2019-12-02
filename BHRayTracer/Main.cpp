@@ -45,12 +45,16 @@ void SaveImages();
 //-------------------
 /** Build PhotonMap */
 #define MAX_PhotonCount 1000000
+#define MAX_CausticPhotonCount 100000
 
 
 PhotonMap* photonMap;
+PhotonMap* causticPhotonMap;
 bool BuildPhotonMap(const LightList& i_lights, Node* i_root);
+bool BuildCausticPhotonMap(const LightList& i_lights, Node* i_root);
 /** Trace the photon ray, return true when hit photon surface, knowing the hit info and bounce type by passing parameters*/
 void TracePhotonRay(const Ray& ray, Color i_bounceIntensity, const bool i_firstHit);
+void TraceCausticPhotonRay(const Ray& ray, Color i_bounceIntensity, const bool i_firstHit);
 float Rnd01();
 //-------------------
 /** Calculate all light intensity*/
@@ -139,6 +143,7 @@ void BeginRender() {
 	renderImage.ResetNumRenderedPixels();
 
 	BuildPhotonMap(lights, &rootNode);
+	BuildCausticPhotonMap(lights, &rootNode);
 
 	CalculateLightsIntensity();
 
@@ -248,6 +253,76 @@ void TracePhotonRay(const Ray& ray, Color i_bounceIntensity, const  bool i_first
 		// This ray did not hit anything
 	}
 }
+
+void TraceCausticPhotonRay(const Ray& ray, Color i_bounceIntensity, const bool i_firstHit)
+{
+	bool bHit = false;
+	HitInfo hinfo = HitInfo();
+	recursive(&rootNode, ray, hinfo, bHit, HIT_FRONT);
+	if (bHit) {
+
+		const Material* mtl = hinfo.node->GetMaterial();
+		//Add this photon to photon map if it is not the first hit and if it is not a photon surface
+		if (!i_firstHit && mtl->IsPhotonSurface())
+			causticPhotonMap->AddPhoton(hinfo.p, ray.dir.GetNormalized(), i_bounceIntensity);
+
+		Ray newRay = ray;
+		Color newIntensity = i_bounceIntensity;
+
+		if (mtl->RandomPhotonBounce(newRay, newIntensity, hinfo))
+			TraceCausticPhotonRay(newRay, newIntensity, false);
+	}
+	else {
+		// This ray did not hit anything
+	}
+}
+
+
+bool BuildCausticPhotonMap(const LightList& i_lights, Node* i_root)
+{
+	causticPhotonMap = new PhotonMap();
+	causticPhotonMap->Resize(MAX_CausticPhotonCount);
+	std::vector<PointLight*> pointLightList;
+	for (auto it = i_lights.begin(); it != i_lights.end(); ++it)
+	{
+		// if it is a point light
+		if (PointLight* ptr = reinterpret_cast<PointLight*>(*it)) {
+			pointLightList.push_back(ptr);
+		}
+	}
+	if (pointLightList.size() == 0) return false;
+
+	sort(pointLightList.begin(), pointLightList.end(), ComparePointLight);
+	float sumOfPointLight = 0;
+	for (int i = 0; i < pointLightList.size(); ++i)
+	{
+		sumOfPointLight += pointLightList[i]->GetIntensity() * pointLightList[i]->GetSize();
+	}
+	while (causticPhotonMap->NumPhotons() < MAX_CausticPhotonCount)
+	{
+		float rnd = Rnd01();
+		int i = 0;
+		while (rnd > pointLightList[i]->GetProbability(sumOfPointLight) && i < pointLightList.size() - 1)
+		{
+			i++;
+		}
+		PointLight* thisLight = pointLightList[i];
+
+		Ray ray = thisLight->RandomPhoton();
+		Color bounceIntensity = thisLight->GetPhotonIntensity();
+
+		// This is the first hit of this photon
+		TraceCausticPhotonRay(ray, bounceIntensity, true);
+	}
+	// scale the intensity according to the overall photon count
+	causticPhotonMap->ScalePhotonPowers(1.f / causticPhotonMap->NumPhotons());
+	causticPhotonMap->PrepareForIrradianceEstimation();
+	// write photon map
+	FILE *fp = fopen("Resource/causticPhotonMap.dat", "wb");
+	fwrite(causticPhotonMap->GetPhotons(), sizeof(cyPhotonMap::Photon), causticPhotonMap->NumPhotons(), fp);
+	fclose(fp);
+}
+
 
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/) {
 	if (root->GetNumChild() <= 0) return;
