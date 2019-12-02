@@ -24,9 +24,10 @@
 #ifdef UsePhotonMapping
 //#define UsePhotonMapping_ForDirectLight
 /** Photon Map*/
+#define Photon_AbsorbChance 0.3f
 #define MAX_PhotonCountInArea 1000
-#define MAX_Area 2
-#define GIBounceCount 8
+#define MAX_Area 1.5
+#define GIBounceCount 4
 // -----------------------------------
 #endif // UsePhotonMapping
 
@@ -141,10 +142,13 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
 {
-	// distance fall off
-	//float dist_sqr = hInfo.z * hInfo.z;
-	//if (dist_sqr < 1) dist_sqr = 1;
-	//c = c / dist_sqr;
+	// rnd for determine absorb, diffuse, specular, refraction 
+	float rnd = Rnd01();
+	
+	if (rnd < Photon_AbsorbChance) {
+		// Not going to generate next bounce
+		return false;
+	}
 
 	Vec3f vN = hInfo.N.GetNormalized();
 	Vec3f vV = -r.dir.GetNormalized();
@@ -192,6 +196,7 @@ bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
 		bool useSpecular;
 		float p_Diff = 0;
 		float p_Spec = 0;
+		float p_Absorb = Photon_AbsorbChance;
 		Vec3f dir;
 		{
 			// diffuse GI
@@ -210,16 +215,15 @@ bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
 			float P_Diffuse = GetKD() * p_diffuseTheta;
 			float P_sum = P_Diffuse + GetKS() * p_specularTheta;
 
-			p_Diff = P_Diffuse / P_sum;
-			p_Spec = 1 - p_Diff;
+			p_Diff = (P_Diffuse / P_sum) * (1 - Photon_AbsorbChance) + Photon_AbsorbChance;
+			p_Spec = (1 - p_Diff)  * (1 - Photon_AbsorbChance) + Photon_AbsorbChance;
 		
-			float rnd = Rnd01();
 			useSpecular = rnd >=p_Diff;
 
 			dir = useSpecular ? specualrRayDir : diffuseRayDir;
 		}
-		float kdf = GetKD() / p_Diff;
-		float ksf = GetKS() / p_Spec;
+		Color kdf = diffuse.GetColor() / p_Diff;
+		Color ksf = specular.GetColor() / p_Spec;
 
 		Color newC = c * (useSpecular ? ksf : kdf);
 		if (isnan(newC.r)) {
@@ -230,6 +234,7 @@ bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
 		r.dir = dir;
 		r.p = hInfo.p + hInfo.N * Bias;
 	}
+
 	return true;
 }
 cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV)

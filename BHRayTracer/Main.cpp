@@ -45,7 +45,7 @@ void SaveImages();
 //-------------------
 /** Build PhotonMap */
 #define MAX_PhotonCount 1000000
-#define Photon_AbsorbChance 0.3f
+
 
 PhotonMap* photonMap;
 bool BuildPhotonMap(const LightList& i_lights, Node* i_root);
@@ -73,7 +73,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 8
+#define GIBounceCount 4
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -84,7 +84,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 1024
+#define PT_SampleCount 16
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -142,7 +142,7 @@ void BeginRender() {
 
 	CalculateLightsIntensity();
 
-	
+
 
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
@@ -226,7 +226,7 @@ bool BuildPhotonMap(const LightList& i_lights, Node* i_root)
 	fwrite(photonMap->GetPhotons(), sizeof(cyPhotonMap::Photon), photonMap->NumPhotons(), fp);
 	fclose(fp);
 }
-void TracePhotonRay(const Ray& ray,  Color i_bounceIntensity, const  bool i_firstHit)
+void TracePhotonRay(const Ray& ray, Color i_bounceIntensity, const  bool i_firstHit)
 {
 	bool bHit = false;
 	HitInfo hinfo = HitInfo();
@@ -238,17 +238,11 @@ void TracePhotonRay(const Ray& ray,  Color i_bounceIntensity, const  bool i_firs
 		if (!i_firstHit && mtl->IsPhotonSurface())
 			photonMap->AddPhoton(hinfo.p, ray.dir.GetNormalized(), i_bounceIntensity);
 
-		// Photon has 30% chance get absorbed, this value is defined by user
-		if (Rnd01() < 1 - Photon_AbsorbChance) {
-			// This photon is needed to be bounced
-			Ray newRay = ray;
-			Color newIntensity = i_bounceIntensity;
-			// This function handles light intensity distance fall off / generate new direction
-			mtl->RandomPhotonBounce(newRay, newIntensity, hinfo);
-			// This is not the direct photon, 
+		Ray newRay = ray;
+		Color newIntensity = i_bounceIntensity;
+		// If not absorb, generate new bounce
+		if (mtl->RandomPhotonBounce(newRay, newIntensity, hinfo))
 			TracePhotonRay(newRay, newIntensity, false);
-		}
-		// absorbed
 	}
 	else {
 		// This ray did not hit anything
