@@ -269,7 +269,7 @@ void TraceCausticPhotonRay(const Ray& ray, Color i_bounceIntensity, const bool i
 		Ray newRay = ray;
 		Color newIntensity = i_bounceIntensity;
 
-		if (mtl->RandomPhotonBounce(newRay, newIntensity, hinfo))
+		if (mtl->RandomPhotonBounceForCaustic(newRay, newIntensity, hinfo))
 			TraceCausticPhotonRay(newRay, newIntensity, false);
 	}
 	else {
