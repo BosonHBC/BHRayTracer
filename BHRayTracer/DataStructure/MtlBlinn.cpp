@@ -40,9 +40,9 @@ extern PhotonMap* photonMap;
 extern PhotonMap* causticPhotonMap;
 extern float allLightIntensity;
 
-float Rnd01() { 
+float Rnd01() {
 	float rnd = ((double)rand() / (RAND_MAX));
-	while (rnd == 0.0f || rnd == 1.0f )
+	while (rnd == 0.0f || rnd == 1.0f)
 	{
 		rnd = ((double)rand() / (RAND_MAX));
 	}
@@ -54,7 +54,7 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 
 
 // Path tracing functions
-cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV);
+cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int i_GIbounceCount);
 cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int i_GIbounceCount);
 // Refraction
 // -----------------
@@ -121,7 +121,7 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 
 	// ----------
 	// Diffuse and Specular
-	outColor += PathTracing_DiffuseNSpecular(diffuse, newSpecular, glossiness, hInfo, vN, vV);
+	outColor += PathTracing_DiffuseNSpecular(diffuse, newSpecular, glossiness, hInfo, vN, vV, i_GIBounceCount);
 	if (outColor.r >= 1 && outColor.g >= 1 && outColor.b >= 1) return outColor;
 	// ----------
 	// Global Illumination
@@ -145,48 +145,13 @@ bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
 {
 	// rnd for determine absorb, diffuse, specular, refraction 
 	float rnd = Rnd01();
-	
+
 	Vec3f vN = hInfo.N.GetNormalized();
 	Vec3f vV = -r.dir.GetNormalized();
 
 	// if it is a transmissive material
 	if (refraction.GetColor().Gray() > 0) {
-		// let this ray walk through this material
-
-		float cosPhi1 = vN.Dot(vV);
-		float sinPhi1 = sqrt(1 - cosPhi1 * cosPhi1);
-		float sinPhi2 = sinPhi1 / ior;
-		float cosPhi2 = sqrt(1 - sinPhi2 * sinPhi2);
-
-		Vec3f vTn = -cosPhi2 * vN;
-		Vec3f vNxV = vN.Cross(vV);
-		Vec3f vTp = vN.Cross(vNxV).GetNormalized()*sinPhi2;
-		// perfect refraction direction
-		Vec3f vT = vTn + vTp;
-
-		Ray refractionRay_in;
-		refractionRay_in.dir = vT;
-		refractionRay_in.p = hInfo.p - vN * Bias;
-		HitInfo refraHInfo_in = HitInfo();
-		bool bRefractionInHit;
-		recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, HIT_BACK);
-
-		if (bRefractionInHit && refraHInfo_in.node != nullptr) {
-			bool bGoingOut;
-			Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut, refractionGlossiness);
-			if (bGoingOut) {
-				r = nextRay;
-				return true;
-			}
-			else {
-				// This photon is not going to bounce
-				return false;
-			}
-		}
-		else {
-			// This photon is not going to bounce
-			return false;
-		}
+		return false;
 	}
 	else {
 		if (rnd < Photon_AbsorbChance) {
@@ -219,8 +184,8 @@ bool MtlBlinn::RandomPhotonBounce(Ray &r, Color &c, const HitInfo &hInfo) const
 
 			p_Diff = (P_Diffuse / P_sum) * (1 - Photon_AbsorbChance) + Photon_AbsorbChance;
 			p_Spec = (1 - p_Diff)  * (1 - Photon_AbsorbChance) + Photon_AbsorbChance;
-		
-			useSpecular = rnd >=p_Diff;
+
+			useSpecular = rnd >= p_Diff;
 
 			dir = useSpecular ? specualrRayDir : diffuseRayDir;
 		}
@@ -340,56 +305,77 @@ bool MtlBlinn::RandomPhotonBounceForCaustic(Ray &r, Color &c, const HitInfo &hIn
 
 	return true;
 }
-cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV)
+cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int i_GIbounceCount)
 {
 	Color outColor = Color::Black();
+	if (i_GIbounceCount > GIBounceCount - 1) {
 
+		// Direct shading
+		{
+			float rnd = Rnd01();
+			int i = 0;
+			while (rnd > lights[i]->GetIntensity() / allLightIntensity && i < lights.size() - 1)
+			{
+				i++;
+			}
 
-#ifdef UsePhotonMapping_ForDirectLight
-	{
-		Vec3f vL;
-		Color irrad;
-		photonMap->EstimateIrradiance<MAX_PhotonCountInArea>(irrad, vL, MAX_Area, hInfo.p, &hInfo.N);
-		float cosTheta = -vL.Dot(vN);
+			Light* light = lights[i];
+			Vec3f vL = GetSampleInLight(diffuse, specular, light, hInfo, glossiness);
 
-		if (!vL.IsZero() && !irrad.IsBlack() && cosTheta > 0) {
-			//printf("Anything right\n");
+			// Theta is  dot product of Normal and light
+			float cosTheta = vL.Dot(vN);
+
+			if (cosTheta <= 0) {
+				// from back side
+				return Color::Black();
+			}
+			// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
+			Vec3f vH = (vL + vV).GetNormalized();
+			Color irrad = (light)->Illuminate(hInfo.p, vN);
+			Color brdfXCosTheta = diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness);
+			outColor += irrad * brdfXCosTheta;
+
 		}
 
-		if (cosTheta <= 0) {
-			// from back side
-			return Color::Black();
+		// for caustic photon map
+		{
+			Vec3f vL;
+			Color causticIndirectIrrad;
+			causticPhotonMap->EstimateIrradiance<MAX_PhotonCountInArea>(causticIndirectIrrad, vL, MAX_Area, hInfo.p, &hInfo.N);
+
+			float cosTheta = -vL.Dot(vN);
+			if (cosTheta <= 0) {
+				// from back side
+				return Color::Black();
+			}
+			// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
+			Vec3f vH = (vL + vV).GetNormalized();
+
+			Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw)  + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness) / cosTheta;
+			outColor += brdf * causticIndirectIrrad;
 		}
-		// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
-		Vec3f vH = (vL + vV).GetNormalized();
 
-		Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw) + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness) / cosTheta;
-		outColor += brdf * irrad;
 	}
-#else
-	float rnd = Rnd01();
-	int i = 0;
-	while (rnd > lights[i]->GetIntensity() / allLightIntensity && i < lights.size() - 1)
-	{
-		i++;
+	else {
+		// for normal photon map
+		{
+			Vec3f vL;
+			Color indirectIrrad;
+			photonMap->EstimateIrradiance<MAX_PhotonCountInArea>(indirectIrrad, vL, MAX_Area, hInfo.p, &hInfo.N);
+			float cosTheta = -vL.Dot(vN);
+			if (cosTheta <= 0) {
+				// from back side
+				return Color::Black();
+			}
+			// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
+			Vec3f vH = (vL + vV).GetNormalized();
+
+			Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw) + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness) / cosTheta;
+			outColor += brdf * indirectIrrad;
+		}
+
 	}
 
-	Light* light = lights[i];
-	Vec3f vL = GetSampleInLight(diffuse, specular, light, hInfo, glossiness);
-
-	// Theta is  dot product of Normal and light
-	float cosTheta = vL.Dot(vN);
-
-	if (cosTheta <= 0) {
-		// from back side
-		return Color::Black();
-	}
-	// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
-	Vec3f vH = (vL + vV).GetNormalized();
-	Color irrad = (light)->Illuminate(hInfo.p, vN);
-	Color brdfXCosTheta = OneOverPI * (diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + (glossiness *0.5f + 1)*specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));
-	outColor += irrad * brdfXCosTheta;
-#endif
 	ClampColorToWhite(outColor);
 	if (isnan(outColor.r)) {
 		printf("Diffuse/Specular color has nan! \n");
@@ -432,11 +418,10 @@ cy::Vec3f GIUseSpecularDirOrDiffuseDir(bool& o_bUseSpecular, const Vec3f& vN, co
 
 cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int o_bounceCount, int i_GIbounceCount /*= 1*/)
 {
-	i_GIbounceCount--;
 	// Bound too many times
 	if (i_GIbounceCount < 0)return Color::Black();
 	Color outColor = Color::Black();
-	if (i_GIbounceCount < GIBounceCount && GetKD(diffuse) > 0) {
+	/*if (i_GIbounceCount < GIBounceCount - 1 && GetKD(diffuse) > 0) {
 		// for normal photon map
 		{
 			Vec3f vL;
@@ -453,24 +438,9 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 			Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw) + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness) / cosTheta;
 			outColor += brdf * indirectIrrad;
 		}
-		// for caustic photon map
-		{
-			Vec3f vL;
-			Color indirectIrrad;
-			causticPhotonMap->EstimateIrradiance<MAX_PhotonCountInArea>(indirectIrrad, vL, MAX_Area, hInfo.p, &hInfo.N);
-			float cosTheta = -vL.Dot(vN);
-			if (cosTheta <= 0) {
-				// from back side
-				return Color::Black();
-			}
-			// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
-			Vec3f vH = (vL + vV).GetNormalized();
 
-			Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw) + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness) / cosTheta;
-			outColor += brdf * indirectIrrad;
-		}
 	}
-	else
+	else*/
 	{
 		bool useSpecular;
 		Ray GIRay;
@@ -485,15 +455,13 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 
 			/** Mesh intersect situation */
 			if (abs(reflHInfo.z) > Bias) {
-				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_GIbounceCount);
+				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, useSpecular ? i_GIbounceCount : i_GIbounceCount - 1);
 			}
-
-			//ClampColorToWhite(indirectColor);
-/*
-			Vec3f vL = -GIRay.dir.GetNormalized();
-			Vec3f vH = (vL + vV).GetNormalized();
-			float cosTheta = vL.Dot(vN);
-			outColor += indirectColor * (diffuse.Sample(hInfo.uvw, hInfo.duvw) * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));*/
+			/*
+						Vec3f vL = -GIRay.dir.GetNormalized();
+						Vec3f vH = (vL + vV).GetNormalized();
+						float cosTheta = vL.Dot(vN);
+						outColor += indirectColor * (diffuse.Sample(hInfo.uvw, hInfo.duvw) * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness));*/
 			outColor += indirectColor * (useSpecular ? specular : diffuse).Sample(hInfo.uvw, hInfo.duvw);
 		}
 		else {
@@ -524,7 +492,6 @@ cy::Color PathTracing_Refraction(const Color& refraction, const Color& absorptio
 {
 	Color refractionColor = Color::Black();
 	if (o_bounceCount <= 0) return refractionColor;
-	o_bounceCount--;
 
 	if (!refraction.IsBlack()) {
 
