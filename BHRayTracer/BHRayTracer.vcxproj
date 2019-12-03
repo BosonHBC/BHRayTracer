@@ -87,13 +87,17 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir);$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
+      <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;tinyxml.lib;opengl32.lib</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <StackReserveSize>
+      </StackReserveSize>
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y
@@ -107,6 +111,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>freeglut.lib</AdditionalDependencies>
@@ -125,15 +130,19 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir);$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
+      <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;tinyxml.lib;opengl32.lib</AdditionalDependencies>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <StackReserveSize>
+      </StackReserveSize>
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y
@@ -149,6 +158,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -162,6 +172,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="cyTriMesh.h" />
     <ClInclude Include="DataStructure\cyAlphaDistribution.h" />
     <ClInclude Include="DataStructure\cyBVH.h" />
     <ClInclude Include="DataStructure\cyColor.h" />
@@ -173,6 +184,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <ClInclude Include="DataStructure\cyIVector.h" />
     <ClInclude Include="DataStructure\cyLightingGrid.h" />
     <ClInclude Include="DataStructure\cyMatrix.h" />
+    <ClInclude Include="DataStructure\cyPhotonMap.h" />
     <ClInclude Include="DataStructure\cyPoint.h" />
     <ClInclude Include="DataStructure\cyPointCloud.h" />
     <ClInclude Include="DataStructure\cyQuat.h" />
@@ -187,12 +199,19 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <ClInclude Include="DataStructure\objects.h" />
     <ClInclude Include="DataStructure\scene.h" />
     <ClInclude Include="LoadPNG\lodepng.h" />
+    <ClInclude Include="texture.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Box.cpp" />
     <ClCompile Include="DataStructure\MtlBlinn.cpp" />
     <ClCompile Include="DataStructure\Sphere.cpp" />
+    <ClCompile Include="GenLight.cpp" />
     <ClCompile Include="LoadPNG\lodepng.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Plane.cpp" />
+    <ClCompile Include="PointLight.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TriObj.cpp" />
     <ClCompile Include="viewport.cpp" />
     <ClCompile Include="xmlload.cpp" />
   </ItemGroup>

@@ -1,0 +1,163 @@
+<xml>
+  <scene>
+    <!-- Objects -->
+    <object name="box">
+      <translate x="0" y="0" z="12"/>
+      <object type="plane" name="WallBottom" material="wall">
+        <scale value="62"/>
+        <translate z="-12"/>
+      </object>
+      <object type="plane" name="WallTop" material="wall">
+        <scale value="62"/>
+        <rotate angle="180" x="1"/>
+        <translate z="12"/>
+      </object>
+      <object type="plane" name="WallBack" material="wallSpec">
+        <scale value="32"/>
+        <rotate angle="90" x="1"/>
+        <translate y="20"/>
+      </object>
+      <object type="plane" name="WallFront" material="wallSpec">
+        <scale value="32"/>
+        <rotate angle="-90" x="1"/>
+        <translate y="-71"/>
+      </object>
+      <!--<object type="plane" name="WallFront" material="wall">
+        <scale value="32"/>
+        <rotate angle="-90" x="1"/>
+        <translate y="-61"/>
+      </object>-->
+      <object type="plane" name="WallLeft" material="wallRed">
+        <scale value="62"/>
+        <rotate angle="90" y="1"/>
+        <translate x="-15"/>
+      </object>
+      <object type="plane" name="WallRight" material="wallBlue">
+        <scale value="62"/>
+        <rotate angle="-90" y="1"/>
+        <translate x="15"/>
+      </object>
+    </object>
+    <object type="sphere" name="sphere1" material="diffuse">
+      <scale value="3.5"/>
+      <translate x="-10" y="8" z="3.5"/>
+    </object>
+    <object type="sphere" name="sphere2" material="middle">
+      <scale value="3.5"/>
+      <translate x="0" y="8" z="3.5"/>
+    </object> 
+    <object type="sphere" name="sphere3" material="specular">
+      <scale value="3.5"/>
+      <translate x="10" y="8" z="3.5"/>
+    </object>
+     <object type="sphere" name="sphere4" material="Full">
+      <scale value="2.5"/>
+      <translate x="-5" y="-4" z="2.5"/>
+    </object>
+    <object type="sphere" name="sphere5" material="FullGlo">
+      <scale value="2.5"/>
+      <translate x="5" y="-4" z="2.5"/>
+    </object>
+    <object type="obj" name="Resource/Data/teapot.obj" material="teapot">
+      <scale value="0.3"/>
+      <rotate angle="-30" z="1"/>
+      <translate x="0" y="-12" z="0.14"/>
+    </object>
+    <object type="sphere" name="sphere6" material="refraction">
+      <scale value="4"/>
+      <translate x="-9.5" y="-13" z="4"/>
+    </object>
+    <!-- Materials -->
+    <material type="blinn" name="wallSpec">
+      <diffuse  r="0" g="0" b="0"/>
+      <specular r="1" g="1" b="1"/>
+      <glossiness value="25000"/>
+    </material>
+    <material type="blinn" name="wall">
+      <diffuse  r="1" g="1" b="1"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="wallRed">
+      <diffuse  r="1" g="0.2" b="0.2"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="wallBlue">
+      <diffuse  r="0" g="0" b="0"/>
+      <specular r="0.2" g="0.2" b="1"/>
+      <glossiness value="25000"/>
+    </material>
+    <material type="blinn" name="light">
+      <emission  value="20"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="mtl1">
+      <diffuse  r="0.8" g="0.2" b="0.2"/>
+      <specular r="1.0" g="1.0" b="1.0" value="0.7"/>
+      <glossiness value="10"/>
+    </material>
+    <material type="blinn" name="mtl2">
+      <diffuse  r="0.2" g="0.8" b="0.2"/>
+      <specular r="0.9" g="0.9" b="1.0" value="0.8"/>
+      <glossiness value="50"/>
+    </material>
+
+    <material type="blinn" name="diffuse">
+      <diffuse   value="1"/>
+      <specular  value="0.0"/>
+      <glossiness value="0"/>
+    </material>
+    <material type="blinn" name="middle">
+      <diffuse  value="0.5"/>
+      <specular  value="0.5"/>
+      <glossiness value="500"/>
+    </material>
+    <material type="blinn" name="specular">
+      <diffuse value="0.01"/>
+      <specular value="0.8"/>
+      <glossiness value="10000"/>
+    </material>
+    <material type="blinn" name="FullGlo">
+      <diffuse value="0.2"/>
+      <specular value="0.8"/>
+      <glossiness value="80"/>
+    </material>
+    <material type="blinn" name="Full">
+      <diffuse value="0.7"/>
+      <specular value="0.2"/>
+      <glossiness value="0"/>
+    </material>
+    <material type="blinn" name="teapot">
+      <diffuse  r="0.8" g="0.2" b="0.2"/>
+      <specular r="0.7" g="0.7" b="0.7" />
+      <glossiness value="20"/>
+    </material>
+
+    <material type="blinn" name="refraction">
+      <diffuse value="0.0"/>
+      <specular value="0.1"/>
+      <glossiness value="20000"/>
+      <refraction index="2.0" value="0.8"/>
+    </material>
+    <!-- Lights -->
+    <light type="point" name="pointLight1">
+      <intensity value="0.5"/>
+      <position x="0" y="0" z="22"/>
+      <size value="5"/>
+    </light>
+    <!-- <light type="point" name="pointLight2">
+      <intensity value="0.2"/>
+      <position x="0" y="-10" z="8"/>
+      <size value="5"/>
+    </light> -->
+
+  </scene>
+ 
+  <camera>
+    <position x="0" y="-70" z="16"/>
+    <target x="0" y="0" z="11"/>
+    <up x="0" y="0" z="1"/>
+    <fov value="30"/>
+    <width value="800"/>
+    <height value="600"/>
+  </camera>
+</xml>

@@ -1,7 +1,10 @@
 #include "objects.h"
 #include "cyVector.h"
-#define HIT_FRONT 0
-#define HIT_BACK 1
+#include <math.h>
+#define PI 3.14159265
+// cos(85 degree) = 0.08715574274
+#define PerpendicularFaceDeterminance 0.087f
+
 bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
 {
 	// dot(p, p) = (x)^2 + (y)^2 + (z)^2 = 1
@@ -27,15 +30,29 @@ bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 		else if (t1 > 0 && t2 > 0) {
 			t = Min(t1, t2);
 		}
-
-		if (hInfo.z < t) return false;
-
+		// if this hit is longer than current closet hit, return false
+		if (hInfo.z < t || t <= 0) return false;
+		
+		// Set hit info
 		hInfo.z = t;
-
 		hInfo.p = oc + hInfo.z * dir;
 		hInfo.N = hInfo.p; // - Vec3f(0, 0, 0);
-
 		hInfo.front = true;
+
+		// Set uv Info
+		Vec3f uvw;
+		Vec3f d = hInfo.N.GetNormalized();
+		uvw.x = 0.5f + atan2(d.y, d.x) / (2 * PI);
+		uvw.y = 0.5f - asin(d.z) / (PI);
+		hInfo.uvw = uvw;
+
+		// Ray differential
+		Vec3f duvw[2];
+		duvw[0] = Vec3f(0, 0, 0);
+		duvw[1] = Vec3f(0, 0, 0);
+		hInfo.duvw[0] = duvw[0];
+		hInfo.duvw[1] = duvw[1];
+
 		return true;
 	}
 

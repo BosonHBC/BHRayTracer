@@ -3,7 +3,7 @@
 ///
 /// \file       viewport.cpp 
 /// \author     Cem Yuksel (www.cemyuksel.com)
-/// \version    2.0
+/// \version    13.0
 /// \date       August 21, 2019
 ///
 /// \brief Example source for CS 6620 - University of Utah.
@@ -18,6 +18,7 @@
 #include "objects.h"
 #include "lights.h"
 #include "materials.h"
+#include "texture.h"
 #include <stdlib.h>
 #include <time.h>
 
@@ -40,6 +41,7 @@ extern Node rootNode;
 extern Camera camera;
 extern RenderImage renderImage;
 extern LightList lights;
+extern TexturedColor background;
 
 //-------------------------------------------------------------------------------
 
@@ -54,6 +56,8 @@ enum ViewMode
 	VIEWMODE_OPENGL,
 	VIEWMODE_IMAGE,
 	VIEWMODE_Z,
+	VIEWMODE_SAMPLECOUNT,
+	VIEWMODE_IRRADCOMP,
 };
 
 enum MouseMode {
@@ -69,6 +73,12 @@ static int      startTime;                      // Start time of rendering
 static int mouseX = 0, mouseY = 0;
 static float viewAngle1 = 0, viewAngle2 = 0;
 static GLuint viewTexture;
+
+static int      dofDrawCount = 0;
+static Color    *dofImage = nullptr;
+static Color24 *dofBuffer = nullptr;
+
+#define MAX_DOF_DRAW    32
 
 //-------------------------------------------------------------------------------
 
@@ -102,7 +112,8 @@ void ShowViewport()
 	glutMouseFunc(GlutMouse);
 	glutMotionFunc(GlutMotion);
 
-	glClearColor(0, 0, 0, 0);
+	Color bg = background.GetColor();
+	glClearColor(bg.r, bg.g, bg.b, 0);
 
 	glPointSize(3.0);
 	glEnable(GL_CULL_FACE);
@@ -113,6 +124,12 @@ void ShowViewport()
 	glEnable(GL_NORMALIZE);
 
 	glLineWidth(2);
+
+	if (camera.dof > 0) {
+		dofBuffer = new Color24[camera.imgWidth * camera.imgHeight];
+		dofImage = new Color[camera.imgWidth * camera.imgHeight];
+		memset(dofImage, 0, camera.imgWidth * camera.imgHeight * sizeof(Color));
+	}
 
 	glGenTextures(1, &viewTexture);
 	glBindTexture(GL_TEXTURE_2D, viewTexture);
@@ -172,13 +189,58 @@ void DrawScene()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+	const TextureMap *bgMap = background.GetTexture();
+	if (bgMap) {
+		glDepthMask(GL_FALSE);
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glMatrixMode(GL_MODELVIEW);
+		Color c = background.GetColor();
+		glColor3f(c.r, c.g, c.b);
+		if (bgMap->SetViewportTexture()) {
+			glEnable(GL_TEXTURE_2D);
+			glMatrixMode(GL_TEXTURE);
+			Matrix3f tm = bgMap->GetInverseTransform();
+			Vec3f p = tm * bgMap->GetPosition();
+			float m[16] = { tm[0],tm[1],tm[2],0, tm[3],tm[4],tm[5],0, tm[6],tm[7],tm[8],0, -p.x,-p.y,-p.z,1 };
+			glLoadMatrixf(m);
+			glMatrixMode(GL_MODELVIEW);
+		}
+		else {
+			glDisable(GL_TEXTURE_2D);
+		}
+		glBegin(GL_QUADS);
+		glTexCoord2f(0, 1);
+		glVertex2f(-1, -1);
+		glTexCoord2f(1, 1);
+		glVertex2f(1, -1);
+		glTexCoord2f(1, 0);
+		glVertex2f(1, 1);
+		glTexCoord2f(0, 0);
+		glVertex2f(-1, 1);
+		glEnd();
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glDepthMask(GL_TRUE);
+
+		glDisable(GL_TEXTURE_2D);
+	}
+
 	glEnable(GL_LIGHTING);
 	glEnable(GL_DEPTH_TEST);
 
 	glPushMatrix();
 	Vec3f p = camera.pos;
-	Vec3f t = camera.pos + camera.dir;
+	Vec3f t = camera.pos + camera.dir*camera.focaldist;
 	Vec3f u = camera.up;
+	if (camera.dof > 0) {
+		Vec3f v = camera.dir ^ camera.up;
+		float r = sqrtf(float(rand()) / RAND_MAX)*camera.dof;
+		float a = float(M_PI) * 2.0f * float(rand()) / RAND_MAX;
+		p += r * cosf(a)*v + r * sinf(a)*u;
+	}
 	gluLookAt(p.x, p.y, p.z, t.x, t.y, t.z, u.x, u.y, u.z);
 
 	glRotatef(viewAngle1, 1, 0, 0);
@@ -206,6 +268,7 @@ void DrawScene()
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
+	glDisable(GL_TEXTURE_2D);
 }
 
 //-------------------------------------------------------------------------------
@@ -218,6 +281,9 @@ void DrawImage(void *data, GLenum type, GLenum format)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glEnable(GL_TEXTURE_2D);
+
+	glMatrixMode(GL_TEXTURE);
+	glLoadIdentity();
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -279,16 +345,45 @@ void GlutDisplay()
 {
 	switch (viewMode) {
 	case VIEWMODE_OPENGL:
-		DrawScene();
+		if (dofImage) {
+			if (dofDrawCount < MAX_DOF_DRAW) {
+				DrawScene();
+				glReadPixels(0, 0, camera.imgWidth, camera.imgHeight, GL_RGB, GL_UNSIGNED_BYTE, dofBuffer);
+				for (int i = 0, y = 0; y < camera.imgHeight; y++) {
+					int j = (camera.imgHeight - y - 1)*camera.imgWidth;
+					for (int x = 0; x < camera.imgWidth; x++, i++, j++) {
+						dofImage[i] = (dofImage[i] * float(dofDrawCount) + dofBuffer[j].ToColor()) / float(dofDrawCount + 1);
+					}
+				}
+				dofDrawCount++;
+			}
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+			DrawImage(dofImage, GL_FLOAT, GL_RGB);
+			if (dofDrawCount < MAX_DOF_DRAW) {
+				DrawProgressBar(float(dofDrawCount) / MAX_DOF_DRAW);
+				glutPostRedisplay();
+			}
+		}
+		else {
+			DrawScene();
+		}
 		break;
 	case VIEWMODE_IMAGE:
 		DrawImage(renderImage.GetPixels(), GL_UNSIGNED_BYTE, GL_RGB);
 		DrawRenderProgressBar();
 		break;
 	case VIEWMODE_Z:
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		if (!renderImage.GetZBufferImage()) renderImage.ComputeZBufferImage();
 		DrawImage(renderImage.GetZBufferImage(), GL_UNSIGNED_BYTE, GL_LUMINANCE);
+		break;
+	case VIEWMODE_SAMPLECOUNT:
+		if (!renderImage.GetSampleCountImage()) renderImage.ComputeSampleCountImage();
+		DrawImage(renderImage.GetSampleCountImage(), GL_UNSIGNED_BYTE, GL_LUMINANCE);
+		break;
+	case VIEWMODE_IRRADCOMP:
+		if (renderImage.GetIrradianceComputationImage()) {
+			DrawImage(renderImage.GetIrradianceComputationImage(), GL_UNSIGNED_BYTE, GL_LUMINANCE);
+		}
 		break;
 	}
 
@@ -315,6 +410,7 @@ void GlutIdle()
 			}
 			glutPostRedisplay();
 		}
+		if (viewMode == VIEWMODE_IRRADCOMP) glutPostRedisplay();
 	}
 }
 
@@ -331,15 +427,21 @@ void GlutKeyboard(unsigned char key, int x, int y)
 		case MODE_READY:
 			mode = MODE_RENDERING;
 			viewMode = VIEWMODE_IMAGE;
-			DrawScene();
-			glReadPixels(0, 0, renderImage.GetWidth(), renderImage.GetHeight(), GL_RGB, GL_UNSIGNED_BYTE, renderImage.GetPixels());
-			{
-				Color24 *c = renderImage.GetPixels();
-				for (int y0 = 0, y1 = renderImage.GetHeight() - 1; y0 < y1; y0++, y1--) {
-					int i0 = y0 * renderImage.GetWidth();
-					int i1 = y1 * renderImage.GetWidth();
-					for (int x = 0; x < renderImage.GetWidth(); x++, i0++, i1++) {
-						Color24 t = c[i0]; c[i0] = c[i1]; c[i1] = t;
+			if (dofImage) {
+				Color24 *p = renderImage.GetPixels();
+				for (int i = 0; i < camera.imgWidth*camera.imgHeight; i++) p[i] = Color24(dofImage[i]);
+			}
+			else {
+				DrawScene();
+				glReadPixels(0, 0, renderImage.GetWidth(), renderImage.GetHeight(), GL_RGB, GL_UNSIGNED_BYTE, renderImage.GetPixels());
+				{
+					Color24 *c = renderImage.GetPixels();
+					for (int y0 = 0, y1 = renderImage.GetHeight() - 1; y0 < y1; y0++, y1--) {
+						int i0 = y0 * renderImage.GetWidth();
+						int i1 = y1 * renderImage.GetWidth();
+						for (int x = 0; x < renderImage.GetWidth(); x++, i0++, i1++) {
+							Color24 t = c[i0]; c[i0] = c[i1]; c[i1] = t;
+						}
 					}
 				}
 			}
@@ -369,6 +471,14 @@ void GlutKeyboard(unsigned char key, int x, int y)
 		break;
 	case '3':
 		viewMode = VIEWMODE_Z;
+		glutPostRedisplay();
+		break;
+	case '4':
+		viewMode = VIEWMODE_SAMPLECOUNT;
+		glutPostRedisplay();
+		break;
+	case '5':
+		viewMode = VIEWMODE_IRRADCOMP;
 		glutPostRedisplay();
 		break;
 	}
@@ -437,17 +547,89 @@ void Sphere::ViewportDisplay(const Material *mtl) const
 	static GLUquadric *q = nullptr;
 	if (q == nullptr) {
 		q = gluNewQuadric();
+		gluQuadricTexture(q, true);
 	}
 	gluSphere(q, 1, 50, 50);
+}
+void Plane::ViewportDisplay(const Material *mtl) const
+{
+	const int resolution = 32;
+	float xyInc = 2.0f / resolution;
+	float uvInc = 1.0f / resolution;
+	glPushMatrix();
+	glNormal3f(0, 0, 1);
+	glBegin(GL_QUADS);
+	float y1 = -1, y2 = xyInc - 1, v1 = 0, v2 = uvInc;
+	for (int y = 0; y < resolution; y++) {
+		float x1 = -1, x2 = xyInc - 1, u1 = 0, u2 = uvInc;
+		for (int x = 0; x < resolution; x++) {
+			glTexCoord2f(u1, v1);
+			glVertex3f(x1, y1, 0);
+			glTexCoord2f(u2, v1);
+			glVertex3f(x2, y1, 0);
+			glTexCoord2f(u2, v2);
+			glVertex3f(x2, y2, 0);
+			glTexCoord2f(u1, v2);
+			glVertex3f(x1, y2, 0);
+			x1 = x2; x2 += xyInc; u1 = u2; u2 += uvInc;
+		}
+		y1 = y2; y2 += xyInc; v1 = v2; v2 += uvInc;
+	}
+	glEnd();
+	glPopMatrix();
+}
+void TriObj::ViewportDisplay(const Material *mtl) const
+{
+	unsigned int nextMtlID = 0;
+	unsigned int nextMtlSwith = NF();
+	if (mtl && NM() > 0) {
+		mtl->SetViewportMaterial(0);
+		nextMtlSwith = GetMaterialFaceCount(0);
+		nextMtlID = 1;
+	}
+	glBegin(GL_TRIANGLES);
+	for (unsigned int i = 0; i < NF(); i++) {
+		while (i >= nextMtlSwith) {
+			if (nextMtlID >= NM()) nextMtlSwith = NF();
+			else {
+				glEnd();
+				nextMtlSwith += GetMaterialFaceCount(nextMtlID);
+				mtl->SetViewportMaterial(nextMtlID);
+				nextMtlID++;
+				glBegin(GL_TRIANGLES);
+			}
+		}
+		for (int j = 0; j < 3; j++) {
+			if (HasTextureVertices()) glTexCoord3fv(&VT(FT(i).v[j]).x);
+			if (HasNormals()) glNormal3fv(&VN(FN(i).v[j]).x);
+			glVertex3fv(&V(F(i).v[j]).x);
+		}
+	}
+	glEnd();
 }
 void MtlBlinn::SetViewportMaterial(int subMtlID) const
 {
 	ColorA c;
-	c = ColorA(diffuse);
+	c = ColorA(diffuse.GetColor());
 	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, &c.r);
-	c = ColorA(specular);
+	c = ColorA(specular.GetColor());
 	glMaterialfv(GL_FRONT, GL_SPECULAR, &c.r);
 	glMaterialf(GL_FRONT, GL_SHININESS, glossiness*1.5f);
+	c = ColorA(emission.GetColor());
+	glMaterialfv(GL_FRONT, GL_EMISSION, &c.r);
+	const TextureMap *dm = diffuse.GetTexture();
+	if (dm && dm->SetViewportTexture()) {
+		glEnable(GL_TEXTURE_2D);
+		glMatrixMode(GL_TEXTURE);
+		Matrix3f tm = dm->GetInverseTransform();
+		Vec3f p = tm * dm->GetPosition();
+		float m[16] = { tm[0],tm[1],tm[2],0, tm[3],tm[4],tm[5],0, tm[6],tm[7],tm[8],0, -p.x,-p.y,-p.z,1 };
+		glLoadMatrixf(m);
+		glMatrixMode(GL_MODELVIEW);
+	}
+	else {
+		glDisable(GL_TEXTURE_2D);
+	}
 }
 void GenLight::SetViewportParam(int lightID, ColorA ambient, ColorA intensity, Vec4f pos) const
 {
@@ -456,6 +638,50 @@ void GenLight::SetViewportParam(int lightID, ColorA ambient, ColorA intensity, V
 	glLightfv(GL_LIGHT0 + lightID, GL_DIFFUSE, &intensity.r);
 	glLightfv(GL_LIGHT0 + lightID, GL_SPECULAR, &intensity.r);
 	glLightfv(GL_LIGHT0 + lightID, GL_POSITION, &pos.x);
+}
+void PointLight::SetViewportLight(int lightID) const
+{
+	SetViewportParam(lightID, ColorA(0, 0, 0), ColorA(intensity), Vec4f(position, 1.0f));
+	glLightf(GL_LIGHT0 + lightID, GL_CONSTANT_ATTENUATION, 0);
+	glLightf(GL_LIGHT0 + lightID, GL_LINEAR_ATTENUATION, 0);
+	glLightf(GL_LIGHT0 + lightID, GL_QUADRATIC_ATTENUATION, 1);
+}
+bool TextureFile::SetViewportTexture() const
+{
+	if (viewportTextureID == 0) {
+		glGenTextures(1, &viewportTextureID);
+		glBindTexture(GL_TEXTURE_2D, viewportTextureID);
+		gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, &data[0].r);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+	glBindTexture(GL_TEXTURE_2D, viewportTextureID);
+	return true;
+}
+bool TextureChecker::SetViewportTexture() const
+{
+	if (viewportTextureID == 0) {
+		const int texSize = 256;
+		glGenTextures(1, &viewportTextureID);
+		glBindTexture(GL_TEXTURE_2D, viewportTextureID);
+		Color24 c[2] = { Color24(color1), Color24(color2) };
+		Color24 *tex = new Color24[texSize*texSize];
+		for (int i = 0; i < texSize*texSize; i++) {
+			int ix = (i%texSize) < 128 ? 0 : 1;
+			if (i / 256 >= 128) ix = 1 - ix;
+			tex[i] = c[ix];
+		}
+		gluBuild2DMipmaps(GL_TEXTURE_2D, 3, texSize, texSize, GL_RGB, GL_UNSIGNED_BYTE, &tex[0].r);
+		delete[] tex;
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+	glBindTexture(GL_TEXTURE_2D, viewportTextureID);
+	return true;
 }
 //-------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------

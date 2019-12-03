@@ -127,6 +127,7 @@ public:
 	//!@name Static Methods
 	static Color Black() { return Color(0.0f,0.0f,0.0f); }	//!< Returns a black color
 	static Color White() { return Color(1.0f,1.0f,1.0f); }	//!< Returns a white color
+	static Color NANPurple() { return Color(1.0f, 0.0f, 1.0f); }	//!< Returns a purple color, represent nan
 };
 
 //-------------------------------------------------------------------------------
