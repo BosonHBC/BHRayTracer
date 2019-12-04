@@ -142,10 +142,13 @@ void BeginRender() {
 	dd_y = camYAxis * h / camera.imgHeight;
 	renderImage.ResetNumRenderedPixels();
 
+#if USE_PhotonMap
 	BuildPhotonMap(lights, &rootNode);
 	BuildCausticPhotonMap(lights, &rootNode);
+#endif
 
 	CalculateLightsIntensity();
+
 
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
@@ -349,12 +352,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj13.png");
+	renderImage.SaveImage("Resource/Result/proj14.png");
 }
 int main() {
-
+	//BHRTFinal
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj13.xml";
+	const char* filename = "Resource/BHRTFinal/proj14.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

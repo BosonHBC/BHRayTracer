@@ -308,8 +308,9 @@ bool MtlBlinn::RandomPhotonBounceForCaustic(Ray &r, Color &c, const HitInfo &hIn
 cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int i_GIbounceCount)
 {
 	Color outColor = Color::Black();
-	if ( i_GIbounceCount > GIBounceCount - 1 ) {
-
+#ifdef USE_PhotonMap
+	if (i_GIbounceCount > GIBounceCount - 1) {
+#endif // USE_PhotonMap
 		// Direct shading
 		{
 			float rnd = Rnd01();
@@ -332,7 +333,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 				outColor += irrad * brdfXCosTheta;
 			}
 		}
-
+#if USE_PhotonMap
 		//Adding caustics for direct color
 		{
 			Vec3f vL;
@@ -361,7 +362,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 			}
 		}
 	}
-
+#endif
 	ClampColorToWhite(outColor);
 	if (isnan(outColor.r)) {
 		printf("Diffuse/Specular color has nan! \n");
@@ -421,7 +422,12 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 
 			/** Mesh intersect situation */
 			if (abs(reflHInfo.z) > Bias) {
-				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, useSpecular ? i_GIbounceCount : i_GIbounceCount - 1);
+				int bounceCount = i_GIbounceCount - 1;
+#ifdef USE_PhotonMap
+				bounceCount = useSpecular ? i_GIbounceCount : i_GIbounceCount - 1
+#endif // USE_PhotonMap
+
+				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, bounceCount);
 			}
 		
 			outColor += indirectColor * (useSpecular ? specular : diffuse).Sample(hInfo.uvw, hInfo.duvw);

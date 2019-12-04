@@ -1,0 +1,102 @@
+<xml>
+  <scene>
+    <!-- Objects -->
+    <object type="obj" name="Resource\BHRTFinal\01_teapot.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\03_base.obj" material="mtl1">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+        <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="19.745" y="11.779" z="0.927"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="18.33" y="-5.424" z="0.927"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\05_bigWall.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+        <object type="obj" name="Resource\BHRTFinal\05_bigWallSide.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+        <object type="obj" name="Resource\BHRTFinal\05_bigWallSide2.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+        <object type="obj" name="Resource\BHRTFinal\05_bigTop.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+
+    <object type="obj" name="Resource\BHRTFinal\06_bigBase.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="18"/>
+    </object>
+
+    <!-- Materials -->
+    <material type="blinn" name="wall">
+      <diffuse  r="1" g="1" b="1"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="wallRed">
+      <diffuse  r="1.0" g="0.5" b="0.5"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="wallBlue">
+      <diffuse  r="0.5" g="0.5" b="1.0"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="china">
+      <diffuse  r="1" g="1" b="1"/>
+      <specular value="0"/>
+      <glossiness value="2000"/>
+    </material>
+    <material type="blinn" name="mtl2">
+      <diffuse  value="0"/>
+      <specular value="1"/>
+      <glossiness value="20000"/>
+    </material>
+    <material type="blinn" name="refraction">
+      <diffuse  value="0"/>
+      <specular value="0.2"/>
+      <glossiness value="20000"/>
+      <refraction value="1.0" index="1.52"/>
+    </material>
+
+    <!-- Lights -->
+    <light type="point" name="pointLight">
+      <intensity value="150.5"/>
+      <position x="0" y="-10" z="28.161"/>
+    <size value="5"/>
+    </light>
+    <light type="point" name="pointLight2">
+      <intensity value="250.5"/>
+      <position x="-32" y="-10" z="28.161"/>
+    <size value="3"/>
+    </light>
+  </scene>
+
+  <camera>
+    <position x="57.252" y="46.39" z="20.451"/>
+    <target x="19.745" y="11.779" z="3.827"/>
+    <up x="0" y="0" z="1"/>
+    <fov value="25"/>
+    <width value="800"/>
+    <height value="600"/>
+  </camera>
+</xml>
