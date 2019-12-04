@@ -45,7 +45,7 @@ void SaveImages();
 //-------------------
 /** Build PhotonMap */
 #define MAX_PhotonCount 1000000
-#define MAX_CausticPhotonCount 100000
+#define MAX_CausticPhotonCount 1000000
 
 
 PhotonMap* photonMap;
@@ -77,7 +77,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 5
+#define GIBounceCount 3
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -88,7 +88,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 64
+#define PT_SampleCount 16
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -146,8 +146,6 @@ void BeginRender() {
 	BuildCausticPhotonMap(lights, &rootNode);
 
 	CalculateLightsIntensity();
-
-
 
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
