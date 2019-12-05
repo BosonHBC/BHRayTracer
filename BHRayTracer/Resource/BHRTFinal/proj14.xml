@@ -1,51 +1,35 @@
 <xml>
   <scene>
     <!-- Objects -->
-    <object type="obj" name="Resource\BHRTFinal\01_teapot.obj" material="wall">
+    <object type="obj" name="Resource\BHRTFinal\01_teapot.obj" material="china">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0.3"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\03_base.obj" material="wall">
       <scale value="1"/>
       <rotate angle="0" z="1"/>
       <translate x="0" y="0" z="0"/>
     </object>
-    <object type="obj" name="Resource\BHRTFinal\03_base.obj" material="mtl1">
+        <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="refraction">
       <scale value="1"/>
       <rotate angle="0" z="1"/>
-      <translate x="0" y="0" z="0"/>
+      <translate x="19.745" y="11.779" z="1"/>
     </object>
-        <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="wall">
+    <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="china">
       <scale value="1"/>
       <rotate angle="0" z="1"/>
-      <translate x="19.745" y="11.779" z="0.927"/>
+      <translate x="18.33" y="-5.424" z="1"/>
     </object>
-    <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="wall">
+    <object type="obj" name="Resource\BHRTFinal\07_OverallRoom.obj" material="wall">
       <scale value="1"/>
       <rotate angle="0" z="1"/>
-      <translate x="18.33" y="-5.424" z="0.927"/>
+      <translate x="0" y="0" z="17"/>
     </object>
-    <object type="obj" name="Resource\BHRTFinal\05_bigWall.obj" material="wall">
-      <scale value="1"/>
-      <rotate angle="0" z="1"/>
-      <translate x="0" y="0" z="0"/>
-    </object>
-        <object type="obj" name="Resource\BHRTFinal\05_bigWallSide.obj" material="wall">
-      <scale value="1"/>
-      <rotate angle="0" z="1"/>
-      <translate x="0" y="0" z="0"/>
-    </object>
-        <object type="obj" name="Resource\BHRTFinal\05_bigWallSide2.obj" material="wall">
-      <scale value="1"/>
-      <rotate angle="0" z="1"/>
-      <translate x="0" y="0" z="0"/>
-    </object>
-        <object type="obj" name="Resource\BHRTFinal\05_bigTop.obj" material="wall">
-      <scale value="1"/>
-      <rotate angle="0" z="1"/>
-      <translate x="0" y="0" z="0"/>
-    </object>
-
     <object type="obj" name="Resource\BHRTFinal\06_bigBase.obj" material="wall">
       <scale value="1"/>
       <rotate angle="0" z="1"/>
-      <translate x="0" y="0" z="18"/>
+      <translate x="0" y="0" z="17"/>
     </object>
 
     <!-- Materials -->
@@ -54,7 +38,7 @@
       <specular value="0"/>
     </material>
     <material type="blinn" name="wallRed">
-      <diffuse  r="1.0" g="0.5" b="0.5"/>
+      <diffuse  r="1.0" g="0.5" b="0.4"/>
       <specular value="0"/>
     </material>
     <material type="blinn" name="wallBlue">
@@ -62,9 +46,9 @@
       <specular value="0"/>
     </material>
     <material type="blinn" name="china">
-      <diffuse  r="1" g="1" b="1"/>
-      <specular value="0"/>
-      <glossiness value="2000"/>
+      <diffuse  r="0.8" g="0.8" b="0.8"/>
+      <specular value="0.4"/>
+      <glossiness value="500"/>
     </material>
     <material type="blinn" name="mtl2">
       <diffuse  value="0"/>
@@ -80,13 +64,13 @@
 
     <!-- Lights -->
     <light type="point" name="pointLight">
-      <intensity value="150.5"/>
+      <intensity value="250.5"/>
       <position x="0" y="-10" z="28.161"/>
     <size value="5"/>
     </light>
     <light type="point" name="pointLight2">
-      <intensity value="250.5"/>
-      <position x="-32" y="-10" z="28.161"/>
+      <intensity value="350.5"/>
+      <position x="-10.573" y="21.804" z="25"/>
     <size value="3"/>
     </light>
   </scene>

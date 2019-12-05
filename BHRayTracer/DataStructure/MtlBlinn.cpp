@@ -22,7 +22,7 @@
 
 #define UsePhotonMapping
 #ifdef UsePhotonMapping
-//#define UsePhotonMapping_ForDirectLight
+#define USE_PhotonMap
 /** Photon Map*/
 #define Photon_AbsorbChance 0.3f
 #define MAX_PhotonCountInArea 1000
@@ -333,7 +333,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 				outColor += irrad * brdfXCosTheta;
 			}
 		}
-#if USE_PhotonMap
+#ifdef USE_PhotonMap
 		//Adding caustics for direct color
 		{
 			Vec3f vL;
@@ -424,7 +424,7 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 			if (abs(reflHInfo.z) > Bias) {
 				int bounceCount = i_GIbounceCount - 1;
 #ifdef USE_PhotonMap
-				bounceCount = useSpecular ? i_GIbounceCount : i_GIbounceCount - 1
+				bounceCount = useSpecular ? i_GIbounceCount : i_GIbounceCount - 1;
 #endif // USE_PhotonMap
 
 				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, bounceCount);

@@ -44,6 +44,7 @@ void SaveImages();
 
 //-------------------
 /** Build PhotonMap */
+#define  USE_PhotonMap
 #define MAX_PhotonCount 1000000
 #define MAX_CausticPhotonCount 1000000
 
@@ -142,17 +143,20 @@ void BeginRender() {
 	dd_y = camYAxis * h / camera.imgHeight;
 	renderImage.ResetNumRenderedPixels();
 
-#if USE_PhotonMap
+#ifdef USE_PhotonMap
 	BuildPhotonMap(lights, &rootNode);
 	BuildCausticPhotonMap(lights, &rootNode);
 #endif
 
 	CalculateLightsIntensity();
 
-
+	int percent = 0;
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
 	{
+		percent++;
+		if (percent % 100 == 0)
+			printf("render percent: %f\n", (float)percent / (float)camera.imgWidth);
 		for (int j = 0; j < camera.imgHeight; ++j)
 		{
 			// Initialize the data
@@ -299,6 +303,7 @@ bool BuildCausticPhotonMap(const LightList& i_lights, Node* i_root)
 	{
 		sumOfPointLight += pointLightList[i]->GetIntensity() * pointLightList[i]->GetSize();
 	}
+
 	while (causticPhotonMap->NumPhotons() < MAX_CausticPhotonCount)
 	{
 		float rnd = Rnd01();
