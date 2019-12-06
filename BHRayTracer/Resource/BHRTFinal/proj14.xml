@@ -6,7 +6,12 @@
       <rotate angle="0" z="1"/>
       <translate x="0" y="0" z="0.3"/>
     </object>
-    <object type="obj" name="Resource\BHRTFinal\03_base.obj" material="wall">
+    <object type="obj" name="Resource\BHRTFinal\03_base.obj" material="china">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\03_base_Internal.obj" material="wood">
       <scale value="1"/>
       <rotate angle="0" z="1"/>
       <translate x="0" y="0" z="0"/>
@@ -14,7 +19,7 @@
         <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="refraction">
       <scale value="1"/>
       <rotate angle="0" z="1"/>
-      <translate x="19.745" y="11.779" z="1"/>
+      <translate x="18" y="10" z="1"/>
     </object>
     <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="china">
       <scale value="1"/>
@@ -61,7 +66,12 @@
       <glossiness value="20000"/>
       <refraction value="1.0" index="1.52"/>
     </material>
-
+    <material type="blinn" name="wood">
+      <diffuse texture="Resource/BHRTFinal/wood.png">
+      </diffuse>
+      <specular value="0.5"/>
+      <glossiness value="50"/>
+    </material>
     <!-- Lights -->
     <light type="point" name="pointLight">
       <intensity value="250.5"/>
