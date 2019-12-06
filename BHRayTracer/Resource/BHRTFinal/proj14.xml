@@ -65,13 +65,18 @@
     <!-- Lights -->
     <light type="point" name="pointLight">
       <intensity value="250.5"/>
-      <position x="0" y="-10" z="28.161"/>
+      <position x="0" y="-10" z="20.161"/>
     <size value="5"/>
     </light>
     <light type="point" name="pointLight2">
       <intensity value="350.5"/>
-      <position x="-10.573" y="21.804" z="25"/>
+      <position x="-16.412" y="10.804" z="13.139"/>
     <size value="3"/>
+    </light>
+    <light type="point" name="pointLight3">
+      <intensity value="50.5"/>
+      <position x="16.412" y="15.804" z="13.139"/>
+    <size value="7"/>
     </light>
   </scene>
 

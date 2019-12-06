@@ -22,7 +22,7 @@
 
 #define UsePhotonMapping
 #ifdef UsePhotonMapping
-#define USE_PhotonMap
+//#define USE_PhotonMap
 /** Photon Map*/
 #define Photon_AbsorbChance 0.3f
 #define MAX_PhotonCountInArea 1000
@@ -309,7 +309,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 {
 	Color outColor = Color::Black();
 #ifdef USE_PhotonMap
-	if (i_GIbounceCount > GIBounceCount - 1) {
+	if (true) {
 #endif // USE_PhotonMap
 		// Direct shading
 		{
@@ -348,6 +348,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 		}
 
 	}
+/*
 	else {
 		// for normal photon map
 		{
@@ -361,7 +362,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 				outColor += brdf * indirectIrrad;
 			}
 		}
-	}
+	}*/
 #endif
 	ClampColorToWhite(outColor);
 	if (isnan(outColor.r)) {
@@ -424,7 +425,7 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 			if (abs(reflHInfo.z) > Bias) {
 				int bounceCount = i_GIbounceCount - 1;
 #ifdef USE_PhotonMap
-				bounceCount = useSpecular ? i_GIbounceCount : i_GIbounceCount - 1;
+				//bounceCount = useSpecular ? i_GIbounceCount : i_GIbounceCount - 1;
 #endif // USE_PhotonMap
 
 				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, bounceCount);

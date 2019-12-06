@@ -44,7 +44,7 @@ void SaveImages();
 
 //-------------------
 /** Build PhotonMap */
-#define  USE_PhotonMap
+//#define  USE_PhotonMap
 #define MAX_PhotonCount 1000000
 #define MAX_CausticPhotonCount 1000000
 
@@ -144,7 +144,7 @@ void BeginRender() {
 	renderImage.ResetNumRenderedPixels();
 
 #ifdef USE_PhotonMap
-	BuildPhotonMap(lights, &rootNode);
+	//BuildPhotonMap(lights, &rootNode);
 	BuildCausticPhotonMap(lights, &rootNode);
 #endif
 

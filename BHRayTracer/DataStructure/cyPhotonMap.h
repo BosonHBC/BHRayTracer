@@ -133,6 +133,8 @@ namespace cy {
 		//! If no photon is found within the radius, returns false.
 		bool GetNearestPhoton(Photon &photon, float radius, Vec3f const &pos, Vec3f const *normal = nullptr, float ellipticity = 1) const;
 
+		void InitializePhotonMapByFile(Photon* i_incommingPhtons, int i_maxPhotonCount);
+
 		//! Returns the photon i.
 		Photon       & operator [] (unsigned int i) { return photons[i + 1]; }
 		Photon const & operator [] (unsigned int i) const { return photons[i + 1]; }
@@ -402,6 +404,16 @@ namespace cy {
 			return true;
 		}
 		return false;
+	}
+
+	inline void PhotonMap::InitializePhotonMapByFile(Photon* i_incommingPhtons, int i_maxPhotonCount)
+	{
+		this->Resize(i_maxPhotonCount);
+		for (int i = 1; i <= i_maxPhotonCount; ++i)
+		{
+			photons[i] = i_incommingPhtons[i - 1];
+		}
+		PrepareForIrradianceEstimation();
 	}
 
 	//-------------------------------------------------------------------------------

@@ -160,8 +160,8 @@ int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
 
-	//char defaultFileName[] = "../BHRayTracer/Resource/causticPhotonMap.dat";
-	char defaultFileName[] = "../BHRayTracer/Resource/photonmap.dat";
+	char defaultFileName[] = "../BHRayTracer/Resource/causticPhotonMap.dat";
+	//char defaultFileName[] = "../BHRayTracer/Resource/photonmap.dat";
 
 	char *fname = defaultFileName;
 	if (argc > 1) {
