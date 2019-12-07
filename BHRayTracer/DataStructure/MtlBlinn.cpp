@@ -27,7 +27,7 @@
 #define Photon_AbsorbChance 0.3f
 #define MAX_PhotonCountInArea 1000
 #define MAX_Area 0.5
-#define GIBounceCount 3
+#define GIBounceCount 4
 // -----------------------------------
 #endif // UsePhotonMapping
 
