@@ -348,21 +348,21 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 		}
 
 	}
-/*
-	else {
-		// for normal photon map
-		{
-			Vec3f vL;
-			Color indirectIrrad;
-			photonMap->EstimateIrradiance<MAX_PhotonCountInArea>(indirectIrrad, vL, MAX_Area, hInfo.p, &hInfo.N);
-			float cosTheta = -vL.Dot(vN);
-			if (cosTheta > 0) {
-				Vec3f vH = (vL + vV).GetNormalized();
-				Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw) + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness) / cosTheta;
-				outColor += brdf * indirectIrrad;
+	/*
+		else {
+			// for normal photon map
+			{
+				Vec3f vL;
+				Color indirectIrrad;
+				photonMap->EstimateIrradiance<MAX_PhotonCountInArea>(indirectIrrad, vL, MAX_Area, hInfo.p, &hInfo.N);
+				float cosTheta = -vL.Dot(vN);
+				if (cosTheta > 0) {
+					Vec3f vH = (vL + vV).GetNormalized();
+					Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw) + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness) / cosTheta;
+					outColor += brdf * indirectIrrad;
+				}
 			}
-		}
-	}*/
+		}*/
 #endif
 	ClampColorToWhite(outColor);
 	if (isnan(outColor.r)) {
@@ -430,7 +430,7 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 
 				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, bounceCount);
 			}
-		
+
 			outColor += indirectColor * (useSpecular ? specular : diffuse).Sample(hInfo.uvw, hInfo.duvw);
 		}
 		else {
@@ -547,7 +547,7 @@ cy::Color RefractionOut(const Ray& outRay, const Color& absorption, const Color&
 		float absorptionFactorG = pow(EulerN, -absorption.g*refraHinfo_out.z);
 		float absorptionFactorB = pow(EulerN, -absorption.b*refraHinfo_out.z);
 		Color absorptionFactor(absorptionFactorR, absorptionFactorG, absorptionFactorB);
-		outColor = refraction * absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(outRay, refraHinfo_out, lights, o_bounceCount, i_GIbounceCount);
+		outColor = refraction * absorptionFactor* refraHinfo_out.node->GetMaterial()->Shade(outRay, refraHinfo_out, lights, o_bounceCount, i_GIbounceCount - 1);
 	}
 	else {
 		// refraction out hit doesn't hit anything
