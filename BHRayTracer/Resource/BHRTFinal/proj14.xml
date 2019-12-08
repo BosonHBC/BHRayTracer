@@ -98,7 +98,7 @@
     </material>
     <material type="blinn" name="tea">
       <diffuse  value="0"/>
-      <specular  value="0.05"/>
+      <specular  r="0.6" g="0.2" b="0.018"/>
       <refraction  r="0.6" g="0.2" b="0.018" index="1.345"/>
       <glossiness value="20000"/>
       <!-- <refraction  r="0.6" g="0.2" b="0.018" index="1.52"/> -->
@@ -128,23 +128,23 @@
     <!-- Lights -->
     <light type="point" name="pointLight">
       <intensity value="250.5"/>
-      <position x="0" y="-10" z="20.161"/>
+      <position x="0" y="-10" z="13.161"/>
     <size value="5"/>
     </light>
     <light type="point" name="pointLight2">
       <intensity value="350.5"/>
       <position x="-16.412" y="10.804" z="13.139"/>
-    <size value="3"/>
+    <size value="6"/>
     </light>
     <light type="point" name="pointLight3">
       <intensity value="50.5"/>
       <position x="16.412" y="15.804" z="13.139"/>
-    <size value="7"/>
+    <size value="4"/>
     </light>
   </scene>
 
   <camera>
-    <position x="57.252" y="46.39" z="24.451"/>
+    <position x="57.252" y="46.39" z="21.451"/>
     <target x="19.745" y="11.779" z="3.827"/>
     <up x="0" y="0" z="1"/>
     <fov value="25"/>
