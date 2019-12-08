@@ -352,3 +352,5 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+BHRayTracer/Resource/Data/.mayaSwatches/clouds.png_hcm.swatch
+*.mtl

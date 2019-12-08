@@ -7,7 +7,7 @@
 
 
 #define ENABLE_Reflection_And_Refraction
-#define Bias 0.001f
+#define Bias 0.0001f
 #define EulerN 2.7182818f
 #define PI 3.14159265
 #define OneOverPI 0.31830988f
@@ -22,12 +22,12 @@
 
 #define UsePhotonMapping
 #ifdef UsePhotonMapping
-//#define USE_PhotonMap
+#define USE_PhotonMap
 /** Photon Map*/
 #define Photon_AbsorbChance 0.3f
 #define MAX_PhotonCountInArea 1000
 #define MAX_Area 0.5
-#define GIBounceCount 4
+#define GIBounceCount 3
 // -----------------------------------
 #endif // UsePhotonMapping
 
@@ -119,20 +119,17 @@ Color MtlBlinn::Shade(Ray const &ray, const HitInfo &hInfo, const LightList &lig
 	if (outColor.r >= 1 && outColor.g >= 1 && outColor.b >= 1) return outColor;
 #endif // ENABLE_Refraction
 
-	// ----------
-	// Diffuse and Specular
-	outColor += PathTracing_DiffuseNSpecular(diffuse, newSpecular, glossiness, hInfo, vN, vV, i_GIBounceCount);
-	if (outColor.r >= 1 && outColor.g >= 1 && outColor.b >= 1) return outColor;
+#ifdef ENABLE_GI
 	// ----------
 	// Global Illumination
-
-
-#ifdef ENABLE_GI
 	outColor += PathTracing_GlobalIllumination(diffuse, newSpecular, glossiness, hInfo, vN, vV, bounceCount, i_GIBounceCount);
 	if (outColor.r >= 1 && outColor.g >= 1 && outColor.b >= 1) return outColor;
 #endif // ENABLE_GI
 
-
+		// ----------
+		// Diffuse and Specular
+		outColor += PathTracing_DiffuseNSpecular(diffuse, newSpecular, glossiness, hInfo, vN, vV, i_GIBounceCount);
+		if (outColor.r >= 1 && outColor.g >= 1 && outColor.b >= 1) return outColor;
 
 	if (isnan(outColor.r)) {
 		printf("OutColor Has NaN! \n");
@@ -308,9 +305,6 @@ bool MtlBlinn::RandomPhotonBounceForCaustic(Ray &r, Color &c, const HitInfo &hIn
 cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const TexturedColor& specular, const float& glossiness, const HitInfo& hInfo, const Vec3f& vN, const Vec3f& vV, int i_GIbounceCount)
 {
 	Color outColor = Color::Black();
-#ifdef USE_PhotonMap
-	if (true) {
-#endif // USE_PhotonMap
 		// Direct shading
 		{
 			float rnd = Rnd01();
@@ -346,23 +340,6 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 				outColor += brdf * causticIndirectIrrad;
 			}
 		}
-
-	}
-	/*
-		else {
-			// for normal photon map
-			{
-				Vec3f vL;
-				Color indirectIrrad;
-				photonMap->EstimateIrradiance<MAX_PhotonCountInArea>(indirectIrrad, vL, MAX_Area, hInfo.p, &hInfo.N);
-				float cosTheta = -vL.Dot(vN);
-				if (cosTheta > 0) {
-					Vec3f vH = (vL + vV).GetNormalized();
-					Color brdf = diffuse.Sample(hInfo.uvw, hInfo.duvw) + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness) / cosTheta;
-					outColor += brdf * indirectIrrad;
-				}
-			}
-		}*/
 #endif
 	ClampColorToWhite(outColor);
 	if (isnan(outColor.r)) {
@@ -442,7 +419,12 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 				printf("Environment nan\n");
 			}
 			else {
-				outColor += environment.SampleEnvironment(dir_norm) * (useSpecular ? specular : diffuse).Sample(hInfo.uvw, hInfo.duvw);
+				 Color envColor = environment.SampleEnvironment(dir_norm) * (useSpecular ? specular : diffuse).Sample(hInfo.uvw, hInfo.duvw);
+				 if (isnan(envColor.r) || isnan(envColor.g) || isnan(envColor.b)) {
+				 }
+				 else {
+					 outColor += envColor;
+				 }
 			}
 		}
 	}
@@ -487,7 +469,7 @@ cy::Color PathTracing_Refraction(const Color& refraction, const Color& absorptio
 			}
 		}
 
-		refractionColor = RefractionRecusive(refraction, ior, vT_sampled.GetNormalized(), hInfo, vN, refractionGlossiness, absorption, o_bounceCount, GIBounceCount);
+		refractionColor = RefractionRecusive(refraction, ior, vT_sampled.GetNormalized(), hInfo, vN, refractionGlossiness, absorption, o_bounceCount, i_GIBounceCount);
 	}
 
 	ClampColorToWhite(refractionColor);

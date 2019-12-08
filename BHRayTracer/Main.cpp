@@ -34,7 +34,7 @@ Vec3f camXAxis;
 
 #define PI 3.14159265
 
-#define INTERNAL_REFLECTION_BOUNCE 15
+#define INTERNAL_REFLECTION_BOUNCE 8
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -44,7 +44,7 @@ void SaveImages();
 
 //-------------------
 /** Build PhotonMap */
-//#define  USE_PhotonMap
+#define  USE_PhotonMap
 #define MAX_PhotonCount 1000000
 #define MAX_CausticPhotonCount 1000000
 
@@ -78,7 +78,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 4
+#define GIBounceCount 3
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -89,7 +89,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 4096
+#define PT_SampleCount 16
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();

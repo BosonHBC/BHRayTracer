@@ -6,7 +6,7 @@
 #endif // USE_BVH
 
 #ifndef Bias
-#define  Bias 0.001f
+#define  Bias 0.0001f
 #endif
 // cos(85 degree) = 0.08715574274
 #define PerpendicularFaceDeterminance 0.001745f
