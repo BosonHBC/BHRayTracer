@@ -49,7 +49,7 @@ bool TriObj::ShadowRecursive(Ray const&ray, float t_max)
 	if (rootBox.IntersectRay(ray, BIGFLOAT, tmin)) {
 		TraceBVHShadow(ray, t_min, bHit, rootNodeId);
 	}
-	if(bHit && t_min > Bias && t_min < t_max)
+	if (bHit && t_min > Bias && t_min < t_max)
 		return true;
 	return false;
 #else
@@ -80,6 +80,8 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 
 	float t = 0;
 	float t_divisor = (vN.Dot(ray.dir));
+	// ray is parallel to this face
+	if (t_divisor == 0) return false;
 	float perpendicularDeterminance = t_divisor / ((vN).Length() * ray.dir.Length());
 
 	// if it is almost perpendicular, return false
@@ -89,23 +91,19 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 	// the distance is larger than the current shortest one
 	if (t <= 0 || t > hInfo.z) return false;
 
-	// vX is the hit point on the XY plane
-	Vec3f vX = ray.p + t * ray.dir;
+	bool _hitFront = t_divisor < 0;
+	if (!_hitFront && hitSide == HIT_FRONT)
 	{
-		float backfaceDeterminace = (vX - ray.p).Dot(vN);
-		if (backfaceDeterminace > 0)
-		{
-			// Back face
-			if (hitSide == HIT_FRONT) return false;
-		}
-		else if (backfaceDeterminace < 0) {
-			// Front face
-			if (hitSide == HIT_BACK) return false;
-		}
-		else return false;
+		// it is a back face but it hitSide requires hitting front face
+		return false;
+	}
+	else if (_hitFront && hitSide == HIT_BACK) {
+		// it is a back face but it hitSide requires hitting front face
+		return false;
 	}
 
-
+	// vX is the hit point on the XY plane
+	Vec3f vX = ray.p + t * ray.dir;
 	Vec3f absVN = vN.Abs();
 
 	Vec2f v0_2d, v1_2d, v2_2d, vX_2d;
@@ -173,7 +171,7 @@ bool TriObj::IntersectTriangle(Ray const &ray, HitInfo &hInfo, int hitSide, unsi
 	hInfo.z = t;
 	hInfo.N = hitPointNormal;
 	hInfo.p = vX;
-	hInfo.front = true;
+	hInfo.front = _hitFront;
 	// Set uv info
 	Vec3f uvw = Vec3f();
 	Vec3f tc = GetTexCoord(faceID, bc);

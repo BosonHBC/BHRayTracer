@@ -22,7 +22,7 @@
 
 #define UsePhotonMapping
 #ifdef UsePhotonMapping
-#define USE_PhotonMap
+//#define USE_PhotonMap
 /** Photon Map*/
 #define Photon_AbsorbChance 0.3f
 #define MAX_PhotonCountInArea 1000
@@ -400,12 +400,8 @@ cy::Color PathTracing_GlobalIllumination(const TexturedColor& diffuse, const Tex
 
 			/** Mesh intersect situation */
 			if (abs(reflHInfo.z) > Bias) {
-				int bounceCount = i_GIbounceCount - 1;
-#ifdef USE_PhotonMap
-				//bounceCount = useSpecular ? i_GIbounceCount : i_GIbounceCount - 1;
-#endif // USE_PhotonMap
 
-				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, bounceCount);
+				indirectColor = reflHInfo.node->GetMaterial()->Shade(GIRay, reflHInfo, lights, o_bounceCount, i_GIbounceCount - 1);
 			}
 
 			outColor += indirectColor * (useSpecular ? specular : diffuse).Sample(hInfo.uvw, hInfo.duvw);
@@ -485,7 +481,7 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 	refractionRay_in.p = hInfo.p - vN * Bias;
 	HitInfo refraHInfo_in = HitInfo();
 	bool bRefractionInHit;
-	recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, HIT_BACK);
+	recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, HIT_FRONT_AND_BACK);
 	if (bRefractionInHit && refraHInfo_in.node != nullptr) {
 		bool bGoingOut;
 		Color refractionColor = Color::Black();
@@ -498,9 +494,8 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 			// Total internal reflection
 			if (o_bounceCount <= 0)
 			{
+				// When the bounce count is not enough
 				refractionColor = Color::Black();
-				//Ray bouncingCountZeroRay = Ray(refraHInfo_in.p + refraHInfo_in.N*Bias, refractionRay_in.dir);
-				//refractionColor = RefractionOut(bouncingCountZeroRay, absorption, refraction, o_bounceCount, i_GIbounceCount);
 			}
 			else {
 				o_bounceCount--;
@@ -513,6 +508,7 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 	}
 	else {
 		// Trace to outside
+		//printf("Ray did not hit anything");
 		return Color::NANPurple();
 	}
 }

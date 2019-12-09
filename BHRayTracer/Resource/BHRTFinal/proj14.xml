@@ -78,7 +78,7 @@
       <diffuse texture="Resource/BHRTFinal/china.png">
       </diffuse>
       <specular value="0.7"/>
-      <glossiness value="5000"/>
+      <glossiness value="1000"/>
     </material>
     <material type="blinn" name="china2">
       <diffuse  r="1" g="1" b="1"/>

@@ -8,8 +8,10 @@ extern Vec3f dd_y;
 bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRONT*/) const
 {
 	// in obj space
+
 	float rayPz = ray.p.z;
 	float rayDz = ray.dir.z;
+	// this direction is parallel to this plane
 	if (rayDz == 0.0f) return false;
 	float t = -rayPz / rayDz;
 	// hit the opposite face, or not the closest one
@@ -19,22 +21,22 @@ bool Plane::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FRO
 	if (x.x < -1 || x.x > 1 || x.y < -1 || x.y > 1) {
 		return false;
 	}
+	Vec3f faceNormal = Vec3f(0, 0, 1);
 	// Back face check
+	bool _hitFront = ((-ray.dir).Dot(faceNormal) > 0);
 	{
-		float dotCheck = (-ray.dir).Dot(Vec3f(0, 0, 1));
-		if (dotCheck < 0 && hitSide == HIT_FRONT) // back face
+		if (!_hitFront && hitSide == HIT_FRONT) // back face
 			return false;
-		else if (dotCheck > 0 && hitSide == HIT_BACK) // front face
+		else if (_hitFront && hitSide == HIT_BACK) // front face
 			return false;
 	}
 
-
 	// Set hit info
 	hInfo.p = x;
-	hInfo.N = Vec3f(0, 0, 1);
-	hInfo.front = true;
+	hInfo.N = faceNormal;
 	hInfo.z = t;
-
+	hInfo.front = _hitFront;
+	
 	// Set uv Info
 	Vec3f uvw = Vec3f(0, 0, 0);
 	uvw.x = (1 + hInfo.p.x) / 2.f;

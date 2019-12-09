@@ -34,7 +34,7 @@ Vec3f camXAxis;
 
 #define PI 3.14159265
 
-#define INTERNAL_REFLECTION_BOUNCE 8
+#define INTERNAL_REFLECTION_BOUNCE 32
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -44,7 +44,7 @@ void SaveImages();
 
 //-------------------
 /** Build PhotonMap */
-#define  USE_PhotonMap
+//#define  USE_PhotonMap
 #define MAX_PhotonCount 1000000
 #define MAX_CausticPhotonCount 1000000
 
@@ -357,12 +357,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj14.png");
+	renderImage.SaveImage("Resource/Result/proj12_backfaceTest.png");
 }
 int main() {
 	//BHRTFinal
 	omp_set_num_threads(16);
-	const char* filename = "Resource/BHRTFinal/proj14.xml";
+	const char* filename = "Resource/Data/proj12_backfaceTest.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());

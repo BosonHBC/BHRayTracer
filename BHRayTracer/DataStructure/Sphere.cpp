@@ -18,26 +18,41 @@ bool Sphere::IntersectRay(Ray const &ray, HitInfo &hInfo, int hitSide /*= HIT_FR
 
 	float DD = B * B - 4 * A*C;
 	if (DD > 0) {
+		// A must > 0 because dir.Dot(dir) > 0
+		// so t1 is bigger than t2 if DD > 0
 		float t1 = (-B + sqrt(DD)) / (2 * A);
 		float t2 = (-B - sqrt(DD)) / (2 * A);
 		float t = BIGFLOAT;
+		bool _hitFront = true;
 		if (t1 < 0 && t2 < 0) {
+			// from the ray direction, there is no intersection, all intersections happen on the opposite direction of the sphere
 			return false;
 		}
 		else if (t1 *t2 <= 0) {
-			t = cy::Max(t1, t2);
+			// origin is in the center of the sphere, the intersection is back face, so if the hitSide requires front face, it should not be counted as intersection
+			if (hitSide == HIT_FRONT) return false;
+			t = t1;
+			_hitFront = false;
 		}
 		else if (t1 > 0 && t2 > 0) {
-			t = Min(t1, t2);
+			// origin is outside the sphere
+			if (hitSide == HIT_FRONT || hitSide == HIT_FRONT_AND_BACK) {
+				t = t2;
+				_hitFront = true;
+			}
+			else if (hitSide == HIT_BACK) {
+				t = t1;
+				_hitFront = false;
+			}
 		}
 		// if this hit is longer than current closet hit, return false
 		if (hInfo.z < t || t <= 0) return false;
-		
+
 		// Set hit info
 		hInfo.z = t;
 		hInfo.p = oc + hInfo.z * dir;
 		hInfo.N = hInfo.p; // - Vec3f(0, 0, 0);
-		hInfo.front = true;
+		hInfo.front = _hitFront;
 
 		// Set uv Info
 		Vec3f uvw;
