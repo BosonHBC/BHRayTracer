@@ -56,7 +56,7 @@
       <rotate angle="0" z="1"/>
       <translate x="0" y="0" z="0"/>
     </object>
-    <object type="obj" name="Resource\BHRTFinal\11_singleTeaLeaf.obj" material="teaLeaf">
+    <object type="obj" name="Resource\BHRTFinal\12_woodStand.obj" material="woodStand">
       <scale value="1"/>
       <rotate angle="0" z="1"/>
       <translate x="0" y="0" z="0"/>
@@ -108,11 +108,6 @@
       <specular value="0.7"/>
       <glossiness value="2500"/>
     </material>
-    <material type="blinn" name="teaLeaf">
-      <diffuse  r="0.01" g="0.02" b="0.0018"/>
-      <specular r="0.005" g="0.01" b="0"/>
-      <glossiness value="0"/>
-    </material>
     <material type="blinn" name="wood">
       <diffuse texture="Resource/BHRTFinal/wood.png">
       </diffuse>
@@ -125,26 +120,32 @@
       <specular value="0.05"/>
       <glossiness value="10"/>
     </material>
+    <material type="blinn" name="woodStand">
+      <diffuse texture="Resource/BHRTFinal/wood2.png">
+      </diffuse>
+      <specular value="0.2"/>
+      <glossiness value="10"/>
+    </material>
     <!-- Lights -->
     <light type="point" name="pointLight">
       <intensity value="250.5"/>
       <position x="0" y="-10" z="13.161"/>
-    <size value="5"/>
+    <size value="2"/>
     </light>
     <light type="point" name="pointLight2">
       <intensity value="350.5"/>
       <position x="-16.412" y="10.804" z="13.139"/>
-    <size value="6"/>
+    <size value="3"/>
     </light>
     <light type="point" name="pointLight3">
       <intensity value="50.5"/>
       <position x="16.412" y="15.804" z="13.139"/>
-    <size value="4"/>
+    <size value="1"/>
     </light>
   </scene>
 
   <camera>
-    <position x="57.252" y="46.39" z="21.451"/>
+    <position x="57.252" y="46.39" z="24.451"/>
     <target x="19.745" y="11.779" z="3.827"/>
     <up x="0" y="0" z="1"/>
     <fov value="25"/>
