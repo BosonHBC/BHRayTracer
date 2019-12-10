@@ -78,7 +78,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 3
+#define GIBounceCount 5
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -361,6 +361,8 @@ void SaveImages() {
 }
 int main() {
 	//BHRTFinal
+	//proj12_backfaceTest
+	// TestRoom
 	omp_set_num_threads(16);
 	const char* filename = "Resource/Data/proj12_backfaceTest.xml";
 	LoadScene(filename);

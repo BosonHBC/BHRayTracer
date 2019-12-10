@@ -33,7 +33,7 @@
         <translate y="-32"/>
       </object>
     </object>
-    <object type="obj" name="Resource\Data\01_teapot.obj" material="refraction">
+    <object type="obj" name="Resource\BHRTFinal\01_teapot.obj" material="refraction">
       <scale value="0.4"/>
       <rotate angle="250" z="1"/>
       <translate x="-7" y="-13" z="0.85"/>

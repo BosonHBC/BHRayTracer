@@ -27,7 +27,6 @@
 #define Photon_AbsorbChance 0.3f
 #define MAX_PhotonCountInArea 1000
 #define MAX_Area 0.5
-#define GIBounceCount 3
 // -----------------------------------
 #endif // UsePhotonMapping
 
@@ -483,26 +482,32 @@ cy::Color RefractionRecusive(const Color& refraction, const float& ior, const Ve
 	bool bRefractionInHit;
 	recursive(&rootNode, refractionRay_in, refraHInfo_in, bRefractionInHit, HIT_FRONT_AND_BACK);
 	if (bRefractionInHit && refraHInfo_in.node != nullptr) {
-		bool bGoingOut;
 		Color refractionColor = Color::Black();
 
-		Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut, refractionGlossiness);
-		if (bGoingOut) {
-			refractionColor = RefractionOut(nextRay, absorption, refraction, o_bounceCount, i_GIbounceCount);
-		}
-		else {
-			// Total internal reflection
-			if (o_bounceCount <= 0)
-			{
-				// When the bounce count is not enough
-				refractionColor = Color::Black();
+		// If this intersection happened to be a back face, go out from this point, shade the outside point
+		if (!refraHInfo_in.front) {
+			bool bGoingOut;
+			Ray nextRay = HandleRayWhenRefractionRayOut(refractionRay_in, refraHInfo_in, ior, bGoingOut, refractionGlossiness);
+			if (bGoingOut) {
+				refractionColor = RefractionOut(nextRay, absorption, refraction, o_bounceCount, i_GIbounceCount);
 			}
 			else {
-				o_bounceCount--;
-				refractionColor = RefractionRecusive(refraction, ior, nextRay.dir, refraHInfo_in, refraHInfo_in.N, refractionGlossiness, absorption, o_bounceCount, i_GIbounceCount);
+				// Total internal reflection
+				if (o_bounceCount <= 0)
+				{
+					// When the bounce count is not enough
+					refractionColor = Color::Black();
+				}
+				else {
+					o_bounceCount--;
+					refractionColor = RefractionRecusive(refraction, ior, nextRay.dir, refraHInfo_in, refraHInfo_in.N, refractionGlossiness, absorption, o_bounceCount, i_GIbounceCount);
+				}
 			}
 		}
-
+		else {
+			// if this intersection happened to be a front face, shade this point
+			refractionColor = refraHInfo_in.node->GetMaterial()->Shade(refractionRay_in, refraHInfo_in, lights, o_bounceCount, i_GIbounceCount - 1);
+		}
 		ClampColorToWhite(refractionColor);
 		return refractionColor;
 	}
