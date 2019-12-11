@@ -18,6 +18,53 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Lights\GenLight.cpp" />
+    <ClCompile Include="Lights\PointLight.cpp" />
+    <ClCompile Include="LoadPNG\lodepng.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Materials\Blinn\MtlBlinn.cpp" />
+    <ClCompile Include="Objects\Box\Box.cpp" />
+    <ClCompile Include="Objects\Plane\Plane.cpp" />
+    <ClCompile Include="Objects\Sphere\Sphere.cpp" />
+    <ClCompile Include="Objects\TriObj\TriObj.cpp" />
+    <ClCompile Include="Textures\Texture.cpp" />
+    <ClCompile Include="viewport.cpp" />
+    <ClCompile Include="xmlload.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DataStructure\cyAlphaDistribution.h" />
+    <ClInclude Include="DataStructure\cyBVH.h" />
+    <ClInclude Include="DataStructure\cyColor.h" />
+    <ClInclude Include="DataStructure\cyCore.h" />
+    <ClInclude Include="DataStructure\cyGL.h" />
+    <ClInclude Include="DataStructure\cyHairFile.h" />
+    <ClInclude Include="DataStructure\cyHeap.h" />
+    <ClInclude Include="DataStructure\cyIPoint.h" />
+    <ClInclude Include="DataStructure\cyIVector.h" />
+    <ClInclude Include="DataStructure\cyLightingGrid.h" />
+    <ClInclude Include="DataStructure\cyMatrix.h" />
+    <ClInclude Include="DataStructure\cyPhotonMap.h" />
+    <ClInclude Include="DataStructure\cyPoint.h" />
+    <ClInclude Include="DataStructure\cyPointCloud.h" />
+    <ClInclude Include="DataStructure\cyQuat.h" />
+    <ClInclude Include="DataStructure\cySampleElim.h" />
+    <ClInclude Include="DataStructure\cySpatial.h" />
+    <ClInclude Include="DataStructure\cyString.h" />
+    <ClInclude Include="DataStructure\cyTimer.h" />
+    <ClInclude Include="DataStructure\cyVector.h" />
+    <ClInclude Include="Lights\lights.h" />
+    <ClInclude Include="LoadPNG\lodepng.h" />
+    <ClInclude Include="Materials\materials.h" />
+    <ClInclude Include="Objects\TriObj\cyTriMesh.h" />
+    <ClInclude Include="Scenes\scene.h" />
+    <ClInclude Include="Textures\texture.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LoadPNG\LICENSE" />
+    <None Include="LoadPNG\Makefile" />
+    <None Include="LoadPNG\README.md" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{49C75113-36C4-4483-B0DB-A7679269F75F}</ProjectGuid>
@@ -171,50 +218,6 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
 xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="cyTriMesh.h" />
-    <ClInclude Include="DataStructure\cyAlphaDistribution.h" />
-    <ClInclude Include="DataStructure\cyBVH.h" />
-    <ClInclude Include="DataStructure\cyColor.h" />
-    <ClInclude Include="DataStructure\cyCore.h" />
-    <ClInclude Include="DataStructure\cyGL.h" />
-    <ClInclude Include="DataStructure\cyHairFile.h" />
-    <ClInclude Include="DataStructure\cyHeap.h" />
-    <ClInclude Include="DataStructure\cyIPoint.h" />
-    <ClInclude Include="DataStructure\cyIVector.h" />
-    <ClInclude Include="DataStructure\cyLightingGrid.h" />
-    <ClInclude Include="DataStructure\cyMatrix.h" />
-    <ClInclude Include="DataStructure\cyPhotonMap.h" />
-    <ClInclude Include="DataStructure\cyPoint.h" />
-    <ClInclude Include="DataStructure\cyPointCloud.h" />
-    <ClInclude Include="DataStructure\cyQuat.h" />
-    <ClInclude Include="DataStructure\cySampleElim.h" />
-    <ClInclude Include="DataStructure\cySpatial.h" />
-    <ClInclude Include="DataStructure\cyString.h" />
-    <ClInclude Include="DataStructure\cyTimer.h" />
-    <ClInclude Include="DataStructure\cyTriMesh.h" />
-    <ClInclude Include="DataStructure\cyVector.h" />
-    <ClInclude Include="DataStructure\lights.h" />
-    <ClInclude Include="DataStructure\materials.h" />
-    <ClInclude Include="DataStructure\objects.h" />
-    <ClInclude Include="DataStructure\scene.h" />
-    <ClInclude Include="LoadPNG\lodepng.h" />
-    <ClInclude Include="texture.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Box.cpp" />
-    <ClCompile Include="DataStructure\MtlBlinn.cpp" />
-    <ClCompile Include="DataStructure\Sphere.cpp" />
-    <ClCompile Include="GenLight.cpp" />
-    <ClCompile Include="LoadPNG\lodepng.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Plane.cpp" />
-    <ClCompile Include="PointLight.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="TriObj.cpp" />
-    <ClCompile Include="viewport.cpp" />
-    <ClCompile Include="xmlload.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

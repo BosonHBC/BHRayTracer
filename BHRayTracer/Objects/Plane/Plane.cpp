@@ -1,4 +1,4 @@
-#include "objects.h"
+#include "../objects.h"
 
 extern Vec3f dd_x;
 extern Vec3f dd_y;

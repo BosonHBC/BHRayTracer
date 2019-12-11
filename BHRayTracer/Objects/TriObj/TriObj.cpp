@@ -1,4 +1,4 @@
-#include "objects.h"
+#include "../objects.h"
 #define USE_BVH
 #ifdef USE_BVH
 //#define SHOW_BOUNDINGBOX

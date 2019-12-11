@@ -14,11 +14,11 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-#include "scene.h"
-#include "objects.h"
-#include "lights.h"
-#include "materials.h"
-#include "texture.h"
+#include "Scenes/scene.h"
+#include "Objects/objects.h"
+#include "Lights/lights.h"
+#include "Materials/materials.h"
+#include "Textures/texture.h"
 #include <stdlib.h>
 #include <time.h>
 

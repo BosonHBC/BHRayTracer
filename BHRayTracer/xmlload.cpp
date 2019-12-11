@@ -10,11 +10,11 @@
 ///
 //-------------------------------------------------------------------------------
 
-#include "scene.h"
-#include "objects.h"
-#include "materials.h"
-#include "lights.h"
-#include "texture.h"
+#include "Scenes/scene.h"
+#include "Objects/objects.h"
+#include "Materials/materials.h"
+#include "Lights/lights.h"
+#include "Textures/texture.h"
 #include "tinyxml/tinyxml.h"
 
 //-------------------------------------------------------------------------------

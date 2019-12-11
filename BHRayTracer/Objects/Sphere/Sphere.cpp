@@ -1,4 +1,4 @@
-#include "objects.h"
+#include "../objects.h"
 #include "cyVector.h"
 #include <math.h>
 #define PI 3.14159265

@@ -13,7 +13,7 @@
 #ifndef _LIGHTS_H_INCLUDED_
 #define _LIGHTS_H_INCLUDED_
 
-#include "scene.h"
+#include "../Scenes/scene.h"
 
 //-------------------------------------------------------------------------------
 

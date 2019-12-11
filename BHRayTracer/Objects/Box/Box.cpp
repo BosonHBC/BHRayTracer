@@ -1,4 +1,4 @@
-#include "scene.h"
+#include "../Scenes/scene.h"
 
 bool Box::IntersectRay(Ray const &r, float t_max, float& t_min) const
 {

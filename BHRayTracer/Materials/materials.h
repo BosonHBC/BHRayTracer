@@ -13,7 +13,7 @@
 #ifndef _MATERIALS_H_INCLUDED_
 #define _MATERIALS_H_INCLUDED_
 
-#include "scene.h"
+#include "../Scenes/scene.h"
 
 //-------------------------------------------------------------------------------
 

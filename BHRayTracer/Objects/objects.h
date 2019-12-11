@@ -13,8 +13,8 @@
 #ifndef _OBJECTS_H_INCLUDED_
 #define _OBJECTS_H_INCLUDED_
 
-#include "scene.h"
-#include "cyTriMesh.h"
+#include "../Scenes/scene.h"
+#include "../Objects/TriObj/cyTriMesh.h"
 #include "cyBVH.h"
 
 //-------------------------------------------------------------------------------

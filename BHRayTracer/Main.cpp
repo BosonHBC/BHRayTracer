@@ -1,11 +1,10 @@
 
-#include "scene.h"
-#include "objects.h"
-#include "lights.h"
+#include "Scenes/scene.h"
+#include "Objects/objects.h"
+#include "Lights/lights.h"
 #include "cyVector.h"
 #include "cyColor.h"
 #include <math.h>
-#include "lights.h"
 #include <omp.h>
 #include <algorithm>
 #include "cyPhotonMap.h"
@@ -34,7 +33,7 @@ Vec3f camXAxis;
 
 #define PI 3.14159265
 
-#define INTERNAL_REFLECTION_BOUNCE 32
+#define INTERNAL_REFLECTION_BOUNCE 16
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -78,7 +77,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 5
+#define GIBounceCount 3
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;

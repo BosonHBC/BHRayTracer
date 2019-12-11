@@ -1,6 +1,6 @@
 #include "lights.h"
-#include "scene.h"
-#include "objects.h"
+#include "../Scenes/scene.h"
+#include "../Objects/objects.h"
 
 #define ShadowBias 0.00001f
 

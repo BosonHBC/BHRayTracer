@@ -1,6 +1,6 @@
-#include "materials.h"
-#include "lights.h"
-#include "scene.h"
+#include "../Materials/materials.h"
+#include "../Lights/lights.h"
+#include "../Scenes/scene.h"
 #include <math.h>
 #include <omp.h>
 #include "cyPhotonMap.h"
@@ -319,7 +319,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 			float cosTheta = vL.Dot(vN);
 
 			if (cosTheta > 0) {
-				// Diffuse & Specular  //  fs = kd + ks * vH.dot(vN) * 1/ Cos(theta)
+				// irradance * brdf * abs(costheta)
 				Vec3f vH = (vL + vV).GetNormalized();
 				Color irrad = (light)->Illuminate(hInfo.p, vN);
 				Color brdfXCosTheta = diffuse.Sample(hInfo.uvw, hInfo.duvw)  * cosTheta + specular.Sample(hInfo.uvw, hInfo.duvw) * pow(vH.Dot(vN), glossiness);
@@ -343,7 +343,7 @@ cy::Color PathTracing_DiffuseNSpecular(const TexturedColor& diffuse, const Textu
 	ClampColorToWhite(outColor);
 	if (isnan(outColor.r)) {
 		printf("Diffuse/Specular color has nan! \n");
-		return Color::NANPurple();
+		return Color::Black();
 	}
 	if (s_debugTrace)
 		PrintDebugColor("DiffuseSpecular", outColor);
