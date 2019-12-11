@@ -14,41 +14,85 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Source Files\DataStructure">
-      <UniqueIdentifier>{27fee814-b88c-4519-9e1f-30381dc22d4b}</UniqueIdentifier>
+      <UniqueIdentifier>{e62bd5f6-f125-4e9b-adb0-4aaa78e246c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lights">
+      <UniqueIdentifier>{5414613e-d91c-4612-a4b6-6beb5d1e9830}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\LoadPNG">
-      <UniqueIdentifier>{d942d8c2-167e-4e0a-8e59-755190d1426e}</UniqueIdentifier>
+      <UniqueIdentifier>{ee6ebdc5-5033-40ea-9cab-e9586e83e2df}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Materials">
-      <UniqueIdentifier>{278cfa6b-f188-4b93-b025-087be1a91d27}</UniqueIdentifier>
+    <Filter Include="Source Files\Materials">
+      <UniqueIdentifier>{5fcaff2f-04d6-41f6-b294-895ab9917389}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Obejcts">
-      <UniqueIdentifier>{17bb6621-4bb3-4407-94e0-626ad524faf5}</UniqueIdentifier>
+    <Filter Include="Source Files\Materials\Blinn">
+      <UniqueIdentifier>{b7c8d951-6804-4eff-b417-0f609edac054}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Obejcts\TrianglarObj">
-      <UniqueIdentifier>{1831fac2-8aa6-4154-b8b3-479e6a885e8d}</UniqueIdentifier>
+    <Filter Include="Source Files\Objects">
+      <UniqueIdentifier>{bc5f110f-5fc3-4ed0-a9c4-50947c676186}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Obejcts\Sphere">
-      <UniqueIdentifier>{a4b94873-c029-4301-a360-d5fe8757d59e}</UniqueIdentifier>
+    <Filter Include="Source Files\Objects\Box">
+      <UniqueIdentifier>{b7ea18e4-708a-43a6-8d90-f3b6b156959e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Obejcts\Box">
-      <UniqueIdentifier>{35de0111-5cb9-42c9-b0de-33a4f7d71399}</UniqueIdentifier>
+    <Filter Include="Source Files\Objects\Plane">
+      <UniqueIdentifier>{3f2ec9dc-00df-4162-b212-c7ac9a2e4ec7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Textures">
-      <UniqueIdentifier>{d380334a-0be8-4e1e-ad52-0e296b0dd380}</UniqueIdentifier>
+    <Filter Include="Source Files\Objects\Sphere">
+      <UniqueIdentifier>{a8a1326a-340a-43b9-a453-0cc3efac1a22}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Scenes">
-      <UniqueIdentifier>{5a0cd78a-1a94-4129-921c-d1972bc3f81f}</UniqueIdentifier>
+    <Filter Include="Source Files\Objects\TriObj">
+      <UniqueIdentifier>{6eec878d-9e46-438b-bdc4-f11c66a1f353}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Lights">
-      <UniqueIdentifier>{b45eda6c-9697-46a4-a4ce-926f0ccb98a5}</UniqueIdentifier>
+    <Filter Include="Source Files\Scenes">
+      <UniqueIdentifier>{8a82064e-8b56-4e0c-bc6e-65febb74818a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\Camera">
-      <UniqueIdentifier>{53d05a7e-318f-4621-8bd8-ac73226d88f0}</UniqueIdentifier>
+    <Filter Include="Source Files\Textures">
+      <UniqueIdentifier>{9227bea2-774e-4aba-bd1f-cde306e1f373}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DataStructure\PhotonMap">
-      <UniqueIdentifier>{6686ad0d-d134-4622-ac75-9e2f79ace913}</UniqueIdentifier>
+    <Filter Include="Source Files\Tinyxml2">
+      <UniqueIdentifier>{97693981-cfe5-49fa-9402-be56d91c71b3}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="viewport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xmlload.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Lights\GenLight.cpp">
+      <Filter>Source Files\Lights</Filter>
+    </ClCompile>
+    <ClCompile Include="Lights\PointLight.cpp">
+      <Filter>Source Files\Lights</Filter>
+    </ClCompile>
+    <ClCompile Include="LoadPNG\lodepng.cpp">
+      <Filter>Source Files\LoadPNG</Filter>
+    </ClCompile>
+    <ClCompile Include="Materials\Blinn\MtlBlinn.cpp">
+      <Filter>Source Files\Materials\Blinn</Filter>
+    </ClCompile>
+    <ClCompile Include="Objects\Box\Box.cpp">
+      <Filter>Source Files\Objects\Box</Filter>
+    </ClCompile>
+    <ClCompile Include="Objects\TriObj\TriObj.cpp">
+      <Filter>Source Files\Objects\TriObj</Filter>
+    </ClCompile>
+    <ClCompile Include="Objects\Sphere\Sphere.cpp">
+      <Filter>Source Files\Objects\Sphere</Filter>
+    </ClCompile>
+    <ClCompile Include="Objects\Plane\Plane.cpp">
+      <Filter>Source Files\Objects\Plane</Filter>
+    </ClCompile>
+    <ClCompile Include="Textures\Texture.cpp">
+      <Filter>Source Files\Textures</Filter>
+    </ClCompile>
+    <ClCompile Include="Tinyxml2\tinyxml2.cpp">
+      <Filter>Source Files\Tinyxml2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataStructure\cyAlphaDistribution.h">
@@ -84,6 +128,9 @@
     <ClInclude Include="DataStructure\cyMatrix.h">
       <Filter>Source Files\DataStructure</Filter>
     </ClInclude>
+    <ClInclude Include="DataStructure\cyPhotonMap.h">
+      <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
     <ClInclude Include="DataStructure\cyPoint.h">
       <Filter>Source Files\DataStructure</Filter>
     </ClInclude>
@@ -105,73 +152,40 @@
     <ClInclude Include="DataStructure\cyTimer.h">
       <Filter>Source Files\DataStructure</Filter>
     </ClInclude>
-    <ClInclude Include="DataStructure\cyTriMesh.h">
-      <Filter>Source Files\DataStructure</Filter>
-    </ClInclude>
     <ClInclude Include="DataStructure\cyVector.h">
       <Filter>Source Files\DataStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="Lights\lights.h">
+      <Filter>Source Files\Lights</Filter>
     </ClInclude>
     <ClInclude Include="LoadPNG\lodepng.h">
       <Filter>Source Files\LoadPNG</Filter>
     </ClInclude>
-    <ClInclude Include="cyTriMesh.h">
-      <Filter>Source Files\DataStructure</Filter>
+    <ClInclude Include="Materials\materials.h">
+      <Filter>Source Files\Materials</Filter>
     </ClInclude>
-    <ClInclude Include="texture.h">
-      <Filter>Source Files\DataStructure\Textures</Filter>
+    <ClInclude Include="Objects\TriObj\cyTriMesh.h">
+      <Filter>Source Files\Objects\TriObj</Filter>
     </ClInclude>
-    <ClInclude Include="DataStructure\materials.h">
-      <Filter>Source Files\DataStructure\Materials</Filter>
+    <ClInclude Include="Scenes\scene.h">
+      <Filter>Source Files\Scenes</Filter>
     </ClInclude>
-    <ClInclude Include="DataStructure\objects.h">
-      <Filter>Source Files\DataStructure\Obejcts</Filter>
+    <ClInclude Include="Textures\texture.h">
+      <Filter>Source Files\Textures</Filter>
     </ClInclude>
-    <ClInclude Include="DataStructure\scene.h">
-      <Filter>Source Files\DataStructure\Scenes</Filter>
-    </ClInclude>
-    <ClInclude Include="DataStructure\lights.h">
-      <Filter>Source Files\DataStructure\Lights</Filter>
-    </ClInclude>
-    <ClInclude Include="DataStructure\cyPhotonMap.h">
-      <Filter>Source Files\DataStructure\PhotonMap</Filter>
+    <ClInclude Include="Tinyxml2\tinyxml2.h">
+      <Filter>Source Files\Tinyxml2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="LoadPNG\lodepng.cpp">
+    <None Include="LoadPNG\LICENSE">
       <Filter>Source Files\LoadPNG</Filter>
-    </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="viewport.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="xmlload.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DataStructure\MtlBlinn.cpp">
-      <Filter>Source Files\DataStructure\Materials</Filter>
-    </ClCompile>
-    <ClCompile Include="DataStructure\Sphere.cpp">
-      <Filter>Source Files\DataStructure\Obejcts\Sphere</Filter>
-    </ClCompile>
-    <ClCompile Include="TriObj.cpp">
-      <Filter>Source Files\DataStructure\Obejcts\TrianglarObj</Filter>
-    </ClCompile>
-    <ClCompile Include="Plane.cpp">
-      <Filter>Source Files\DataStructure\Obejcts\TrianglarObj</Filter>
-    </ClCompile>
-    <ClCompile Include="Box.cpp">
-      <Filter>Source Files\DataStructure\Obejcts\Box</Filter>
-    </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>Source Files\DataStructure\Textures</Filter>
-    </ClCompile>
-    <ClCompile Include="PointLight.cpp">
-      <Filter>Source Files\DataStructure\Lights</Filter>
-    </ClCompile>
-    <ClCompile Include="GenLight.cpp">
-      <Filter>Source Files\DataStructure\Lights</Filter>
-    </ClCompile>
+    </None>
+    <None Include="LoadPNG\Makefile">
+      <Filter>Source Files\LoadPNG</Filter>
+    </None>
+    <None Include="LoadPNG\README.md">
+      <Filter>Source Files\LoadPNG</Filter>
+    </None>
   </ItemGroup>
 </Project>

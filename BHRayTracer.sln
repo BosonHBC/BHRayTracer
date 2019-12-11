@@ -4,11 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.28307.779
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BHRayTracer", "BHRayTracer\BHRayTracer.vcxproj", "{49C75113-36C4-4483-B0DB-A7679269F75F}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1} = {C406DAEC-0886-4771-8DEA-9D7329B46CC1}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml", "tinyxml\tinyxml_lib.vcxproj", "{C406DAEC-0886-4771-8DEA-9D7329B46CC1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PhotonMapViewer", "PhotonMapViewer\PhotonMapViewer.vcxproj", "{872CE33A-43F1-463E-86D1-7645C91DAAC5}"
 EndProject
@@ -40,20 +35,6 @@ Global
 		{49C75113-36C4-4483-B0DB-A7679269F75F}.RelWithDebInfo|x64.Build.0 = Release|x64
 		{49C75113-36C4-4483-B0DB-A7679269F75F}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
 		{49C75113-36C4-4483-B0DB-A7679269F75F}.RelWithDebInfo|x86.Build.0 = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Debug|x64.ActiveCfg = Debug|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Debug|x86.ActiveCfg = Debug|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Debug|x86.Build.0 = Debug|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.MinSizeRel|x64.ActiveCfg = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.MinSizeRel|x64.Build.0 = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.MinSizeRel|x86.ActiveCfg = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.MinSizeRel|x86.Build.0 = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Release|x64.ActiveCfg = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Release|x86.ActiveCfg = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.Release|x86.Build.0 = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.RelWithDebInfo|x64.ActiveCfg = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.RelWithDebInfo|x64.Build.0 = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
-		{C406DAEC-0886-4771-8DEA-9D7329B46CC1}.RelWithDebInfo|x86.Build.0 = Release|Win32
 		{872CE33A-43F1-463E-86D1-7645C91DAAC5}.Debug|x64.ActiveCfg = Debug|x64
 		{872CE33A-43F1-463E-86D1-7645C91DAAC5}.Debug|x64.Build.0 = Debug|x64
 		{872CE33A-43F1-463E-86D1-7645C91DAAC5}.Debug|x86.ActiveCfg = Debug|Win32

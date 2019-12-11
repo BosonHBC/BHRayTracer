@@ -33,10 +33,10 @@
         <translate y="-32"/>
       </object>
     </object>
-    <object type="obj" name="Resource\Data\teapot.obj" material="refraction">
-      <scale value="0.38"/>
-      <rotate angle="-30" z="1"/>
-      <translate x="-10" y="10" z="0.05"/>
+    <object type="obj" name="Resource\BHRTFinal\01_teapot.obj" material="refraction">
+      <scale value="0.4"/>
+      <rotate angle="250" z="1"/>
+      <translate x="-7" y="-13" z="0.85"/>
     </object> 
     <object type="obj" name="Resource\Data\blend2.obj" material="refraction">
       <scale x="8" y="4" z="8"/>
@@ -87,11 +87,11 @@
       <diffuse value="0"/>
       <specular value="0.0"/>
       <glossiness value="200000"/>
-      <refraction index="2.0" value="0.8"/>
+      <refraction index="1.52" value="1"/>
     </material>
     <!-- Lights -->
     <light type="point" name="pointLight">
-      <intensity value="0.5"/>
+      <intensity value="100.5"/>
       <position x="0" y="0" z="22"/>
       <size value="5"/>
     </light>

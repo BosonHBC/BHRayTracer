@@ -1,0 +1,82 @@
+<xml>
+  <scene>
+    <!-- Objects -->
+    <object type="obj" name="Resource\TestRoom\00_WallLeft.obj" material="wallRed">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <object type="obj" name="Resource\TestRoom\00_WallRight.obj" material="wallBlue">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <object type="obj" name="Resource\TestRoom\00_WallTopDown.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+     <object type="sphere" name="sphere" material="wallRed">
+      <scale value="15"/>
+      <rotate angle="0" z="1"/>
+      <translate x="-40" y="" z="20"/>
+    </object> 
+    <object type="obj" name="Resource\BHRTFinal\01_teapot.obj" material="refraction">
+      <scale value="2.5"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="4.8"/>
+    </object>
+
+    <!-- Materials -->
+    <material type="blinn" name="wall">
+      <diffuse  r="1" g="1" b="1"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="wallRed">
+      <diffuse  r="1.0" g="0.5" b="0.4"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="wallBlue">
+      <diffuse  r="0.5" g="0.5" b="1.0"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="china">
+      <diffuse texture="Resource/BHRTFinal/china.png">
+      </diffuse>
+      <specular value="0.7"/>
+      <glossiness value="500"/>
+    </material>
+    <material type="blinn" name="china2">
+      <diffuse  r="1" g="1" b="1"/>
+      <specular value="0.7"/>
+      <glossiness value="1500"/>
+    </material>
+    <material type="blinn" name="mtl2">
+      <diffuse  value="0"/>
+      <specular value="1"/>
+      <glossiness value="20000"/>
+    </material>
+    <material type="blinn" name="refraction">
+      <diffuse  value="0"/>
+      <specular value="0.05"/>
+      <glossiness value="20000"/>
+      <refraction value="1.0" index="1.52"/>
+    </material>
+
+    <!-- Lights -->
+    <light type="point" name="pointLight">
+      <intensity value="350.5"/>
+      <position x="0" y="0" z="60"/>
+    <size value="2"/>
+    </light>
+  </scene>
+
+  <camera>
+    <position x="200" y="40" z="35"/>
+    <target x="0" y="0" z="35"/>
+    <up x="0" y="0" z="1"/>
+    <fov value="25"/>
+    <width value="800"/>
+    <height value="600"/>
+  </camera>
+</xml>

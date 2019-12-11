@@ -1,11 +1,10 @@
 
-#include "scene.h"
-#include "objects.h"
-#include "lights.h"
+#include "Scenes/scene.h"
+#include "Objects/objects.h"
+#include "Lights/lights.h"
 #include "cyVector.h"
 #include "cyColor.h"
 #include <math.h>
-#include "lights.h"
 #include <omp.h>
 #include <algorithm>
 #include "cyPhotonMap.h"
@@ -34,7 +33,7 @@ Vec3f camXAxis;
 
 #define PI 3.14159265
 
-#define INTERNAL_REFLECTION_BOUNCE 15
+#define INTERNAL_REFLECTION_BOUNCE 16
 
 int LoadScene(char const *filename);
 void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hitSide /*= HIT_FRONT*/);
@@ -44,8 +43,9 @@ void SaveImages();
 
 //-------------------
 /** Build PhotonMap */
+//#define  USE_PhotonMap
 #define MAX_PhotonCount 1000000
-#define MAX_CausticPhotonCount 100000
+#define MAX_CausticPhotonCount 1000000
 
 
 PhotonMap* photonMap;
@@ -77,7 +77,7 @@ void CalculateLightsIntensity() {
 #define USE_PathTracing
 #define USE_GamaCorrection
 
-#define GIBounceCount 5
+#define GIBounceCount 3
 //---------------
 Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	Vec3f result = i_center;
@@ -88,7 +88,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 64
+#define PT_SampleCount 16
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -142,16 +142,20 @@ void BeginRender() {
 	dd_y = camYAxis * h / camera.imgHeight;
 	renderImage.ResetNumRenderedPixels();
 
-	BuildPhotonMap(lights, &rootNode);
+#ifdef USE_PhotonMap
+	//BuildPhotonMap(lights, &rootNode);
 	BuildCausticPhotonMap(lights, &rootNode);
+#endif
 
 	CalculateLightsIntensity();
 
-
-
+	int percent = 0;
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
 	{
+		percent++;
+		if (percent % 100 == 0)
+			printf("render percent: %f\n", (float)percent / (float)camera.imgWidth);
 		for (int j = 0; j < camera.imgHeight; ++j)
 		{
 			// Initialize the data
@@ -277,7 +281,6 @@ void TraceCausticPhotonRay(const Ray& ray, Color i_bounceIntensity, const bool i
 	}
 }
 
-
 bool BuildCausticPhotonMap(const LightList& i_lights, Node* i_root)
 {
 	causticPhotonMap = new PhotonMap();
@@ -298,6 +301,7 @@ bool BuildCausticPhotonMap(const LightList& i_lights, Node* i_root)
 	{
 		sumOfPointLight += pointLightList[i]->GetIntensity() * pointLightList[i]->GetSize();
 	}
+
 	while (causticPhotonMap->NumPhotons() < MAX_CausticPhotonCount)
 	{
 		float rnd = Rnd01();
@@ -351,10 +355,12 @@ void recursive(Node* root, const Ray& ray, HitInfo & outHit, bool &_bHit, int hi
 }
 void SaveImages() {
 	//renderImage.ComputeZBufferImage();
-	renderImage.SaveImage("Resource/Result/proj13.png");
+	renderImage.SaveImage("Resource/Result/proj12_backfaceTest.png");
 }
 int main() {
-
+	//BHRTFinal
+	//proj12_backfaceTest
+	// TestRoom
 	omp_set_num_threads(16);
 	const char* filename = "Resource/Data/proj13.xml";
 	LoadScene(filename);

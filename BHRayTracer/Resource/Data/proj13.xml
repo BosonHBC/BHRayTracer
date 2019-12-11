@@ -28,7 +28,7 @@
         <translate x="15"/>
       </object>
     </object>
-    <object type="obj" name="Resource\Data\teapot.obj" material="mtl1">
+    <object type="obj" name="Resource\Data\teapot.obj" material="refraction">
       <scale value="0.8"/>
       <rotate angle="-30" z="1"/>
       <translate x="2" y="5" z="0"/>
@@ -57,7 +57,7 @@
     </material>
     <material type="blinn" name="mtl1">
       <diffuse  r="1.0" g="0.3" b="0.3"/>
-      <specular r="1.0" g="1.0" b="1.0" value="0.2"/>
+      <specular r="1.0" g="1.0" b="1.0" value="0.7"/>
       <glossiness value="20"/>
     </material>
     <material type="blinn" name="mtl2">
@@ -67,9 +67,9 @@
     </material>
     <material type="blinn" name="refraction">
       <diffuse  value="0"/>
-      <specular value="0"/>
+      <specular value="0.0"/>
       <glossiness value="20000"/>
-      <refraction value="1.0" index="1.52"/>
+      <refraction value="1.0" index="2"/>
     </material>
 
     <!-- Lights -->

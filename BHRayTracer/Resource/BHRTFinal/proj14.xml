@@ -1,0 +1,155 @@
+<xml>
+  <scene>
+      <background r="1" g="1" b="1" texture="Resource/Data/clouds.png">
+      <scale y="0.4"/>
+      <translate y="-0.1"/>
+    </background>
+    <environment value="0.7" texture="Resource/Data/clouds.png"/>
+    <!-- Objects -->
+    <object type="obj" name="Resource\BHRTFinal\01_teapot.obj" material="china">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\03_base.obj" material="china2">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\03_base_Internal.obj" material="wood">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="refraction">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="18" y="10" z="0.926"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\08_waterMesh.obj" material="tea">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="18" y="10" z="0.926"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\02_cup.obj" material="refraction">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="18.33" y="-5.424" z="0.926"/>
+    </object>
+    <!-- <object type="obj" name="Resource\BHRTFinal\08_waterMesh.obj" material="tea">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="18.33" y="-5.424" z="0.926"/>
+    </object> -->
+    <object type="obj" name="Resource\BHRTFinal\07_OverallRoom.obj" material="wall">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="17"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\06_bigBase.obj" material="woodTable">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\10_window.obj" material="window">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <object type="obj" name="Resource\BHRTFinal\12_woodStand.obj" material="woodStand">
+      <scale value="1"/>
+      <rotate angle="0" z="1"/>
+      <translate x="0" y="0" z="0"/>
+    </object>
+    <!-- Materials -->
+    <material type="blinn" name="wall">
+      <diffuse  r="1" g="1" b="1"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="wallRed">
+      <diffuse  r="1.0" g="0.5" b="0.4"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="wallBlue">
+      <diffuse  r="0.5" g="0.5" b="1.0"/>
+      <specular value="0"/>
+    </material>
+    <material type="blinn" name="china">
+      <diffuse texture="Resource/BHRTFinal/china.png">
+      </diffuse>
+      <specular value="0.7"/>
+      <glossiness value="500"/>
+    </material>
+    <material type="blinn" name="china2">
+      <diffuse  r="1" g="1" b="1"/>
+      <specular value="0.7"/>
+      <glossiness value="1500"/>
+    </material>
+    <material type="blinn" name="mtl2">
+      <diffuse  value="0"/>
+      <specular value="1"/>
+      <glossiness value="20000"/>
+    </material>
+    <material type="blinn" name="refraction">
+      <diffuse  value="0"/>
+      <specular value="0.05"/>
+      <glossiness value="20000"/>
+      <refraction value="1.0" index="1.52"/>
+    </material>
+    <material type="blinn" name="tea">
+      <diffuse  value="0"/>
+      <specular  r="0.6" g="0.2" b="0.018"/>
+      <refraction  r="0.6" g="0.2" b="0.018" index="1.345"/>
+      <glossiness value="20000"/>
+      <!-- <refraction  r="0.6" g="0.2" b="0.018" index="1.52"/> -->
+    </material>
+    <material type="blinn" name="window">
+      <diffuse  r="0.18" g="0.22" b="0.337"/>
+      <specular value="0.7"/>
+      <glossiness value="2500"/>
+    </material>
+    <material type="blinn" name="wood">
+      <diffuse texture="Resource/BHRTFinal/wood.png">
+      </diffuse>
+      <specular value="0.5"/>
+      <glossiness value="50"/>
+    </material>
+    <material type="blinn" name="woodTable">
+      <diffuse texture="Resource/BHRTFinal/wood2.png">
+      </diffuse>
+      <specular value="0.05"/>
+      <glossiness value="10"/>
+    </material>
+    <material type="blinn" name="woodStand">
+      <diffuse texture="Resource/BHRTFinal/wood2.png">
+      </diffuse>
+      <specular value="0.2"/>
+      <glossiness value="10"/>
+    </material>
+    <!-- Lights -->
+    <light type="point" name="pointLight">
+      <intensity value="250.5"/>
+      <position x="0" y="-10" z="13.161"/>
+    <size value="2"/>
+    </light>
+    <light type="point" name="pointLight2">
+      <intensity value="350.5"/>
+      <position x="-16.412" y="10.804" z="13.139"/>
+    <size value="3"/>
+    </light>
+    <light type="point" name="pointLight3">
+      <intensity value="50.5"/>
+      <position x="16.412" y="15.804" z="13.139"/>
+    <size value="1"/>
+    </light>
+  </scene>
+
+  <camera>
+    <position x="57.252" y="46.39" z="24.451"/>
+    <target x="19.745" y="11.779" z="3.827"/>
+    <up x="0" y="0" z="1"/>
+    <fov value="25"/>
+    <width value="800"/>
+    <height value="600"/>
+  </camera>
+</xml>
