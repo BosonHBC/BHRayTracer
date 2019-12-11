@@ -156,9 +156,13 @@
       </StackReserveSize>
     </Link>
     <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
       <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y
 xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Command>
-    </PostBuildEvent>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -166,12 +170,12 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml2;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS;USE_PhotonMap</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>freeglut.lib;$(SolutionDir)temp\output\tinyxml2\$(Platform)-$(Configuration)-Lib\tinyxml2.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -205,9 +209,13 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       </StackReserveSize>
     </Link>
     <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
       <Command>xcopy $(SolutionDir)freeglut\bin\freeglut.dll $(targetDir) /Y
 xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Command>
-    </PostBuildEvent>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -217,14 +225,14 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml2;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS;USE_PhotonMap</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>freeglut.lib;$(SolutionDir)temp\output\tinyxml2\$(Platform)-$(Configuration)-Lib\tinyxml2.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
