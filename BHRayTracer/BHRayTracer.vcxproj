@@ -65,6 +65,11 @@
     <None Include="LoadPNG\Makefile" />
     <None Include="LoadPNG\README.md" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\tinyxml2\tinyxml2\tinyxml2.vcxproj">
+      <Project>{d1c528b6-aa02-4d29-9d61-dc08e317a70d}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{49C75113-36C4-4483-B0DB-A7679269F75F}</ProjectGuid>
@@ -117,16 +122,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>$(SolutionDir)temp\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)temp\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)temp\output\$(ProjectName)\$(Platform)-$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IntDir>$(SolutionDir)temp\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)temp\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)temp\output\$(ProjectName)\$(Platform)-$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(SolutionDir)temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)temp\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)temp\output\$(ProjectName)\$(Platform)-$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(SolutionDir)temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)temp\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)temp\output\$(ProjectName)\$(Platform)-$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -161,7 +170,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS;USE_PhotonMap</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>freeglut.lib</AdditionalDependencies>
+      <AdditionalDependencies>freeglut.lib;</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -210,7 +219,7 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>freeglut.lib</AdditionalDependencies>
+      <AdditionalDependencies>freeglut.lib;</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
