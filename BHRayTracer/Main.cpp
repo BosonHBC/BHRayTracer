@@ -281,7 +281,6 @@ void TraceCausticPhotonRay(const Ray& ray, Color i_bounceIntensity, const bool i
 	}
 }
 
-
 bool BuildCausticPhotonMap(const LightList& i_lights, Node* i_root)
 {
 	causticPhotonMap = new PhotonMap();
