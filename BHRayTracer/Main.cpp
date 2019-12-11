@@ -9,6 +9,7 @@
 #include <omp.h>
 #include <algorithm>
 #include "cyPhotonMap.h"
+#include <thread> 
 
 Node rootNode;
 Camera camera;
@@ -91,40 +92,81 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 #ifdef USE_PathTracing
 #define PT_SampleCount 16
 
-Color PathTracing(int i_i, int i_j) {
+Color PathTracingPixel(int i_i, int i_j) {
 	Color outColor = Color::Black();
 	Vec3f pixelCenter = topLeft + (i_i + 1 / 2) * dd_x - (i_j + 1 / 2) * dd_y;
 
 	/** Square Pixel Only*/
 	const float pixelLen = dd_x.Length();
-	Color colorSum = Color::Black();
-	for (int i = 0; i < PT_SampleCount; ++i)
-	{
-		/** Jitter sampling in a pixel */
-		Ray ray = Ray(camera.pos, RandomPositionInPixel(pixelCenter, pixelLen) - camera.pos);
 
-		bool bHit = false;
-		HitInfo tHitInfo = HitInfo();
+	/** Jitter sampling in a pixel */
+	Ray ray = Ray(camera.pos, RandomPositionInPixel(pixelCenter, pixelLen) - camera.pos);
 
-		recursive(&rootNode, ray, tHitInfo, bHit, HIT_FRONT);
-		if (bHit) {
-			// Shade the hit object 
-			colorSum += tHitInfo.node->GetMaterial()->Shade(ray, tHitInfo, lights, INTERNAL_REFLECTION_BOUNCE, GIBounceCount);
+	bool bHit = false;
+	HitInfo tHitInfo = HitInfo();
 
-		}
-		else {
-			// Shade Background color
-			Vec3f bguvw = Vec3f((float)i_i / camera.imgWidth, (float)i_j / camera.imgHeight, 0.0f);
-			colorSum += background.Sample(bguvw);
-		}
+	recursive(&rootNode, ray, tHitInfo, bHit, HIT_FRONT);
+	if (bHit) {
+		// Shade the hit object 
+		outColor += tHitInfo.node->GetMaterial()->Shade(ray, tHitInfo, lights, INTERNAL_REFLECTION_BOUNCE, GIBounceCount);
+
 	}
-	outColor = colorSum / PT_SampleCount;
+	else {
+		// Shade Background color
+		Vec3f bguvw = Vec3f((float)i_i / camera.imgWidth, (float)i_j / camera.imgHeight, 0.0f);
+		outColor += background.Sample(bguvw);
+	}
+
 	return outColor;
 }
 
 #endif // USE_PathTracing
 
+void CleanImage() {
+	for (int i = 0; i < camera.imgWidth; ++i)
+	{
+		for (int j = 0; j < camera.imgHeight; ++j)
+		{
+			renderImage.GetSampleCount()[j*camera.imgWidth + i] = 0;
+		}
+	}
+}
 
+void RenderProgressiveImage(int i_currentRayCount) {
+	renderImage.ResetNumRenderedPixels();
+#pragma omp parallel for
+	for (int i = 0; i < camera.imgWidth; ++i)
+	{
+		for (int j = 0; j < camera.imgHeight; ++j)
+		{
+			Color outColor = Color::Black();
+
+			outColor = PathTracingPixel(i, j);
+
+#ifdef USE_GamaCorrection
+			Color afterGamaCorrection = Color::Black();
+			const float inverseGama = 1 / 2.2f;
+			afterGamaCorrection.r = pow(outColor.r, inverseGama);
+			afterGamaCorrection.g = pow(outColor.g, inverseGama);
+			afterGamaCorrection.b = pow(outColor.b, inverseGama);
+			outColor = afterGamaCorrection;
+#endif // USE_GamaCorrection
+			Color tempColor = Color::Black();
+			tempColor.r = renderImage.GetPixels()[j*camera.imgWidth + i].r / 255.f;
+			tempColor.g = renderImage.GetPixels()[j*camera.imgWidth + i].g / 255.f;
+			tempColor.b = renderImage.GetPixels()[j*camera.imgWidth + i].b / 255.f;
+
+			tempColor *= (i_currentRayCount - 1);
+			tempColor += outColor;
+			tempColor /= i_currentRayCount;
+
+			// Set out color
+			renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(tempColor);
+
+			renderImage.IncrementNumRenderPixel(1);
+		}
+	}
+}
 
 void BeginRender() {
 	float aor = camera.imgWidth / (float)camera.imgHeight;
@@ -149,42 +191,19 @@ void BeginRender() {
 #endif
 
 	CalculateLightsIntensity();
+	CleanImage();
 
-	int percent = 0;
-#pragma omp parallel for
-	for (int i = 0; i < camera.imgWidth; ++i)
+	for (int i = 1; i <= 16; ++i)
 	{
-		percent++;
-		if (percent % 100 == 0)
-			printf("render percent: %f\n", (float)percent / (float)camera.imgWidth);
-		for (int j = 0; j < camera.imgHeight; ++j)
-		{
-			// Initialize the data
-			{
-				renderImage.GetSampleCount()[j*camera.imgWidth + i] = 0;
-			}
-			Color outColor = Color::Black();
-
-			outColor = PathTracing(i, j);
-
-#ifdef USE_GamaCorrection
-			Color afterGamaCorrection = Color::Black();
-			const float inverseGama = 1 / 2.2f;
-			afterGamaCorrection.r = pow(outColor.r, inverseGama);
-			afterGamaCorrection.g = pow(outColor.g, inverseGama);
-			afterGamaCorrection.b = pow(outColor.b, inverseGama);
-			outColor = afterGamaCorrection;
-#endif // USE_GamaCorrection
-			// Set out color
-			renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
-			//renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
-			renderImage.IncrementNumRenderPixel(1);
-		}
+		std::thread renderThread(RenderProgressiveImage, i);
+		renderThread.join();
 	}
+
 	SaveImages();
 }
 void StopRender() {
-
+	printf("StopRender");
+	//renderImage.IncrementNumRenderPixel(camera.imgWidth * camera.imgHeight);
 }
 // Comparing the point light by size * intensity
 bool ComparePointLight(PointLight* l1, PointLight* l2) {
