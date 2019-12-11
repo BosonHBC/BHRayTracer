@@ -15,7 +15,7 @@
 #include "Materials/materials.h"
 #include "Lights/lights.h"
 #include "Textures/texture.h"
-#include "../tinyxml2/tinyxml2.h"
+#include "Tinyxml2/tinyxml2.h"
 
 //-------------------------------------------------------------------------------
 

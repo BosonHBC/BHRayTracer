@@ -49,6 +49,9 @@
     <Filter Include="Source Files\Textures">
       <UniqueIdentifier>{9227bea2-774e-4aba-bd1f-cde306e1f373}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Tinyxml2">
+      <UniqueIdentifier>{97693981-cfe5-49fa-9402-be56d91c71b3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -86,6 +89,9 @@
     </ClCompile>
     <ClCompile Include="Textures\Texture.cpp">
       <Filter>Source Files\Textures</Filter>
+    </ClCompile>
+    <ClCompile Include="Tinyxml2\tinyxml2.cpp">
+      <Filter>Source Files\Tinyxml2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +172,9 @@
     </ClInclude>
     <ClInclude Include="Textures\texture.h">
       <Filter>Source Files\Textures</Filter>
+    </ClInclude>
+    <ClInclude Include="Tinyxml2\tinyxml2.h">
+      <Filter>Source Files\Tinyxml2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

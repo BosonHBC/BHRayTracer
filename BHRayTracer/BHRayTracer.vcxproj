@@ -29,6 +29,7 @@
     <ClCompile Include="Objects\Sphere\Sphere.cpp" />
     <ClCompile Include="Objects\TriObj\TriObj.cpp" />
     <ClCompile Include="Textures\Texture.cpp" />
+    <ClCompile Include="Tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="viewport.cpp" />
     <ClCompile Include="xmlload.cpp" />
   </ItemGroup>
@@ -59,16 +60,12 @@
     <ClInclude Include="Objects\TriObj\cyTriMesh.h" />
     <ClInclude Include="Scenes\scene.h" />
     <ClInclude Include="Textures\texture.h" />
+    <ClInclude Include="Tinyxml2\tinyxml2.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LoadPNG\LICENSE" />
     <None Include="LoadPNG\Makefile" />
     <None Include="LoadPNG\README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\tinyxml2\tinyxml2\tinyxml2.vcxproj">
-      <Project>{d1c528b6-aa02-4d29-9d61-dc08e317a70d}</Project>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -172,9 +169,10 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml2;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS;USE_PhotonMap</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>freeglut.lib;$(SolutionDir)temp\output\tinyxml2\$(Platform)-$(Configuration)-Lib\tinyxml2.lib</AdditionalDependencies>
+      <AdditionalDependencies>x64\freeglut.lib;$(SolutionDir)temp\output\tinyxml2\$(Platform)-$(Configuration)-Lib\tinyxml2.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -182,8 +180,8 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>xcopy $(SolutionDir)freeglut\bin\x64\freeglut.dll $(targetDir) /Y
-xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Command>
+      <Command>xcopy $(SolutionDir)freeglut\bin\x64\freeglut.dll $(targetDir)x64 /Y /E /I
+xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)Resource /Y /E /I</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -227,11 +225,12 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)$(SolutionName)\DataStructure;$(SolutionDir)$(SolutionName)\LoadPNG;$(SolutionDir)tinyxml2;$(SolutionDir)freeglut\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS;USE_PhotonMap</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>freeglut.lib;$(SolutionDir)temp\output\tinyxml2\$(Platform)-$(Configuration)-Lib\tinyxml2.lib</AdditionalDependencies>
+      <AdditionalDependencies>x64\freeglut.lib;$(SolutionDir)temp\output\tinyxml2\$(Platform)-$(Configuration)-Lib\tinyxml2.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\lib;$(SolutionDir);$(SolutionDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -239,8 +238,8 @@ xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Comm
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>xcopy $(SolutionDir)freeglut\bin\x64\freeglut.dll $(targetDir) /Y
-xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)\Resource /Y /E /I</Command>
+      <Command>xcopy $(SolutionDir)freeglut\bin\x64\freeglut.dll $(targetDir)x64 /Y /E /I
+xcopy $(SolutionDir)$(ProjectName)\Resource $(targetDir)Resource /Y /E /I</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
