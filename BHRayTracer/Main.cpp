@@ -363,7 +363,7 @@ int main() {
 	//proj12_backfaceTest
 	// TestRoom
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj12_backfaceTest.xml";
+	const char* filename = "Resource/Data/proj13.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
