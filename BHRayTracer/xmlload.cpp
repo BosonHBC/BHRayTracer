@@ -65,7 +65,7 @@ std::vector<NodeMtl> nodeMtlList;
 int LoadScene(char const *filename)
 {
 	XMLDocument doc(filename);
-	if (!doc.LoadFile(filename)) {
+	if (doc.LoadFile(filename) != XMLError::XML_SUCCESS) {
 		printf("Failed to load the file \"%s\"\n", filename);
 		return 0;
 	}
