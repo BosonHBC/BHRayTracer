@@ -19,9 +19,6 @@
     <Filter Include="Source Files\Lights">
       <UniqueIdentifier>{5414613e-d91c-4612-a4b6-6beb5d1e9830}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\LoadPNG">
-      <UniqueIdentifier>{ee6ebdc5-5033-40ea-9cab-e9586e83e2df}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Materials">
       <UniqueIdentifier>{5fcaff2f-04d6-41f6-b294-895ab9917389}</UniqueIdentifier>
     </Filter>
@@ -49,8 +46,17 @@
     <Filter Include="Source Files\Textures">
       <UniqueIdentifier>{9227bea2-774e-4aba-bd1f-cde306e1f373}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Tinyxml2">
+    <Filter Include="Source Files\Plugins">
+      <UniqueIdentifier>{f1303792-4fbe-4b0e-9693-c01a2bc135c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Plugins\Tinyxml2">
       <UniqueIdentifier>{97693981-cfe5-49fa-9402-be56d91c71b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Plugins\LoadPNG">
+      <UniqueIdentifier>{ee6ebdc5-5033-40ea-9cab-e9586e83e2df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Plugins\Oidn">
+      <UniqueIdentifier>{8f6351a1-4990-45f1-8ca2-339a150dd495}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -70,7 +76,7 @@
       <Filter>Source Files\Lights</Filter>
     </ClCompile>
     <ClCompile Include="LoadPNG\lodepng.cpp">
-      <Filter>Source Files\LoadPNG</Filter>
+      <Filter>Source Files\Plugins\LoadPNG</Filter>
     </ClCompile>
     <ClCompile Include="Materials\Blinn\MtlBlinn.cpp">
       <Filter>Source Files\Materials\Blinn</Filter>
@@ -91,7 +97,7 @@
       <Filter>Source Files\Textures</Filter>
     </ClCompile>
     <ClCompile Include="Tinyxml2\tinyxml2.cpp">
-      <Filter>Source Files\Tinyxml2</Filter>
+      <Filter>Source Files\Plugins\Tinyxml2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -159,7 +165,7 @@
       <Filter>Source Files\Lights</Filter>
     </ClInclude>
     <ClInclude Include="LoadPNG\lodepng.h">
-      <Filter>Source Files\LoadPNG</Filter>
+      <Filter>Source Files\Plugins\LoadPNG</Filter>
     </ClInclude>
     <ClInclude Include="Materials\materials.h">
       <Filter>Source Files\Materials</Filter>
@@ -174,18 +180,27 @@
       <Filter>Source Files\Textures</Filter>
     </ClInclude>
     <ClInclude Include="Tinyxml2\tinyxml2.h">
-      <Filter>Source Files\Tinyxml2</Filter>
+      <Filter>Source Files\Plugins\Tinyxml2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oidn-1.1.0.x64\include\OpenImageDenoise\oidn.h">
+      <Filter>Source Files\Plugins\Oidn</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oidn-1.1.0.x64\include\OpenImageDenoise\oidn.hpp">
+      <Filter>Source Files\Plugins\Oidn</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oidn-1.1.0.x64\include\OpenImageDenoise\version.h">
+      <Filter>Source Files\Plugins\Oidn</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="LoadPNG\LICENSE">
-      <Filter>Source Files\LoadPNG</Filter>
+      <Filter>Source Files\Plugins\LoadPNG</Filter>
     </None>
     <None Include="LoadPNG\Makefile">
-      <Filter>Source Files\LoadPNG</Filter>
+      <Filter>Source Files\Plugins\LoadPNG</Filter>
     </None>
     <None Include="LoadPNG\README.md">
-      <Filter>Source Files\LoadPNG</Filter>
+      <Filter>Source Files\Plugins\LoadPNG</Filter>
     </None>
   </ItemGroup>
 </Project>

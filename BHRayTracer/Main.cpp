@@ -8,6 +8,11 @@
 #include <omp.h>
 #include <algorithm>
 #include "cyPhotonMap.h"
+#ifdef _X64
+#include "OpenImageDenoise/oidn.hpp"
+#endif
+
+#define CleanPointer(o_ptr) if(o_ptr){delete o_ptr; o_ptr = nullptr;}
 
 Node rootNode;
 Camera camera;
@@ -47,6 +52,51 @@ void SaveImages();
 #define MAX_PhotonCount 1000000
 #define MAX_CausticPhotonCount 1000000
 
+//--------------------
+/** Use Open Image denoise to denoise image in 64 bits configuration*/
+#ifdef _X64
+#define USE_OIDN
+#ifdef USE_OIDN
+bool DenoiseImage(Color* o_colorArray, RenderImage& o_renderImage)
+{
+	oidn::DeviceRef device = oidn::newDevice();
+	device.commit();
+
+	Color* outputPtr = new Color[camera.imgWidth * camera.imgHeight];
+
+	// Create a denoising filter 
+	oidn::FilterRef filter = device.newFilter("RT"); // generic ray tracing filter
+	filter.setImage("color", o_colorArray, oidn::Format::Float3, camera.imgWidth, camera.imgHeight);
+	//filter.setImage("albedo", albedoPtr, oidn::Format::Float3, width, height); // optional 
+	//filter.setImage("normal", normalPtr, oidn::Format::Float3, width, height); // optional 
+	filter.setImage("output", outputPtr, oidn::Format::Float3, camera.imgWidth, camera.imgHeight);
+	//filter.set("hdr", true); // image is HDR 
+	filter.commit();
+
+	// Filter the image 
+	filter.execute();
+
+	// Check for errors 
+	const char* errorMessage;
+	if (device.getError(errorMessage) != oidn::Error::None) {
+		printf("oidn error: %s", errorMessage);
+		return false;
+	}
+	// Set render images
+	for (auto i = 0; i < camera.imgWidth * camera.imgHeight; ++i)
+	{
+		renderImage.GetPixels()[i] = Color24(outputPtr[i]);
+	}
+
+	CleanPointer(outputPtr);
+
+	return true;
+}
+#endif // USE_OIDN
+#endif // _X64
+
+
+//--------------------
 
 PhotonMap* photonMap;
 PhotonMap* causticPhotonMap;
@@ -88,7 +138,7 @@ Vec3f RandomPositionInPixel(Vec3f i_center, float i_pixelLength) {
 	return result;
 }
 #ifdef USE_PathTracing
-#define PT_SampleCount 16
+#define PT_SampleCount 32
 
 Color PathTracing(int i_i, int i_j) {
 	Color outColor = Color::Black();
@@ -149,6 +199,7 @@ void BeginRender() {
 
 	CalculateLightsIntensity();
 
+	Color* colorArray = new Color[camera.imgHeight * camera.imgWidth];
 	int percent = 0;
 #pragma omp parallel for
 	for (int i = 0; i < camera.imgWidth; ++i)
@@ -175,12 +226,19 @@ void BeginRender() {
 			outColor = afterGamaCorrection;
 #endif // USE_GamaCorrection
 			// Set out color
+			colorArray[j*camera.imgWidth + i] =outColor;
 			renderImage.GetPixels()[j*camera.imgWidth + i] = Color24(outColor);
 			//renderImage.GetZBuffer()[j*camera.imgWidth + i] = outHit.z;
 			renderImage.IncrementNumRenderPixel(1);
 		}
 	}
+
+#ifdef USE_OIDN
+	DenoiseImage(colorArray, renderImage);
+#endif // USE_OIDN
+
 	SaveImages();
+	CleanPointer(colorArray);
 }
 void StopRender() {
 
@@ -362,7 +420,7 @@ int main() {
 	//proj12_backfaceTest
 	// TestRoom
 	omp_set_num_threads(16);
-	const char* filename = "Resource/Data/proj13.xml";
+	const char* filename = "Resource/Data/proj12_backfaceTest.xml";
 	LoadScene(filename);
 
 	printf("Render image width: %d\n", renderImage.GetWidth());
